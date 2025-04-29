@@ -3,9 +3,9 @@
   <component name="FacetManager">
     <facet type="django" name="Django">
       <configuration>
-        <option name="rootFolder" value="$MODULE_DIR$/rapidconsult" />
-        <option name="settingsModule" value="config/settings/local.py" />
-        <option name="manageScript" value="$MODULE_DIR$/rapidconsult/manage.py" />
+        <option name="rootFolder" value="$MODULE_DIR$" />
+        <option name="settingsModule" value="config/settings/base.py" />
+        <option name="manageScript" value="manage.py" />
         <option name="environment" value="&lt;map/&gt;" />
         <option name="doNotUseTestRunner" value="false" />
         <option name="trackFilePattern" value="migrations" />
