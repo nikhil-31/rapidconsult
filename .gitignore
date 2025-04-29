@@ -330,3 +330,4 @@ rapidconsult/media/
 .env
 .envs/*
 !.envs/.local/
+.envs/.production/
