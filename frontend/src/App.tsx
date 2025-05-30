@@ -1,9 +1,10 @@
+import {BrowserRouter, Route, Routes} from "react-router-dom";
 
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-
-import { Chat } from "./components/Chat";
-import { Login } from "./components/Login";
-import { Navbar } from "./components/Navbar";
+import {Chat} from "./components/Chat";
+import {Login} from "./components/Login";
+import {Navbar} from "./components/Navbar";
+import {AuthContextProvider} from "./contexts/AuthContext";
+import {ProtectedRoute} from "./components/ProtectedRoute";
 
 // export default function App() {
 //     const [welcomeMessage, setWelcomeMessage] = useState("");
@@ -105,14 +106,38 @@ import { Navbar } from "./components/Navbar";
 // }
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navbar />}>
-          <Route path="" element={<Chat />} />
-          <Route path="login" element={<Login />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <AuthContextProvider>
+                            <Navbar/>
+                        </AuthContextProvider>
+                    }
+                >
+                    {/*<Route path="" element={<Chat/>}/>*/}
+                    <Route path="login" element={<Login/>}/>
+
+                    <Route
+                        path=""
+                        element={
+                            <ProtectedRoute>
+                                {/*<Conversations/>*/}
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="chats/:conversationName"
+                        element={
+                            <ProtectedRoute>
+                                <Chat/>
+                            </ProtectedRoute>
+                        }
+                    />
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    );
 }
