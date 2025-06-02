@@ -6,44 +6,43 @@ export function Chat() {
     const [welcomeMessage, setWelcomeMessage] = useState("");
     const [messageHistory, setMessageHistory] = useState<any>([]);
     const {user} = useContext(AuthContext);
-    const {sendJsonMessage} = useWebSocket("ws://127.0.0.1:8000/");
-
     const [message, setMessage] = useState("");
     const [name, setName] = useState("");
 
-    const {readyState} = useWebSocket(user ? "ws://127.0.0.1:8000/": null, {
-        queryParams: {
-            token: user ? user.token : "",
-        },
+    const {readyState, sendJsonMessage} =
+        useWebSocket(user ? "ws://127.0.0.1:8000/" : null, {
+            queryParams: {
+                token: user ? user.token : "",
+            },
 
-        onOpen: () => {
-            console.log("Connected!");
-        },
+            onOpen: () => {
+                console.log("Connected!");
+            },
 
-        onClose: () => {
-            console.log("Disconnected!");
-        },
+            onClose: () => {
+                console.log("Disconnected!");
+            },
 
-        onMessage: (e) => {
-            console.log("Received message", e);
-            const data = JSON.parse(e.data);
-            switch (data.type) {
-                case "welcome_message":
-                    setWelcomeMessage(data.message);
-                    break;
-                case "chat_message_echo":
-                    setMessageHistory((prev: any) => prev.concat(data));
-                    break;
-                default:
-                    console.error("Unknown message type!");
-                    break;
-            }
-        },
+            onMessage: (e) => {
+                console.log("Received message", e);
+                const data = JSON.parse(e.data);
+                switch (data.type) {
+                    case "welcome_message":
+                        setWelcomeMessage(data.message);
+                        break;
+                    case "chat_message_echo":
+                        setMessageHistory((prev: any) => prev.concat(data));
+                        break;
+                    default:
+                        console.error("Unknown message type!");
+                        break;
+                }
+            },
 
-        onError: (e) => {
-            console.error('WebSocket Error:', e);
-        },
-    });
+            onError: (e) => {
+                console.error('WebSocket Error:', e);
+            },
+        });
 
     const connectionStatus = {
         [ReadyState.CONNECTING]: "Connecting",

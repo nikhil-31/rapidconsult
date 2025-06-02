@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 from django.core.asgi import get_asgi_application
+from chats.middleware import TokenAuthMiddleware
 
 # This allows easy placement of apps within the interior
 # conversa_dj directory.
@@ -34,6 +35,6 @@ from channels.routing import ProtocolTypeRouter, URLRouter  # noqa isort:skip
 application = ProtocolTypeRouter(
     {
         "http": get_asgi_application(),
-        "websocket": URLRouter(routing.websocket_urlpatterns),
+        "websocket": TokenAuthMiddleware(URLRouter(routing.websocket_urlpatterns)),
     }
 )
