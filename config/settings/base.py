@@ -86,12 +86,13 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "drf_spectacular",
     "channels",
-    "rapidconsult.chats",
+
 ]
 
 LOCAL_APPS = [
     "rapidconsult.users",
     # Your stuff: custom apps go here
+    "rapidconsult.chats",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

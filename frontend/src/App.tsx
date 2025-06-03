@@ -5,6 +5,7 @@ import {Login} from "./components/Login";
 import {Navbar} from "./components/Navbar";
 import {AuthContextProvider} from "./contexts/AuthContext";
 import {ProtectedRoute} from "./components/ProtectedRoute";
+import {Conversations} from "./components/Conversations";
 
 // export default function App() {
 //     const [welcomeMessage, setWelcomeMessage] = useState("");
@@ -120,14 +121,15 @@ export default function App() {
                     {/*<Route path="" element={<Chat/>}/>*/}
                     <Route path="login" element={<Login/>}/>
 
-                    <Route
-                        path=""
-                        element={
-                            <ProtectedRoute>
-                                {/*<Conversations/>*/}
-                            </ProtectedRoute>
-                        }
-                    />
+                    {/*<Route*/}
+                    {/*    path=""*/}
+                    {/*    element={*/}
+                    {/*        <ProtectedRoute>*/}
+                    {/*            /!*<Conversations/>*!/*/}
+                    {/*        </ProtectedRoute>*/}
+                    {/*    }*/}
+                    {/*/>*/}
+                    <Route path="" element={<Conversations />} />
                     <Route
                         path="chats/:conversationName"
                         element={

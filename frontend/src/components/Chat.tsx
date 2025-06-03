@@ -1,6 +1,9 @@
 import {useContext, useState} from "react";
 import useWebSocket, {ReadyState} from "react-use-websocket";
 import {AuthContext} from "../contexts/AuthContext"
+import {useParams} from "react-router-dom";
+import {MessageModel} from "../models/MessageModel";
+import {Message} from "./Message";
 
 export function Chat() {
     const [welcomeMessage, setWelcomeMessage] = useState("");
@@ -8,9 +11,10 @@ export function Chat() {
     const {user} = useContext(AuthContext);
     const [message, setMessage] = useState("");
     const [name, setName] = useState("");
+    const {conversationName} = useParams();
 
     const {readyState, sendJsonMessage} =
-        useWebSocket(user ? "ws://127.0.0.1:8000/" : null, {
+        useWebSocket(user ? `ws://127.0.0.1:8000/${conversationName}/` : null, {
             queryParams: {
                 token: user ? user.token : "",
             },
@@ -31,7 +35,10 @@ export function Chat() {
                         setWelcomeMessage(data.message);
                         break;
                     case "chat_message_echo":
-                        setMessageHistory((prev: any) => prev.concat(data));
+                        setMessageHistory((prev: any) => prev.concat(data.message));
+                        break;
+                    case "last_50_messages":
+                        setMessageHistory(data.messages);
                         break;
                     default:
                         console.error("Unknown message type!");
@@ -92,11 +99,25 @@ export function Chat() {
                 Submit
             </button>
             <hr/>
-            <ul>
-                {messageHistory.map((message: any, idx: number) => (
-                    <div className="border border-gray-200 py-3 px-3" key={idx}>
-                        {message.name}: {message.message}
-                    </div>
+            {/*<ul>*/}
+            {/*    /!*{*!/*/}
+            {/*    /!*    messageHistory.map((message: any, idx: number) => (*!/*/}
+            {/*    /!*    <div className="border border-gray-200 py-3 px-3" key={idx}>*!/*/}
+            {/*    /!*        {message.name}: {message.message}*!/*/}
+            {/*    /!*    </div>*!/*/}
+            {/*    /!*))}*!/*/}
+            {/*    {*/}
+            {/*        messageHistory.map((message: any, idx: number) => (*/}
+            {/*            <div className="border border-gray-200 py-3 px-3" key={idx}>*/}
+            {/*                {message.from_user.username}: {message.content}*/}
+            {/*            </div>*/}
+            {/*        ))*/}
+            {/*    }*/}
+            {/*</ul>*/}
+
+            <ul className="mt-3 flex flex-col-reverse relative w-full border border-gray-200 overflow-y-auto p-6">
+                {messageHistory.map((message: MessageModel) => (
+                    <Message key={message.id} message={message}/>
                 ))}
             </ul>
         </div>
