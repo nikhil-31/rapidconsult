@@ -67,6 +67,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             "type": "last_50_messages",
             "messages": MessageSerializer(messages, many=True).data,
             "message_count": message_count,
+            "has_more": message_count > 50,
         })
 
     def disconnect(self, code):
