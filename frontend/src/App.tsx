@@ -6,6 +6,7 @@ import {Navbar} from "./components/Navbar";
 import {AuthContextProvider} from "./contexts/AuthContext";
 import {ProtectedRoute} from "./components/ProtectedRoute";
 import {Conversations} from "./components/Conversations";
+import {ActiveConversations} from "./components/ActiveConversations";
 
 // export default function App() {
 //     const [welcomeMessage, setWelcomeMessage] = useState("");
@@ -129,12 +130,20 @@ export default function App() {
                     {/*        </ProtectedRoute>*/}
                     {/*    }*/}
                     {/*/>*/}
-                    <Route path="" element={<Conversations />} />
+                    <Route path="" element={<Conversations/>}/>
                     <Route
                         path="chats/:conversationName"
                         element={
                             <ProtectedRoute>
                                 <Chat/>
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="conversations/"
+                        element={
+                            <ProtectedRoute>
+                                <ActiveConversations/>
                             </ProtectedRoute>
                         }
                     />

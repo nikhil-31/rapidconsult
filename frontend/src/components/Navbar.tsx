@@ -4,14 +4,14 @@ import {AuthContext} from "../contexts/AuthContext";
 
 
 export function Navbar() {
-    const { user, logout } = useContext(AuthContext);
+    const {user, logout} = useContext(AuthContext);
     return (
         <>
             <nav className="bg-white border-gray-200 px-4 sm:px-6 py-2.5 rounded dark:bg-gray-800">
                 <div className="max-w-5xl mx-auto flex flex-wrap justify-between items-center">
                     <Link to="/" className="flex items-center">
             <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">
-              Conversa DJ
+              RapidConsult
             </span>
                     </Link>
                     <button
@@ -59,6 +59,15 @@ export function Navbar() {
                                 </Link>
                             </li>
                             <li>
+                                <Link
+                                    to="/conversations"
+                                    className="block py-2 pr-4 pl-3 text-white md:p-0 dark:text-white"
+                                    aria-current="page"
+                                >
+                                    Active Conversations
+                                </Link>
+                            </li>
+                            <li>
                                 {/*<Link*/}
                                 {/*    to="/login"*/}
                                 {/*    className="block py-2 pr-4 pl-3 text-white md:p-0 dark:text-white"*/}
@@ -69,10 +78,10 @@ export function Navbar() {
                                 {
                                     !user ? (
 
-                                            <Link to="/login"
-                                                  className="block py-2 pr-4 pl-3 text-white md:p-0 dark:text-white">
-                                                Login
-                                            </Link>
+                                        <Link to="/login"
+                                              className="block py-2 pr-4 pl-3 text-white md:p-0 dark:text-white">
+                                            Login
+                                        </Link>
 
                                     ) : (
                                         <>
