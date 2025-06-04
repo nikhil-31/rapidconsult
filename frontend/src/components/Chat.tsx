@@ -18,6 +18,9 @@ export function Chat() {
     const {conversationName} = useParams();
     const [page, setPage] = useState(2);
     const [hasMoreMessages, setHasMoreMessages] = useState(false);
+    const [meTyping, setMeTyping] = useState(false);
+    const [typing, setTyping] = useState(false);
+    const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const inputReference: any = useHotkeys(
         "enter",
@@ -61,6 +64,9 @@ export function Chat() {
                         setMessageHistory(data.messages);
                         setHasMoreMessages(data.has_more);
                         break;
+                    case 'typing':
+                        updateTyping(data);
+                        break;
                     default:
                         console.error("Unknown message type!");
                         break;
@@ -82,6 +88,7 @@ export function Chat() {
 
     function handleChangeMessage(e: any) {
         setMessage(e.target.value);
+        onType()
     }
 
     function handleChangeName(e: any) {
@@ -98,6 +105,10 @@ export function Chat() {
         });
         setName("");
         setMessage("");
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+        }
+        timeoutFunction();
     };
 
     async function fetchMessages() {
@@ -125,10 +136,44 @@ export function Chat() {
         }
     }
 
+    // Typing stuff
+    function timeoutFunction() {
+        setMeTyping(false);
+        sendJsonMessage({type: "typing", typing: false});
+    }
+
+    function onType() {
+        if (!meTyping) {
+            setMeTyping(true);
+            sendJsonMessage({type: "typing", typing: true});
+        }
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+        }
+        timeout.current = setTimeout(timeoutFunction, 5000);
+    }
+
+    useEffect(() => {
+        return () => {
+            if (timeout.current) {
+                clearTimeout(timeout.current);
+            }
+        };
+    }, []);
+
+    function updateTyping(event: { user: string; typing: boolean }) {
+        if (event.user !== user!.username) {
+            setTyping(event.typing);
+        }
+    }
+
     return (
         <div>
             <span>The WebSocket is currently {connectionStatus}</span>
             <p>{welcomeMessage}</p>
+            {typing && (
+                <p className="truncate text-sm text-gray-500">typing...</p>
+            )}
             <input
                 name="message"
                 value={message}

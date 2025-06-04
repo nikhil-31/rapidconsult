@@ -80,8 +80,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                 },
             )
 
-
-
         return super().receive_json(content, **kwargs)
 
     def get_message_receiver(self):
