@@ -49,9 +49,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         return MessageSerializer(message).data
 
     def get_other_user(self, obj):
-        print(obj)
         usernames = obj.name.split("__")
-        print(usernames)
         context = {}
         for username in usernames:
             if username != self.context["user"].username:

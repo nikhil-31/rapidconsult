@@ -7,6 +7,7 @@ import {Message} from "./Message";
 import {ChatLoader} from "./ChatLoader";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {useHotkeys} from "react-hotkeys-hook";
+import {ConversationModel} from "../models/Conversation";
 
 
 export function Chat() {
@@ -21,6 +22,8 @@ export function Chat() {
     const [meTyping, setMeTyping] = useState(false);
     const [typing, setTyping] = useState(false);
     const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [participants, setParticipants] = useState<string[]>([]);
+    const [conversation, setConversation] = useState<ConversationModel | null>(null);
 
     const inputReference: any = useHotkeys(
         "enter",
@@ -37,7 +40,7 @@ export function Chat() {
     }, [inputReference]);
 
     const {readyState, sendJsonMessage} =
-        useWebSocket(user ? `ws://127.0.0.1:8000/${conversationName}/` : null, {
+        useWebSocket(user ? `ws://127.0.0.1:8000/chats/${conversationName}/` : null, {
             queryParams: {
                 token: user ? user.token : "",
             },
@@ -67,8 +70,28 @@ export function Chat() {
                     case 'typing':
                         updateTyping(data);
                         break;
+                    case "user_join":
+                        setParticipants((pcpts: string[]) => {
+                            if (!pcpts.includes(data.user)) {
+                                return [...pcpts, data.user];
+                            }
+                            return pcpts;
+                        });
+                        break;
+                    case "user_leave":
+                        setParticipants((pcpts: string[]) => {
+                            pcpts = pcpts.filter((x) => x !== data.user);
+                            console.log(pcpts);
+                            return pcpts
+                        });
+                        break;
+                    case "online_user_list":
+                        setParticipants(data.users);
+                        break;
+                    case "unread_count":
+                        break
                     default:
-                        console.error("Unknown message type!");
+                        console.error("Unknown message type!", data.type);
                         break;
                 }
             },
@@ -136,6 +159,26 @@ export function Chat() {
         }
     }
 
+    // Online users
+    useEffect(() => {
+        async function fetchConversation() {
+            const apiRes = await fetch(`http://127.0.0.1:8000/api/conversations/${conversationName}/`, {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    Authorization: `Token ${user?.token}`
+                }
+            });
+            if (apiRes.status === 200) {
+                const data: ConversationModel = await apiRes.json();
+                setConversation(data);
+            }
+        }
+
+        fetchConversation();
+    }, [conversationName, user]);
+
     // Typing stuff
     function timeoutFunction() {
         setMeTyping(false);
@@ -171,8 +214,21 @@ export function Chat() {
         <div>
             <span>The WebSocket is currently {connectionStatus}</span>
             <p>{welcomeMessage}</p>
-            {typing && (
-                <p className="truncate text-sm text-gray-500">typing...</p>
+            {conversation && (
+                <div className="py-6">
+                    <h3 className="text-3xl font-semibold text-gray-900">
+                        Chat with user: {conversation.other_user.username}
+                    </h3>
+                    <span className="text-sm">
+                        {conversation.other_user.username} is currently
+                        {participants.includes(conversation.other_user.username)
+                            ? " online"
+                            : " offline"}
+                    </span>
+                    {typing && (
+                        <p className="truncate text-sm text-gray-500">typing...</p>
+                    )}
+                </div>
             )}
             <input
                 name="message"

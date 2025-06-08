@@ -38,6 +38,7 @@ class ChatConsumer(JsonWebsocketConsumer):
             self.channel_name,
         )
 
+        # Last 50 messages for the conversation
         messages = self.conversation.messages.all().order_by("-timestamp")[0:50]
         message_count = self.conversation.messages.all().count()
         self.send_json({
@@ -47,12 +48,49 @@ class ChatConsumer(JsonWebsocketConsumer):
             "has_more": message_count > 50,
         })
 
+        #
+        print(f"Conversations online {self.conversation.online.all()}")
+        self.send_json(
+            {
+                "type": "online_user_list",
+                "users": [user.username for user in self.conversation.online.all()],
+            }
+        )
+
+        async_to_sync(self.channel_layer.group_send)(
+            self.conversation_name,
+            {
+                "type": "user_join",
+                "user": self.user.username,
+            },
+        )
+
+        self.conversation.online.add(self.user)
+
+        # Count of unread messages
+        unread_count = Message.objects.filter(to_user=self.user, read=False).count()
+        self.send_json(
+            {
+                "type": "unread_count",
+                "unread_count": unread_count,
+            }
+        )
+
     def disconnect(self, code):
         print("Disconnected!")
+        if self.user.is_authenticated:  # send the leave event to the room
+            async_to_sync(self.channel_layer.group_send)(
+                self.conversation_name,
+                {
+                    "type": "user_leave",
+                    "user": self.user.username,
+                },
+            )
+            self.conversation.online.remove(self.user)
         return super().disconnect(code)
 
     def receive_json(self, content, **kwargs):
-        print(content)
+        # print(content)
         message_type = content["type"]
         if message_type == "chat_message":
             message = Message.objects.create(
@@ -91,12 +129,31 @@ class ChatConsumer(JsonWebsocketConsumer):
         return User.objects.get_or_create(username="test")
 
     def chat_message_echo(self, event):
-        print(event)
         self.send_json(event)
 
     def typing(self, event):
         self.send_json(event)
 
+    def user_join(self, event):
+        self.send_json(event)
+
+    def user_leave(self, event):
+        self.send_json(event)
+
     @classmethod
     def encode_json(cls, content):
         return json.dumps(content, cls=UUIDEncoder)
+
+
+class NotificationConsumer(JsonWebsocketConsumer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.user = None
+
+    def connect(self):
+        self.user = self.scope["user"]
+        if not self.user.is_authenticated:
+            return
+        self.accept()
+

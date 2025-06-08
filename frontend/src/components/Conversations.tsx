@@ -1,4 +1,3 @@
-
 import {useContext, useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 
@@ -13,6 +12,7 @@ interface UserResponse {
 export function Conversations() {
     const {user} = useContext(AuthContext);
     const [users, setUsers] = useState<UserResponse[]>([]);
+    const {logout} = useContext(AuthContext);
 
     useEffect(() => {
         async function fetchUsers() {
@@ -21,6 +21,13 @@ export function Conversations() {
                     Authorization: `Token ${user?.token}`
                 }
             });
+
+            if (res.status === 403) {
+                logout();
+                // throw new Error("Forbidden");
+                return
+            }
+
             const data = await res.json();
             setUsers(data);
         }
