@@ -62,6 +62,9 @@ export function Chat() {
                         break;
                     case "chat_message_echo":
                         setMessageHistory((prev: any) => [data.message, ...prev]);
+                        sendJsonMessage({
+                            type: "read_messages",
+                        });
                         break;
                     case "last_50_messages":
                         setMessageHistory(data.messages);
@@ -108,6 +111,14 @@ export function Chat() {
         [ReadyState.CLOSED]: "Closed",
         [ReadyState.UNINSTANTIATED]: "Uninstantiated"
     }[readyState];
+
+    useEffect(() => {
+        if (connectionStatus === "Open") {
+            sendJsonMessage({
+                type: "read_messages",
+            });
+        }
+    }, [connectionStatus, sendJsonMessage]);
 
     function handleChangeMessage(e: any) {
         setMessage(e.target.value);

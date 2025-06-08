@@ -34,6 +34,7 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                 console.log("Disconnected from Notifications!");
             },
             onMessage: (e) => {
+                console.log("Received message", e);
                 const data = JSON.parse(e.data);
                 switch (data.type) {
                     case "unread_count":
