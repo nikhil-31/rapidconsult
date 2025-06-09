@@ -117,8 +117,7 @@ class ChatConsumer(JsonWebsocketConsumer):
                     "typing": content["typing"],
                 },
             )
-
-        if message_type == "read_messages":
+        elif message_type == "read_messages":
             messages_to_me = self.conversation.messages.filter(to_user=self.user)
             messages_to_me.update(read=True)
 
@@ -129,6 +128,13 @@ class ChatConsumer(JsonWebsocketConsumer):
                 {
                     "type": "unread_count",
                     "unread_count": unread_count,
+                },
+            )
+        elif message_type == "ping":
+            async_to_sync(self.channel_layer.group_send)(
+                self.conversation_name,
+                {
+                    "type": "pong"
                 },
             )
 
@@ -155,6 +161,9 @@ class ChatConsumer(JsonWebsocketConsumer):
         self.send_json(event)
 
     def unread_count(self, event):
+        self.send_json(event)
+
+    def pong(self, event):
         self.send_json(event)
 
     @classmethod

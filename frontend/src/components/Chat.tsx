@@ -47,10 +47,15 @@ export function Chat() {
 
             onOpen: () => {
                 console.log("Connected!");
+                setInterval(() => {
+                    sendJsonMessage({
+                        type: "ping",
+                    });
+                }, 30000);
             },
 
             onClose: () => {
-                console.log("Disconnected!");
+                console.log("Disconnected Message!");
             },
 
             onMessage: (e) => {
@@ -92,6 +97,8 @@ export function Chat() {
                         setParticipants(data.users);
                         break;
                     case "unread_count":
+                        break
+                    case "pong":
                         break
                     default:
                         console.error("Unknown message type!", data.type);
