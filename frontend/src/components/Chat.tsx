@@ -24,6 +24,7 @@ export function Chat() {
     const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [participants, setParticipants] = useState<string[]>([]);
     const [conversation, setConversation] = useState<ConversationModel | null>(null);
+    const [shouldConnect, setShouldConnect] = useState(true);
 
     const inputReference: any = useHotkeys(
         "enter",
@@ -39,8 +40,12 @@ export function Chat() {
         (inputReference.current as HTMLElement).focus();
     }, [inputReference]);
 
-    const {readyState, sendJsonMessage} =
+    const {readyState, sendJsonMessage,} =
         useWebSocket(user ? `ws://127.0.0.1:8000/chats/${conversationName}/` : null, {
+            shouldReconnect: () => false,
+            retryOnError: false,
+            share: true,
+
             queryParams: {
                 token: user ? user.token : "",
             },
@@ -109,7 +114,29 @@ export function Chat() {
             onError: (e) => {
                 console.error('WebSocket Error:', e);
             },
-        });
+        }, shouldConnect);
+
+    const closeSocket = () => {
+        setShouldConnect(false); // This will close the socket
+    };
+
+    const openSocket = () => {
+        setShouldConnect(true); // This will re-open it
+    };
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                openSocket(); // reconnect is undefined in older versions
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
 
     const connectionStatus = {
         [ReadyState.CONNECTING]: "Connecting",
@@ -231,6 +258,10 @@ export function Chat() {
     return (
         <div>
             <span>The WebSocket is currently {connectionStatus}</span>
+            <p>
+                <button className="ml-3 bg-gray-300 px-3 py-1" onClick={closeSocket}>Close WebSocket</button>
+                <button className="ml-3 bg-gray-300 px-3 py-1" onClick={openSocket}>Open WebSocket</button>
+            </p>
             <p>{welcomeMessage}</p>
             {conversation && (
                 <div className="py-6">
