@@ -15,10 +15,10 @@ from django.core.asgi import get_asgi_application
 from chats.middleware import TokenAuthMiddleware
 
 # This allows easy placement of apps within the interior
-# conversa_dj directory.
+# rapidconsult directory.
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
-sys.path.append(str(ROOT_DIR / "conversa_dj"))
+sys.path.append(str(ROOT_DIR / "rapidconsult"))
 
 # If DJANGO_SETTINGS_MODULE is unset, default to the local settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
