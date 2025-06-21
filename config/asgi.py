@@ -17,8 +17,9 @@ from chats.middleware import TokenAuthMiddleware
 # This allows easy placement of apps within the interior
 # rapidconsult directory.
 
-ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
-sys.path.append(str(ROOT_DIR / "rapidconsult"))
+# ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
+# sys.path.append(str(ROOT_DIR / "rapidconsult"))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # If DJANGO_SETTINGS_MODULE is unset, default to the local settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
