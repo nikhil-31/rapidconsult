@@ -9,6 +9,7 @@ from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
 
 from rapidconsult.users.api.views import CustomObtainAuthTokenView
+from rapidconsult.chats.views import HomePageView
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
@@ -17,7 +18,7 @@ urlpatterns = [
     path("users/", include("rapidconsult.users.urls", namespace="users")),
     # path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # ...
+    path("", HomePageView.as_view(), name="home"),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
