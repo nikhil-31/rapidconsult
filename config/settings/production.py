@@ -41,8 +41,18 @@ CACHES = {
     },
 }
 
+# django-rest-framework
+# -------------------------------------------------------------------------------
+# Tools that generate code samples can use SERVERS to point to the correct domain
+SPECTACULAR_SETTINGS["SERVERS"] = [
+    {"url": "https://rapidconsult.com", "description": "Production server"},
+]
+
 # SECURITY
 # ------------------------------------------------------------------------------
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.crystalmelting.com",
+]
 # https://docs.djangoproject.com/en/dev/ref/settings/#secure-proxy-ssl-header
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # # https://docs.djangoproject.com/en/dev/ref/settings/#secure-ssl-redirect
@@ -209,11 +219,5 @@ CACHES = {
 #     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
 # )
 
-# django-rest-framework
-# -------------------------------------------------------------------------------
-# Tools that generate code samples can use SERVERS to point to the correct domain
-SPECTACULAR_SETTINGS["SERVERS"] = [
-    {"url": "https://rapidconsult.com", "description": "Production server"},
-]
 # Your stuff...
 # ------------------------------------------------------------------------------
