@@ -13,10 +13,12 @@ export function Conversations() {
     const {user} = useContext(AuthContext);
     const [users, setUsers] = useState<UserResponse[]>([]);
     const {logout} = useContext(AuthContext);
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const wsUrl = process.env.REACT_APP_WS_URL;
 
     useEffect(() => {
         async function fetchUsers() {
-            const res = await fetch("http://127.0.0.1:8000/api/users/", {
+            const res = await fetch(`${apiUrl}/api/users/`, {
                 headers: {
                     Authorization: `Token ${user?.token}`
                 }

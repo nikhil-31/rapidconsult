@@ -3,12 +3,21 @@ import axios from "axios";
 import {UserModel} from "../models/UserModel";
 
 class AuthService {
+
+    private readonly apiUrl: string | undefined;
+    private readonly wsUrl: string | undefined;
+
+    constructor() {
+        this.apiUrl = process.env.REACT_APP_API_URL;
+        this.wsUrl = process.env.REACT_APP_WS_URL;
+    }
+
     setUserInLocalStorage(data: UserModel) {
         localStorage.setItem("user", JSON.stringify(data));
     }
 
     async login(username: string, password: string): Promise<UserModel> {
-        const response = await axios.post("http://127.0.0.1:8000/api/auth-token/", {username, password});
+        const response = await axios.post(`${this.apiUrl}/api/auth-token/`, {username, password});
         if (!response.data.token) {
             return response.data;
         }

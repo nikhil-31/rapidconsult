@@ -25,6 +25,8 @@ export function Chat() {
     const [participants, setParticipants] = useState<string[]>([]);
     const [conversation, setConversation] = useState<ConversationModel | null>(null);
     const [shouldConnect, setShouldConnect] = useState(true);
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const wsUrl = process.env.REACT_APP_WS_URL;
 
     const inputReference: any = useHotkeys(
         "enter",
@@ -41,7 +43,7 @@ export function Chat() {
     }, [inputReference]);
 
     const {readyState, sendJsonMessage,} =
-        useWebSocket(user ? `ws://127.0.0.1:8000/chats/${conversationName}/` : null, {
+        useWebSocket(user ? `${wsUrl}/chats/${conversationName}/` : null, {
             shouldReconnect: () => false,
             retryOnError: false,
             share: true,
@@ -181,7 +183,7 @@ export function Chat() {
 
     async function fetchMessages() {
         const apiRes = await fetch(
-            `http://127.0.0.1:8000/api/messages/?conversation=${conversationName}&page=${page}`,
+            `${apiUrl}/api/messages/?conversation=${conversationName}&page=${page}`,
             {
                 method: "GET",
                 headers: {
@@ -207,7 +209,7 @@ export function Chat() {
     // Online users
     useEffect(() => {
         async function fetchConversation() {
-            const apiRes = await fetch(`http://127.0.0.1:8000/api/conversations/${conversationName}/`, {
+            const apiRes = await fetch(`${apiUrl}/api/conversations/${conversationName}/`, {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
