@@ -15,6 +15,7 @@ export function Conversations() {
     const {logout} = useContext(AuthContext);
     const apiUrl = process.env.REACT_APP_API_URL;
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         async function fetchUsers() {
             const res = await fetch(`${apiUrl}/api/users/`, {
@@ -33,7 +34,7 @@ export function Conversations() {
             setUsers(data);
         }
 
-        const response = fetchUsers();
+        fetchUsers();
     }, [user]);
 
     function createConversationName(username: string) {

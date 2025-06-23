@@ -207,6 +207,8 @@ export function Chat() {
     }
 
     // Online users
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         async function fetchConversation() {
             const apiRes = await fetch(`${apiUrl}/api/conversations/${conversationName}/`, {

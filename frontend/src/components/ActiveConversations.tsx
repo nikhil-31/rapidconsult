@@ -10,6 +10,7 @@ export function ActiveConversations() {
     const [conversations, setActiveConversations] = useState<ConversationModel[]>([]);
     const apiUrl = process.env.REACT_APP_API_URL;
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         async function fetchUsers() {
             const res = await fetch(`${apiUrl}/api/conversations/`, {
