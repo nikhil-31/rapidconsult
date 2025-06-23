@@ -1,5 +1,6 @@
 # ruff: noqa: E501
 import logging
+import os
 
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -19,14 +20,7 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-# ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "0.0.0.0",
-    "144.126.253.198",
-    "crystalmelting.com"
-]
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
 
 # DATABASES
 # ------------------------------------------------------------------------------
