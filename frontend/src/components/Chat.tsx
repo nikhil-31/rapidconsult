@@ -161,9 +161,9 @@ export function Chat() {
         onType()
     }
 
-    function handleChangeName(e: any) {
-        setName(e.target.value);
-    }
+    // function handleChangeName(e: any) {
+    //     setName(e.target.value);
+    // }
 
     const handleSubmit = () => {
         if (message.length === 0) return;

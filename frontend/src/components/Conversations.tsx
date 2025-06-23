@@ -14,7 +14,6 @@ export function Conversations() {
     const [users, setUsers] = useState<UserResponse[]>([]);
     const {logout} = useContext(AuthContext);
     const apiUrl = process.env.REACT_APP_API_URL;
-    const wsUrl = process.env.REACT_APP_WS_URL;
 
     useEffect(() => {
         async function fetchUsers() {

@@ -20,7 +20,6 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                                                                                }) => {
     const {user} = useContext(AuthContext);
     const [unreadMessageCount, setUnreadMessageCount] = useState(0);
-    const apiUrl = process.env.REACT_APP_API_URL;
     const wsUrl = process.env.REACT_APP_WS_URL;
 
     const {readyState} = useWebSocket(

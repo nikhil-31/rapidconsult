@@ -9,7 +9,6 @@ export function ActiveConversations() {
     const {user} = useContext(AuthContext);
     const [conversations, setActiveConversations] = useState<ConversationModel[]>([]);
     const apiUrl = process.env.REACT_APP_API_URL;
-    const wsUrl = process.env.REACT_APP_WS_URL;
 
     useEffect(() => {
         async function fetchUsers() {
