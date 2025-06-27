@@ -24,6 +24,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+chat_images/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -52,6 +53,7 @@ coverage.xml
 
 # Django stuff:
 staticfiles/
+mediafiles/
 
 # Sphinx documentation
 docs/_build/
