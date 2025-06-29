@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='message',
+            name='image',
+        ),
         migrations.AddField(
             model_name='message',
             name='file',
