@@ -3,7 +3,6 @@ import logging
 import os
 
 import sentry_sdk
-from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
@@ -12,7 +11,6 @@ from .base import *  # noqa: F403
 from .base import DATABASES
 from .base import INSTALLED_APPS
 from .base import REDIS_URL
-from .base import SPECTACULAR_SETTINGS
 from .base import env
 
 # GENERAL
@@ -41,12 +39,34 @@ CACHES = {
     },
 }
 
-# django-rest-framework
+# DJANGO REST FRAMEWORK
 # -------------------------------------------------------------------------------
 # Tools that generate code samples can use SERVERS to point to the correct domain
-SPECTACULAR_SETTINGS["SERVERS"] = [
-    {"url": "https://rapidconsult.com", "description": "Production server"},
+# SPECTACULAR_SETTINGS["SERVERS"] = [
+#     {"url": "https://rapidconsult.com", "description": "Production server"},
+# ]
+
+
+# Sentry
+# ------------------------------------------------------------------------------
+SENTRY_DSN = env("SENTRY_DSN")
+SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
+
+sentry_logging = LoggingIntegration(
+    level=SENTRY_LOG_LEVEL,  # Capture info and above as breadcrumbs
+    event_level=logging.ERROR,  # Send errors as events
+)
+integrations = [
+    sentry_logging,
+    DjangoIntegration(),
+    RedisIntegration(),
 ]
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=integrations,
+    environment=env("SENTRY_ENVIRONMENT", default="production"),
+    traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+)
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -121,48 +141,16 @@ SPECTACULAR_SETTINGS["SERVERS"] = [
 # }
 # MEDIA_URL = f"https://{aws_s3_domain}/media/"
 
-# EMAIL
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
-# DEFAULT_FROM_EMAIL = env(
-#     "DJANGO_DEFAULT_FROM_EMAIL",
-#     default="rapidconsult <noreply@rapidconsult.com>",
-# )
-# # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
-# SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
-# # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
-# EMAIL_SUBJECT_PREFIX = env(
-#     "DJANGO_EMAIL_SUBJECT_PREFIX",
-#     default="[rapidconsult] ",
-# )
-# ACCOUNT_EMAIL_SUBJECT_PREFIX = EMAIL_SUBJECT_PREFIX
-
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL regex.
 ADMIN_URL = env("DJANGO_ADMIN_URL")
-
-# Anymail
-# ------------------------------------------------------------------------------
-# https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-# INSTALLED_APPS += ["anymail"]
-# # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-# # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-# # https://anymail.readthedocs.io/en/stable/esps/mailgun/
-# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-# ANYMAIL = {
-#     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-#     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
-#     "MAILGUN_API_URL": env("MAILGUN_API_URL", default="https://api.mailgun.net/v3"),
-# }
-
 
 # LOGGING
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#logging
 # See https://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
@@ -195,27 +183,3 @@ LOGGING = {
     },
 }
 
-# Sentry
-# # ------------------------------------------------------------------------------
-SENTRY_DSN = env("SENTRY_DSN")
-SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
-
-sentry_logging = LoggingIntegration(
-    level=SENTRY_LOG_LEVEL,  # Capture info and above as breadcrumbs
-    event_level=logging.ERROR,  # Send errors as events
-)
-integrations = [
-    sentry_logging,
-    DjangoIntegration(),
-    CeleryIntegration(),
-    RedisIntegration(),
-]
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    integrations=integrations,
-    environment=env("SENTRY_ENVIRONMENT", default="production"),
-    traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
-)
-
-# Your stuff...
-# ------------------------------------------------------------------------------

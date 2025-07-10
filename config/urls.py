@@ -1,12 +1,10 @@
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
-from drf_spectacular.views import SpectacularAPIView
-from drf_spectacular.views import SpectacularSwaggerView
+# from drf_spectacular.views import SpectacularAPIView
+# from drf_spectacular.views import SpectacularSwaggerView
 
 from rapidconsult.users.api.views import CustomObtainAuthTokenView
 from rapidconsult.chats.views import HomePageView
@@ -17,14 +15,8 @@ urlpatterns = [
     # User management
     path("users/", include("rapidconsult.users.urls", namespace="users")),
     # path("accounts/", include("allauth.urls")),
-    # Your stuff: custom urls includes go here
     path("", HomePageView.as_view(), name="home"),
-    # Media files
-    *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
-if settings.DEBUG:
-    # Static file serving when using Gunicorn + Uvicorn for local web socket development
-    urlpatterns += staticfiles_urlpatterns()
 
 # API URLS
 urlpatterns += [
@@ -33,12 +25,13 @@ urlpatterns += [
     # DRF auth token
     # path("api/auth-token/", obtain_auth_token, name="obtain_auth_token"),
     path("api/auth-token/", CustomObtainAuthTokenView.as_view(), name="obtain_auth_token"),
-    path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="api-schema"),
-        name="api-docs",
-    ),
+
+    # path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
+    # path(
+    #     "api/docs/",
+    #     SpectacularSwaggerView.as_view(url_name="api-schema"),
+    #     name="api-docs",
+    # ),
 ]
 
 if settings.DEBUG:

@@ -70,6 +70,7 @@ venv/
 ENV/
 venv-local/
 venv-prod/
+venv-clean/
 
 # Rope project settings
 .ropeproject

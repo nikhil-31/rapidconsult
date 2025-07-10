@@ -79,7 +79,7 @@ class ChatConsumer(JsonWebsocketConsumer):
     def disconnect(self, code):
         print("Disconnected!")
         if self.user.is_authenticated:  # send the leave event to the room
-            async_to_sync(self.channel_layer.group_send)(
+            async_to_sync(self.channel_layer.group_send) (
                 self.conversation_name,
                 {
                     "type": "user_leave",

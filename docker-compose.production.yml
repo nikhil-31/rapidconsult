@@ -1,11 +1,8 @@
 volumes:
-  production_postgres_data: {}
-  production_postgres_data_backups: {}
-  production_traefik: {}
-  
-  production_redis_data: {}
-  
-
+  production_postgres_data: { }
+  production_postgres_data_backups: { }
+  production_traefik: { }
+  production_redis_data: { }
 
 services:
   django: &django
@@ -49,25 +46,24 @@ services:
 
   redis:
     image: docker.io/redis:6
-    
+
     volumes:
       - production_redis_data:/data
-    
 
-  celeryworker:
-    <<: *django
-    image: rapidconsult_production_celeryworker
-    command: /start-celeryworker
-
-  celerybeat:
-    <<: *django
-    image: rapidconsult_production_celerybeat
-    command: /start-celerybeat
-
-  flower:
-    <<: *django
-    image: rapidconsult_production_flower
-    command: /start-flower
+  #  celeryworker:
+  #    <<: *django
+  #    image: rapidconsult_production_celeryworker
+  #    command: /start-celeryworker
+  #
+  #  celerybeat:
+  #    <<: *django
+  #    image: rapidconsult_production_celerybeat
+  #    command: /start-celerybeat
+  #
+  #  flower:
+  #    <<: *django
+  #    image: rapidconsult_production_flower
+  #    command: /start-flower
 
   awscli:
     build:
