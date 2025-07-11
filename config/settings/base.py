@@ -142,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -153,26 +153,57 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
-# STATIC
-# ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = str(BASE_DIR / "staticfiles")
-# https://docs.djangoproject.com/en/dev/ref/settings/#static-url
-STATIC_URL = "/static/"
-# https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
-STATICFILES_DIRS = [str(APPS_DIR / "static")]
-# https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
-STATICFILES_FINDERS = [
-    "django.contrib.staticfiles.finders.FileSystemFinder",
-    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-]
+# # STATIC
+# # ------------------------------------------------------------------------------
+# # https://docs.djangoproject.com/en/dev/ref/settings/#static-root
+# STATIC_ROOT = str(BASE_DIR / "staticfiles")
+# # https://docs.djangoproject.com/en/dev/ref/settings/#static-url
+# STATIC_URL = "/static/"
+# # https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
+# STATICFILES_DIRS = [str(APPS_DIR / "static")]
+# # https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
+# STATICFILES_FINDERS = [
+#     "django.contrib.staticfiles.finders.FileSystemFinder",
+#     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+# ]
+#
+# # MEDIA
+# # ------------------------------------------------------------------------------
+# # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
+# MEDIA_ROOT = str(APPS_DIR / "media")
+# # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
+# MEDIA_URL = "/media/"
 
-# MEDIA
+
+# STATIC AND MEDIA - DIGITAL OCEAN
 # ------------------------------------------------------------------------------
-# https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = str(APPS_DIR / "media")
-# https://docs.djangoproject.com/en/dev/ref/settings/#media-url
-MEDIA_URL = "/media/"
+# https://docs.djangoproject.com/en/3.2/howto/static-files/
+USE_SPACES = env('USE_SPACES') == 'TRUE'
+
+if USE_SPACES:
+    # settings
+    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_DEFAULT_ACL = 'public-read'
+    # AWS_S3_ENDPOINT_URL = 'https://sfo3.digitaloceanspaces.com'
+    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    # static settings
+    AWS_LOCATION = 'static'
+    STATIC_URL = f'https://{AWS_S3_ENDPOINT_URL}/{AWS_LOCATION}/'
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # public media settings
+    PUBLIC_MEDIA_LOCATION = 'media'
+    MEDIA_URL = f'https://{AWS_S3_ENDPOINT_URL}/{PUBLIC_MEDIA_LOCATION}/'
+    DEFAULT_FILE_STORAGE = 'config.storage_backends.PublicMediaStorage'
+else:
+    STATIC_URL = '/static/'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'mediafiles'
+
+STATICFILES_DIRS = (BASE_DIR / 'static',)
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
