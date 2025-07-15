@@ -6,6 +6,7 @@ from rapidconsult.users.api.serializers import UserSerializer
 
 User = get_user_model()
 
+
 class MessageSerializer(serializers.ModelSerializer):
     from_user = serializers.SerializerMethodField()
     to_user = serializers.SerializerMethodField()
@@ -21,6 +22,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "content",
             "timestamp",
             "read",
+            "file",
         )
 
     def get_conversation(self, obj):
@@ -31,6 +33,14 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def get_to_user(self, obj):
         return UserSerializer(obj.to_user).data
+
+    def get_file(self, obj):
+        if obj.file:
+            try:
+                return obj.file.url  # ✅ This gives you the CDN URL if storage is configured
+            except ValueError:
+                return None
+        return None
 
 
 class ConversationSerializer(serializers.ModelSerializer):

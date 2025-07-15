@@ -1,5 +1,4 @@
 import {useContext} from "react";
-
 import {AuthContext} from "../contexts/AuthContext";
 import {MessageModel} from "../models/MessageModel";
 
@@ -9,36 +8,46 @@ export function classNames(...classes: any) {
 
 export function Message({message}: { message: MessageModel }) {
     const {user} = useContext(AuthContext);
+    const isOwnMessage = user!.username === message.from_user.username;
 
     function formatMessageTimestamp(timestamp: string) {
         const date = new Date(timestamp);
-        return date.toLocaleTimeString().slice(0, 5);
+        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     }
 
     return (
         <li
             className={classNames(
                 "mt-1 mb-1 flex",
-                user!.username === message.to_user.username ? "justify-start" : "justify-end"
+                isOwnMessage ? "justify-end" : "justify-start"
             )}
         >
             <div
                 className={classNames(
                     "relative max-w-xl rounded-lg px-2 py-1 text-gray-700 shadow",
-                    user!.username === message.to_user.username ? "" : "bg-gray-100"
+                    isOwnMessage ? "bg-gray-100" : "bg-white"
                 )}
             >
-                <div className="flex items-end">
-                    <span className="block">{message.content}</span>
-                    <span
-                        className="ml-2"
-                        style={{
-                            fontSize: "0.6rem",
-                            lineHeight: "1rem"
-                        }}
-                    >
+                <div className="flex flex-col space-y-1">
+                    {/* Message text or image */}
+                    {message.file ? (
+                        <img
+                            src={message.file}
+                            alt="Sent image"
+                            className="max-w-xs rounded"
+                        />
+                    ) : (
+                        <span className="block">{message.content}</span>
+                    )}
+
+                    <div className="text-right text-xs text-gray-500">
                         {formatMessageTimestamp(message.timestamp)}
-                    </span>
+                        {isOwnMessage && (
+                            <span className="ml-1">
+                {message.read ? "✓✓ Read" : "✓ Sent"}
+              </span>
+                        )}
+                    </div>
                 </div>
             </div>
         </li>

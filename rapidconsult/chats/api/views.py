@@ -1,7 +1,11 @@
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
-from rapidconsult.chats.models import Conversation, Message
+from rapidconsult.chats.models import Conversation, Message, User
 from .paginaters import MessagePagination
 from .serializers import ConversationSerializer, MessageSerializer
 
@@ -36,3 +40,33 @@ class MessageViewSet(ListModelMixin, GenericViewSet):
             .order_by("-timestamp")
         )
         return queryset
+
+
+class ImageMessageUploadView(APIView):
+    parser_classes = [MultiPartParser]
+    permission_classes = [IsAuthenticated]
+
+    def get_message_receiver(self, conversation_name, user):
+        usernames = conversation_name.split("__")
+        for username in usernames:
+            if username != user.username:
+                # This is the receiver
+                return User.objects.get(username=username)
+        return User.objects.get_or_create(username="test")
+
+    def post(self, request):
+        file = request.data.get('file')
+        conversation_name = request.data.get('conversation')
+
+        if not file or not conversation_name:
+            return Response({'error': 'Missing data'}, status=400)
+
+        conversation, _ = Conversation.objects.get_or_create(name=conversation_name)
+        msg = Message.objects.create(
+            from_user=request.user,
+            to_user=self.get_message_receiver(conversation_name, request.user),
+            file=file,
+            conversation=conversation,
+            content='Image'  # optional
+        )
+        return Response(MessageSerializer(msg).data)

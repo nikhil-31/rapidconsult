@@ -8,4 +8,5 @@ export interface MessageModel {
     content: string;
     timestamp: string;
     read: boolean;
+    file?: string | null;
 }
