@@ -59,6 +59,7 @@ class ImageMessageUploadView(APIView):
     def post(self, request):
         file = request.data.get('file')
         conversation_name = request.data.get('conversation')
+        content = request.data.get('content')
 
         if not file or not conversation_name:
             return Response({'error': 'Missing data'}, status=400)
@@ -69,7 +70,7 @@ class ImageMessageUploadView(APIView):
             to_user=self.get_message_receiver(conversation_name, request.user),
             file=file,
             conversation=conversation,
-            content='Image'  # optional
+            content=content  # optional
         )
 
         # ✅ Send the message to WebSocket group

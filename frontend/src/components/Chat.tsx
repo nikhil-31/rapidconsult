@@ -121,18 +121,6 @@ export function Chat() {
         onType();
     }
 
-    const handleSubmit = () => {
-        if (message.length === 0 || message.length > 512) return;
-        sendJsonMessage({
-            type: "chat_message",
-            message,
-            name,
-        });
-        setMessage("");
-        if (timeout.current) clearTimeout(timeout.current);
-        timeoutFunction();
-    };
-
     async function fetchMessages() {
         const res = await fetch(
             `${apiUrl}/api/messages/?conversation=${conversationName}&page=${page}`,
@@ -204,11 +192,32 @@ export function Chat() {
         reader.readAsDataURL(file);
     }
 
+    const handleSendMessageSubmit = () => {
+        if (!fileToUpload || !user) {
+            handleSubmit()
+        } else {
+            handleSendImage()
+        }
+    };
+
+    const handleSubmit = () => {
+        if (message.length === 0 || message.length > 512) return;
+        sendJsonMessage({
+            type: "chat_message",
+            message,
+            name,
+        });
+        setMessage("");
+        if (timeout.current) clearTimeout(timeout.current);
+        timeoutFunction();
+    };
+
     async function handleSendImage() {
         if (!fileToUpload || !user) return;
         const formData = new FormData();
         formData.append("file", fileToUpload);
         formData.append("conversation", conversationName!);
+        formData.append("content", message)
         try {
             const res = await fetch(`${apiUrl}/api/messages/image/`, {
                 method: "POST",
@@ -219,6 +228,7 @@ export function Chat() {
                 const data = await res.json();
                 setPreviewImage(null);
                 setFileToUpload(null);
+                setMessage("");
                 if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                 }
@@ -266,18 +276,24 @@ export function Chat() {
             </div>
 
             {previewImage && (
-                <div className="p-3 bg-gray-100 border-t">
-                    <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
-                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2"/>
-                    <div className="flex gap-2">
-                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send
-                        </button>
-                        <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => {
+                <div className="relative p-3 bg-gray-100 border-t">
+                    {/* ❌ Cancel Button in Top Right */}
+                    <button
+                        onClick={() => {
                             setPreviewImage(null);
                             setFileToUpload(null);
-                        }}>Cancel
-                        </button>
-                    </div>
+                            if (fileInputRef.current) {
+                                fileInputRef.current.value = "";
+                            }
+                        }}
+                        className="absolute top-2 right-2 text-gray-600 hover:text-red-600 text-lg font-bold"
+                        aria-label="Cancel image preview"
+                    >
+                        &times;
+                    </button>
+
+                    <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
+                    <img src={previewImage} alt="Preview" className="max-w-xs rounded"/>
                 </div>
             )}
 
@@ -292,7 +308,8 @@ export function Chat() {
                     placeholder="Message"
                     className="w-full px-2 py-1 text-sm border rounded bg-gray-100"
                 />
-                <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={handleSubmit}>Send</button>
+                <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={handleSendMessageSubmit}>Send
+                </button>
                 <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef}/>
             </div>
         </div>

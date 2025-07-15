@@ -29,15 +29,15 @@ export function Message({message}: { message: MessageModel }) {
                 )}
             >
                 <div className="flex flex-col space-y-1">
-                    {/* Message text or image */}
-                    {message.file ? (
+                    {message.file && (
                         <img
                             src={message.file}
                             alt="Sent image"
                             className="max-w-xs rounded"
                         />
-                    ) : (
-                        <span className="block">{message.content}</span>
+                    )}
+                    {message.content && (
+                        <span className="block whitespace-pre-wrap break-words">{message.content}</span>
                     )}
 
                     <div className="text-right text-xs text-gray-500">
