@@ -11,7 +11,7 @@ import {ConversationModel} from "../models/Conversation";
 
 export function Chat() {
     const [welcomeMessage, setWelcomeMessage] = useState("");
-    const [messageHistory, setMessageHistory] = useState<any>([]);
+    const [messageHistory, setMessageHistory] = useState<MessageModel[]>([]);
     const {user} = useContext(AuthContext);
     const [message, setMessage] = useState("");
     const [name, setName] = useState("");
@@ -21,9 +21,9 @@ export function Chat() {
     const [meTyping, setMeTyping] = useState(false);
     const [typing, setTyping] = useState(false);
     const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pingRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [participants, setParticipants] = useState<string[]>([]);
     const [conversation, setConversation] = useState<ConversationModel | null>(null);
-    const [shouldConnect, setShouldConnect] = useState(true);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [fileToUpload, setFileToUpload] = useState<File | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -42,17 +42,21 @@ export function Chat() {
     const {readyState, sendJsonMessage} = useWebSocket(
         user ? `${wsUrl}/chats/${conversationName}/` : null,
         {
-            shouldReconnect: () => false,
-            retryOnError: false,
             share: true,
-            queryParams: {
-                token: user ? user.token : "",
-            },
+            retryOnError: true,
+            reconnectAttempts: 20,
+            reconnectInterval: 5000,
+            shouldReconnect: (closeEvent) => closeEvent.code !== 1000,
+            queryParams: {token: user?.token ?? ""},
             onOpen: () => {
                 console.log("Connected!");
-                setInterval(() => sendJsonMessage({type: "ping"}), 30000);
+                pingRef.current = setInterval(() => sendJsonMessage({type: "ping"}), 30000);
             },
-            onClose: () => console.log("Disconnected Message!"),
+            onClose: () => {
+                console.log("Disconnected!");
+                if (pingRef.current) clearInterval(pingRef.current);
+            },
+            onError: (e) => console.error("WebSocket Error:", e),
             onMessage: (e) => {
                 const data = JSON.parse(e.data);
                 switch (data.type) {
@@ -90,31 +94,12 @@ export function Chat() {
                             )
                         );
                         break;
-                    case "pong":
-                        break;
-                    case "unread_count":
-                        break;
                     default:
-                        console.error("Unknown message type!", data.type);
                         break;
                 }
-            },
-            onError: (e) => console.error("WebSocket Error:", e),
-        },
-        shouldConnect
+            }
+        }
     );
-
-    const closeSocket = () => setShouldConnect(false);
-    const openSocket = () => setShouldConnect(true);
-
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") openSocket();
-        };
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        return () =>
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, []);
 
     const connectionStatus = {
         [ReadyState.CONNECTING]: "Connecting",
@@ -163,7 +148,7 @@ export function Chat() {
             const data = await res.json();
             setHasMoreMessages(data.next !== null);
             setPage(page + 1);
-            setMessageHistory((prev: MessageModel[]) => prev.concat(data.results));
+            setMessageHistory((prev) => prev.concat(data.results));
         }
     }
 
@@ -202,6 +187,7 @@ export function Chat() {
 
     useEffect(() => () => {
         if (timeout.current) clearTimeout(timeout.current);
+        if (pingRef.current) clearInterval(pingRef.current);
     }, []);
 
     function updateTyping(event: { user: string; typing: boolean }) {
@@ -236,7 +222,7 @@ export function Chat() {
                     file_url: data.file,
                     name,
                 });
-                setMessageHistory((prev: MessageModel[]) => [data, ...prev]);
+                setMessageHistory((prev) => [data, ...prev]);
                 setPreviewImage(null);
                 setFileToUpload(null);
             } else {
@@ -249,15 +235,10 @@ export function Chat() {
 
     return (
         <div className="flex flex-col h-[80vh] border rounded shadow-md">
-            {/* Header */}
             <div className="p-3 border-b bg-white">
                 <span className="text-xs text-gray-500">
                     WebSocket: {connectionStatus}
                 </span>
-                <div className="mt-2 flex gap-2">
-                    <button className="px-2 py-1 bg-gray-200 rounded" onClick={closeSocket}>Close</button>
-                    <button className="px-2 py-1 bg-gray-200 rounded" onClick={openSocket}>Open</button>
-                </div>
                 <p className="mt-2 text-sm text-gray-700">{welcomeMessage}</p>
                 {conversation && (
                     <div className="mt-2 text-sm">
@@ -271,7 +252,6 @@ export function Chat() {
                 )}
             </div>
 
-            {/* Messages */}
             <div id="scrollableDiv" className="flex-1 overflow-y-auto flex flex-col-reverse p-3 bg-gray-50">
                 <InfiniteScroll
                     dataLength={messageHistory.length}
@@ -279,34 +259,29 @@ export function Chat() {
                     className="flex flex-col-reverse"
                     inverse={true}
                     hasMore={hasMoreMessages}
-                    loader={<ChatLoader/>}
+                    loader={<ChatLoader />}
                     scrollableTarget="scrollableDiv"
                 >
-                    {messageHistory.map((message: MessageModel) => (
-                        <Message key={message.id} message={message}/>
+                    {messageHistory.map((message) => (
+                        <Message key={message.id} message={message} />
                     ))}
                 </InfiniteScroll>
             </div>
 
-            {/* Image Preview */}
             {previewImage && (
                 <div className="p-3 bg-gray-100 border-t">
                     <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
-                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2"/>
+                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2" />
                     <div className="flex gap-2">
-                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send
-                            Image
-                        </button>
+                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send</button>
                         <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => {
                             setPreviewImage(null);
                             setFileToUpload(null);
-                        }}>Cancel
-                        </button>
+                        }}>Cancel</button>
                     </div>
                 </div>
             )}
 
-            {/* Input */}
             <div className="border-t p-3 flex items-center space-x-2 bg-white">
                 <input
                     name="message"
@@ -319,7 +294,7 @@ export function Chat() {
                     className="w-full px-2 py-1 text-sm border rounded bg-gray-100"
                 />
                 <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={handleSubmit}>Send</button>
-                <input type="file" accept="image/*" onChange={handleImageUpload}/>
+                <input type="file" accept="image/*" onChange={handleImageUpload} />
             </div>
         </div>
     );
