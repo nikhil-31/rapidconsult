@@ -127,7 +127,6 @@ class ChatConsumer(JsonWebsocketConsumer):
                     }
                 )
 
-
             # Update unread count for user
             unread_count = Message.objects.filter(to_user=self.user, read=False).count()
             async_to_sync(self.channel_layer.group_send)(
@@ -137,6 +136,7 @@ class ChatConsumer(JsonWebsocketConsumer):
                     "unread_count": unread_count,
                 },
             )
+            messages_to_me.update(read=True)
 
         elif message_type == "ping":
             async_to_sync(self.channel_layer.group_send)(

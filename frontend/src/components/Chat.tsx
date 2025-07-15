@@ -1,21 +1,21 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import useWebSocket, { ReadyState } from "react-use-websocket";
-import { AuthContext } from "../contexts/AuthContext";
-import { useParams } from "react-router-dom";
-import { MessageModel } from "../models/MessageModel";
-import { Message } from "./Message";
-import { ChatLoader } from "./ChatLoader";
+import {useContext, useEffect, useRef, useState} from "react";
+import useWebSocket, {ReadyState} from "react-use-websocket";
+import {AuthContext} from "../contexts/AuthContext";
+import {useParams} from "react-router-dom";
+import {MessageModel} from "../models/MessageModel";
+import {Message} from "./Message";
+import {ChatLoader} from "./ChatLoader";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useHotkeys } from "react-hotkeys-hook";
-import { ConversationModel } from "../models/Conversation";
+import {useHotkeys} from "react-hotkeys-hook";
+import {ConversationModel} from "../models/Conversation";
 
 export function Chat() {
     const [welcomeMessage, setWelcomeMessage] = useState("");
     const [messageHistory, setMessageHistory] = useState<any>([]);
-    const { user } = useContext(AuthContext);
+    const {user} = useContext(AuthContext);
     const [message, setMessage] = useState("");
     const [name, setName] = useState("");
-    const { conversationName } = useParams();
+    const {conversationName} = useParams();
     const [page, setPage] = useState(2);
     const [hasMoreMessages, setHasMoreMessages] = useState(false);
     const [meTyping, setMeTyping] = useState(false);
@@ -32,14 +32,14 @@ export function Chat() {
     const inputReference: any = useHotkeys(
         "enter",
         () => handleSubmit(),
-        { enableOnTags: ["INPUT"] }
+        {enableOnTags: ["INPUT"]}
     );
 
     useEffect(() => {
         (inputReference.current as HTMLElement).focus();
     }, [inputReference]);
 
-    const { readyState, sendJsonMessage } = useWebSocket(
+    const {readyState, sendJsonMessage} = useWebSocket(
         user ? `${wsUrl}/chats/${conversationName}/` : null,
         {
             shouldReconnect: () => false,
@@ -50,7 +50,7 @@ export function Chat() {
             },
             onOpen: () => {
                 console.log("Connected!");
-                setInterval(() => sendJsonMessage({ type: "ping" }), 30000);
+                setInterval(() => sendJsonMessage({type: "ping"}), 30000);
             },
             onClose: () => console.log("Disconnected Message!"),
             onMessage: (e) => {
@@ -61,7 +61,7 @@ export function Chat() {
                         break;
                     case "chat_message_echo":
                         setMessageHistory((prev: any) => [data.message, ...prev]);
-                        sendJsonMessage({ type: "read_messages" });
+                        sendJsonMessage({type: "read_messages"});
                         break;
                     case "last_50_messages":
                         setMessageHistory(data.messages);
@@ -82,6 +82,17 @@ export function Chat() {
                         break;
                     case "online_user_list":
                         setParticipants(data.users);
+                        break;
+                    case "message_read":
+                        setMessageHistory((prev: MessageModel[]) =>
+                            prev.map((msg) =>
+                                msg.id === data.message_id ? {...msg, read: true} : msg
+                            )
+                        );
+                        break;
+                    case "pong":
+                        break;
+                    case "unread_count":
                         break;
                     default:
                         console.error("Unknown message type!", data.type);
@@ -115,7 +126,7 @@ export function Chat() {
 
     useEffect(() => {
         if (connectionStatus === "Open") {
-            sendJsonMessage({ type: "read_messages" });
+            sendJsonMessage({type: "read_messages"});
         }
     }, [connectionStatus]);
 
@@ -171,18 +182,19 @@ export function Chat() {
                 setConversation(data);
             }
         }
+
         fetchConversation();
     }, [conversationName, user]);
 
     function timeoutFunction() {
         setMeTyping(false);
-        sendJsonMessage({ type: "typing", typing: false });
+        sendJsonMessage({type: "typing", typing: false});
     }
 
     function onType() {
         if (!meTyping) {
             setMeTyping(true);
-            sendJsonMessage({ type: "typing", typing: true });
+            sendJsonMessage({type: "typing", typing: true});
         }
         if (timeout.current) clearTimeout(timeout.current);
         timeout.current = setTimeout(timeoutFunction, 5000);
@@ -213,7 +225,7 @@ export function Chat() {
         try {
             const res = await fetch(`${apiUrl}/api/messages/image/`, {
                 method: "POST",
-                headers: { Authorization: `Token ${user.token}` },
+                headers: {Authorization: `Token ${user.token}`},
                 body: formData,
             });
             if (res.ok) {
@@ -250,7 +262,8 @@ export function Chat() {
                 {conversation && (
                     <div className="mt-2 text-sm">
                         <strong>{conversation.other_user.username}</strong> is{" "}
-                        <span className={participants.includes(conversation.other_user.username) ? "text-green-600" : "text-red-500"}>
+                        <span
+                            className={participants.includes(conversation.other_user.username) ? "text-green-600" : "text-red-500"}>
                             {participants.includes(conversation.other_user.username) ? "online" : "offline"}
                         </span>
                         {typing && <p className="italic text-gray-500">typing...</p>}
@@ -266,11 +279,11 @@ export function Chat() {
                     className="flex flex-col-reverse"
                     inverse={true}
                     hasMore={hasMoreMessages}
-                    loader={<ChatLoader />}
+                    loader={<ChatLoader/>}
                     scrollableTarget="scrollableDiv"
                 >
                     {messageHistory.map((message: MessageModel) => (
-                        <Message key={message.id} message={message} />
+                        <Message key={message.id} message={message}/>
                     ))}
                 </InfiniteScroll>
             </div>
@@ -279,13 +292,16 @@ export function Chat() {
             {previewImage && (
                 <div className="p-3 bg-gray-100 border-t">
                     <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
-                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2" />
+                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2"/>
                     <div className="flex gap-2">
-                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send Image</button>
+                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send
+                            Image
+                        </button>
                         <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => {
                             setPreviewImage(null);
                             setFileToUpload(null);
-                        }}>Cancel</button>
+                        }}>Cancel
+                        </button>
                     </div>
                 </div>
             )}
@@ -303,7 +319,7 @@ export function Chat() {
                     className="w-full px-2 py-1 text-sm border rounded bg-gray-100"
                 />
                 <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={handleSubmit}>Send</button>
-                <input type="file" accept="image/*" onChange={handleImageUpload} />
+                <input type="file" accept="image/*" onChange={handleImageUpload}/>
             </div>
         </div>
     );
