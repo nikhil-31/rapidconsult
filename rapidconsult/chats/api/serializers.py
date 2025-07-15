@@ -37,7 +37,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def get_file(self, obj):
         if obj.file:
             try:
-                return obj.file.url  # ✅ This gives you the CDN URL if storage is configured
+                return obj.file.url
             except ValueError:
                 return None
         return None
