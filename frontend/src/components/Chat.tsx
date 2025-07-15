@@ -26,6 +26,7 @@ export function Chat() {
     const [conversation, setConversation] = useState<ConversationModel | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
     const wsUrl = process.env.REACT_APP_WS_URL;
 
@@ -216,15 +217,11 @@ export function Chat() {
             });
             if (res.ok) {
                 const data = await res.json();
-                sendJsonMessage({
-                    type: "chat_message",
-                    message: "",
-                    file_url: data.file,
-                    name,
-                });
-                setMessageHistory((prev) => [data, ...prev]);
                 setPreviewImage(null);
                 setFileToUpload(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
             } else {
                 console.error("Failed to send image");
             }
@@ -259,11 +256,11 @@ export function Chat() {
                     className="flex flex-col-reverse"
                     inverse={true}
                     hasMore={hasMoreMessages}
-                    loader={<ChatLoader />}
+                    loader={<ChatLoader/>}
                     scrollableTarget="scrollableDiv"
                 >
                     {messageHistory.map((message) => (
-                        <Message key={message.id} message={message} />
+                        <Message key={message.id} message={message}/>
                     ))}
                 </InfiniteScroll>
             </div>
@@ -271,13 +268,15 @@ export function Chat() {
             {previewImage && (
                 <div className="p-3 bg-gray-100 border-t">
                     <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
-                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2" />
+                    <img src={previewImage} alt="Preview" className="max-w-xs rounded mb-2"/>
                     <div className="flex gap-2">
-                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send</button>
+                        <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={handleSendImage}>Send
+                        </button>
                         <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => {
                             setPreviewImage(null);
                             setFileToUpload(null);
-                        }}>Cancel</button>
+                        }}>Cancel
+                        </button>
                     </div>
                 </div>
             )}
@@ -294,7 +293,7 @@ export function Chat() {
                     className="w-full px-2 py-1 text-sm border rounded bg-gray-100"
                 />
                 <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={handleSubmit}>Send</button>
-                <input type="file" accept="image/*" onChange={handleImageUpload} />
+                <input type="file" accept="image/*" onChange={handleImageUpload} ref={fileInputRef}/>
             </div>
         </div>
     );

@@ -8,6 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from rapidconsult.chats.models import Conversation, Message, User
 from .paginaters import MessagePagination
 from .serializers import ConversationSerializer, MessageSerializer
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 class ConversationViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -68,5 +70,16 @@ class ImageMessageUploadView(APIView):
             file=file,
             conversation=conversation,
             content='Image'  # optional
+        )
+
+        # ✅ Send the message to WebSocket group
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            conversation_name,
+            {
+                "type": "chat_message_echo",
+                "name": request.user.username,
+                "message": MessageSerializer(msg).data,
+            }
         )
         return Response(MessageSerializer(msg).data)
