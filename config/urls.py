@@ -8,9 +8,9 @@ from django.views import defaults as default_views
 from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
 
-from chats.api.views import ImageMessageUploadView
 from rapidconsult.users.api.views import CustomObtainAuthTokenView
 from rapidconsult.chats.views import HomePageView
+from rapidconsult.chats.api.views import ImageMessageUploadView
 
 urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
