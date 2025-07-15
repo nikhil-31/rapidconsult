@@ -116,7 +116,6 @@ class ChatConsumer(JsonWebsocketConsumer):
         elif message_type == "read_messages":
             # Mark all messages sent *to me* as read
             messages_to_me = self.conversation.messages.filter(to_user=self.user, read=False)
-            messages_to_me.update(read=True)
 
             for msg in messages_to_me:
                 async_to_sync(self.channel_layer.group_send)(
