@@ -29,23 +29,14 @@ export function Navbar() {
                     </button>
                     <div className="hidden w-full md:block md:w-auto text-center" id="mobile-menu">
                         <ul className="flex flex-col items-center mt-4 md:flex-row md:justify-center md:space-x-8 md:mt-0 md:text-sm md:font-medium">
-                            <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link></li>
-                            <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link></li>
-                            <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Messages</Link></li>
-                            <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Contacts</Link></li>
-                            {/*                  <li>*/}
-                            {/*                      <Link to="/conversations" className="block py-2 pr-4 pl-3 text-black md:p-0">*/}
-                            {/*                          Contacts*/}
-                            {/*                          {unreadMessageCount > 0 && (*/}
-                            {/*                              <span*/}
-                            {/*                                  className="ml-2 inline-flex items-center justify-center h-6 w-6 rounded-full bg-white">*/}
-                            {/*  <span className="text-xs font-medium leading-none text-black">*/}
-                            {/*    {unreadMessageCount}*/}
-                            {/*  </span>*/}
-                            {/*</span>*/}
-                            {/*                          )}*/}
-                            {/*                      </Link>*/}
-                            {/*                  </li>*/}
+                            {user && (
+                                <>
+                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link></li>
+                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link></li>
+                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Messages</Link></li>
+                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Contacts</Link></li>
+                                </>
+                            )}
                             <li>
                                 {!user ? (
                                     <Link to="/login" className="block py-2 pr-4 pl-3 text-black md:p-0">Login</Link>

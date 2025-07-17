@@ -37,13 +37,13 @@ export function Login() {
     }, [user]);
 
     return (
-        <div>
-            <div className="w-full max-w-md space-y-8">
+        <div className="flex flex-1 items-center justify-center bg-white h-[calc(60vh-80px)]">
+            <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg shadow-md">
                 <div>
-                    <h1 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in to your account</h1>
+                    <h1 className="mt-6 text-3xl font-bold text-gray-900 text-center">Rapidconsult</h1>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={formik.handleSubmit}>
+                <form className="mt-4 space-y-2" onSubmit={formik.handleSubmit}>
                     {error && <div>{JSON.stringify(error)}</div>}
 
                     <div className="-space-y-px rounded-md">
