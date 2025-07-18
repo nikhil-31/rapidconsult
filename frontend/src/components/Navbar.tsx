@@ -68,7 +68,7 @@ export function Navbar() {
                                             className="flex items-center gap-2 focus:outline-none"
                                         >
                                             <img
-                                                src={user.profile_picture || "/default-avatar.png"}
+                                                src={user.profile_picture || "/doctor-default.png"}
                                                 alt="Profile"
                                                 className="w-8 h-8 rounded-full object-cover"
                                             />
