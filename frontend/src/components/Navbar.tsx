@@ -1,5 +1,5 @@
 import {Link, Outlet} from "react-router-dom";
-import {useContext} from "react";
+import {useContext, useState, useRef, useEffect} from "react";
 import {AuthContext} from "../contexts/AuthContext";
 import {NotificationContext} from "../contexts/NotificationContext";
 
@@ -7,6 +7,19 @@ import {NotificationContext} from "../contexts/NotificationContext";
 export function Navbar() {
     const {user, logout} = useContext(AuthContext);
     const {unreadMessageCount} = useContext(NotificationContext)
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLLIElement | null>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <>
@@ -27,6 +40,7 @@ export function Navbar() {
                         <span className="sr-only">Open main menu</span>
                         {/* ...hamburger and close icons... */}
                     </button>
+
                     <div className="hidden w-full md:block md:w-auto text-center" id="mobile-menu">
                         <ul className="flex flex-col items-center mt-4 md:flex-row md:justify-center md:space-x-8 md:mt-0 md:text-sm md:font-medium">
                             {user && (
@@ -45,27 +59,36 @@ export function Navbar() {
                                     </li>
                                 </>
                             )}
-                            <li className="flex items-center gap-2">
+
+                            <li className="relative" ref={dropdownRef}>
                                 {user ? (
                                     <>
-                                        {/* Profile Picture */}
-                                        {user.profile_picture && (
+                                        <button
+                                            onClick={() => setDropdownOpen((prev) => !prev)}
+                                            className="flex items-center gap-2 focus:outline-none"
+                                        >
                                             <img
-                                                src={user.profile_picture}
+                                                src={user.profile_picture || "/default-avatar.png"}
                                                 alt="Profile"
                                                 className="w-8 h-8 rounded-full object-cover"
                                             />
-                                        )}
-                                        {/* Username */}
-                                        <span className="text-black block py-2 pr-4 pl-3 md:p-0">
-            Logged in: {user.username}</span>
-                                        {/* Logout Button */}
-                                        <button
-                                            className="block py-2 pr-4 pl-3 text-black md:p-0"
-                                            onClick={logout}
-                                        >
-                                            Logout
                                         </button>
+
+                                        {dropdownOpen && (
+                                            <div
+                                                className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                                                <div className="px-4 py-2 text-sm text-gray-700">
+                                                    Logged in: <strong>{user.username}</strong>
+                                                </div>
+                                                <hr className="border-gray-200"/>
+                                                <button
+                                                    onClick={logout}
+                                                    className="block w-full  px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                                >
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        )}
                                     </>
                                 ) : (
                                     <Link to="/login" className="block py-2 pr-4 pl-3 text-black md:p-0">Login</Link>
