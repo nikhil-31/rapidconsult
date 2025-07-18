@@ -15,6 +15,15 @@ export function Message({message}: { message: MessageModel }) {
         return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     }
 
+    function formatDate(timestamp: string) {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString([], {
+            // year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
     return (
         <li
             className={classNames(
@@ -41,15 +50,20 @@ export function Message({message}: { message: MessageModel }) {
                     )}
 
                     <div className="text-right text-xs text-gray-500">
-                        {formatMessageTimestamp(message.timestamp)}
-                        {isOwnMessage && (
-                            <span className="ml-1">
-                {message.read ? "✓✓ Read" : "✓ Sent"}
-              </span>
-                        )}
+                        {/* Date */}
+                        {/*<div className="text-[10px]">{formatDate(message.timestamp)}</div>*/}
+                        {/* Time + Read Receipt */}
+
+                        <div>
+                            {formatMessageTimestamp(message.timestamp)}, {formatDate(message.timestamp)}
+                            {isOwnMessage && (
+                                <span className="ml-1">{message.read ? "✓✓ Read" : "✓ Sent"}</span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
         </li>
+
     );
 }
