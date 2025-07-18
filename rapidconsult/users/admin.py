@@ -1,41 +1,26 @@
-from allauth.account.decorators import secure_admin_login
-from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth import admin as auth_admin
-from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.admin import UserAdmin
 
-# from .forms import UserAdminChangeForm
-# from .forms import UserAdminCreationForm
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import User
-
-if settings.DJANGO_ADMIN_FORCE_ALLAUTH:
-    # Force the `admin` sign in process to go through the `django-allauth` workflow:
-    # https://docs.allauth.org/en/latest/common/admin.html#admin
-    admin.autodiscover()
-    admin.site.login = secure_admin_login(admin.site.login)  # type: ignore[method-assign]
 
 
 @admin.register(User)
-class UserAdmin(auth_admin.UserAdmin):
-    # form = UserAdminChangeForm
-    # add_form = UserAdminCreationForm
-    # fieldsets = (
-    #     (None, {"fields": ("username", "password")}),
-    #     (_("Personal info"), {"fields": ("name", "email")}),
-    #     (
-    #         _("Permissions"),
-    #         {
-    #             "fields": (
-    #                 "is_active",
-    #                 "is_staff",
-    #                 "is_superuser",
-    #                 "groups",
-    #                 "user_permissions",
-    #             ),
-    #         },
-    #     ),
-    #     (_("Important dates"), {"fields": ("last_login", "date_joined")}),
-    # )
-    # list_display = ["username", "name", "is_superuser"]
-    # search_fields = ["name"]
-    pass
+class CustomUserAdmin(UserAdmin):
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
+    model = User
+    list_display = ("email", "username", "is_staff", "is_active", "profile_picture")
+    list_filter = ("is_staff", "is_active", "profile_picture")
+    fieldsets = (
+        (None, {"fields": ("username", "email", "password", "profile_picture")}),
+        ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions")}),
+    )
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("username", "email", "password1", "password2", "is_staff", "is_active", "profile_picture"),}
+        ),
+    )
+    search_fields = ("email",)
+    ordering = ("email",)

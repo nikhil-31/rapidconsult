@@ -31,19 +31,35 @@ export function Navbar() {
                         <ul className="flex flex-col items-center mt-4 md:flex-row md:justify-center md:space-x-8 md:mt-0 md:text-sm md:font-medium">
                             {user && (
                                 <>
-                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link></li>
-                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link></li>
-                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Messages</Link></li>
-                                    <li><Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Contacts</Link></li>
+                                    <li>
+                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Messages</Link>
+                                    </li>
+                                    <li>
+                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Contacts</Link>
+                                    </li>
                                 </>
                             )}
-                            <li>
-                                {!user ? (
-                                    <Link to="/login" className="block py-2 pr-4 pl-3 text-black md:p-0">Login</Link>
-                                ) : (
+                            <li className="flex items-center gap-2">
+                                {user ? (
                                     <>
-                                        <span
-                                            className="text-black block py-2 pr-4 pl-3 md:p-0">Logged in: {user.username}</span>
+                                        {/* Profile Picture */}
+                                        {user.profile_picture && (
+                                            <img
+                                                src={user.profile_picture}
+                                                alt="Profile"
+                                                className="w-8 h-8 rounded-full object-cover"
+                                            />
+                                        )}
+                                        {/* Username */}
+                                        <span className="text-black block py-2 pr-4 pl-3 md:p-0">
+            Logged in: {user.username}</span>
+                                        {/* Logout Button */}
                                         <button
                                             className="block py-2 pr-4 pl-3 text-black md:p-0"
                                             onClick={logout}
@@ -51,10 +67,13 @@ export function Navbar() {
                                             Logout
                                         </button>
                                     </>
+                                ) : (
+                                    <Link to="/login" className="block py-2 pr-4 pl-3 text-black md:p-0">Login</Link>
                                 )}
                             </li>
                         </ul>
                     </div>
+
 
                 </div>
             </nav>

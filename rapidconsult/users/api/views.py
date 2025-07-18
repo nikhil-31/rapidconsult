@@ -41,4 +41,11 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
-        return Response({"token": token.key, "username": user.username})
+        return Response(
+            {
+                "token": token.key,
+                "username": user.username,
+                "profile_picture": request.build_absolute_uri(user.profile_picture.url)
+                if user.profile_picture else None
+            }
+        )
