@@ -8,6 +8,7 @@ import {ProtectedRoute} from "./components/ProtectedRoute";
 import {Conversations} from "./components/Conversations";
 import {ActiveConversations} from "./components/ActiveConversations";
 import {NotificationContextProvider} from "./contexts/NotificationContext";
+import OnCall from "./components/Schedules";
 
 
 export default function App() {
@@ -34,6 +35,8 @@ export default function App() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route path="/oncall" element={<Conversations/>}/>
+                    <Route path="/schedules" element={<OnCall/>}/>
                     <Route
                         path="conversations/"
                         element={

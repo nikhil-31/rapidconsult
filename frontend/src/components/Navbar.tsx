@@ -46,10 +46,10 @@ export function Navbar() {
                             {user && (
                                 <>
                                     <li>
-                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link>
+                                        <Link to="/schedules" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link>
                                     </li>
                                     <li>
-                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link>
+                                        <Link to="/oncall" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link>
                                     </li>
                                     <li>
                                         <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Messages</Link>
