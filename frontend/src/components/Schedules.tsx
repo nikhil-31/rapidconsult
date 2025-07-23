@@ -94,31 +94,39 @@ export const CalendarView = () => {
     };
 
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">On-Call Shift Calendar</h2>
-            <Calendar
-                localizer={localizer}
-                events={events}
-                startAccessor="start"
-                endAccessor="end"
-                views={[Views.DAY, Views.WEEK, Views.MONTH]}
-                view={view}
-                onView={setView}
-                date={date}
-                onNavigate={(newDate) => setDate(newDate)}
-                onSelectEvent={handleSelectEvent}
-                selectable
-                onSelectSlot={handleSelectSlot}
-                style={{height: 600}}
-            />
+        <div className="flex flex-col h-full">
+            {/* Content wrapper that fills remaining space */}
+            <div className="flex-1 flex items-center justify-center">
+                <div className="p-4 w-full max-w-5xl h-full flex flex-col">
+                    <h2 className="text-xl font-bold mb-4">On-Call Shift Calendar</h2>
 
-            <ShiftEditDialog
-                isOpen={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-                shiftId={selectedShiftId}
-                onSaved={fetchEvents}
-                defaultTimeRange={selectedSlotTime}
-            />
+                    <div className="flex-1">
+                        <Calendar
+                            localizer={localizer}
+                            events={events}
+                            startAccessor="start"
+                            endAccessor="end"
+                            views={[Views.DAY, Views.WEEK, Views.MONTH]}
+                            view={view}
+                            onView={setView}
+                            date={date}
+                            onNavigate={(newDate) => setDate(newDate)}
+                            onSelectEvent={handleSelectEvent}
+                            selectable
+                            onSelectSlot={handleSelectSlot}
+                            style={{height: 600}} // fill container
+                        />
+
+                        {/*<ShiftEditDialog*/}
+                        {/*    isOpen={dialogOpen}*/}
+                        {/*    onClose={() => setDialogOpen(false)}*/}
+                        {/*    shiftId={selectedShiftId}*/}
+                        {/*    onSaved={fetchEvents}*/}
+                        {/*    defaultTimeRange={selectedSlotTime}*/}
+                        {/*/>*/}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
