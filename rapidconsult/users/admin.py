@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import User
+from .models import User, Contact
 
 
 @admin.register(User)
@@ -24,3 +24,19 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ("email",)
     ordering = ("email",)
+
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'label',
+        'number',
+        'country_code',
+        'type',
+        'verified',
+        'primary',
+    )
+    list_filter = ('type', 'verified', 'primary')
+    search_fields = ('user__username', 'label', 'number', 'country_code')
+    autocomplete_fields = ('user',)
