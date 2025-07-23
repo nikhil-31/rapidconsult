@@ -9,6 +9,8 @@ import {Conversations} from "./components/Conversations";
 import {ActiveConversations} from "./components/ActiveConversations";
 import {NotificationContextProvider} from "./contexts/NotificationContext";
 import CalendarView from "./components/Schedules";
+import {OnCall} from "./components/OnCall";
+import {Contacts} from "./components/Contacts";
 
 
 export default function App() {
@@ -35,7 +37,8 @@ export default function App() {
                             </ProtectedRoute>
                         }
                     />
-                    <Route path="/oncall" element={<Conversations/>}/>
+                    <Route path="/oncall" element={<OnCall/>}/>
+                    <Route path="/contacts" element={<Contacts/>}/>
                     <Route path="/schedules" element={<CalendarView/>}/>
                     <Route
                         path="conversations/"

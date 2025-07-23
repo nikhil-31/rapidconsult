@@ -1,14 +1,14 @@
-import {Link, Outlet} from "react-router-dom";
+import {Link, Outlet, useLocation} from "react-router-dom";
 import {useContext, useState, useRef, useEffect} from "react";
 import {AuthContext} from "../contexts/AuthContext";
 import {NotificationContext} from "../contexts/NotificationContext";
 
-
 export function Navbar() {
     const {user, logout} = useContext(AuthContext);
-    const {unreadMessageCount} = useContext(NotificationContext)
+    const {unreadMessageCount} = useContext(NotificationContext);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLLIElement | null>(null);
+    const location = useLocation();
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -21,15 +21,19 @@ export function Navbar() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const isActive = (path: string) =>
+        location.pathname === path || location.pathname.startsWith(path + "/");
+
     return (
         <>
             <nav className="bg-white shadow-md px-4 sm:px-6 py-2.5 rounded mb-6">
                 <div className="max-w-5xl mx-auto flex flex-wrap justify-between items-center">
                     <Link to="/" className="flex items-center">
-        <span className="self-center text-xl font-semibold whitespace-nowrap text-black">
-          RapidConsult
-        </span>
+                        <span className="self-center text-xl font-semibold whitespace-nowrap text-black">
+                            RapidConsult
+                        </span>
                     </Link>
+
                     <button
                         data-collapse-toggle="mobile-menu"
                         type="button"
@@ -46,16 +50,58 @@ export function Navbar() {
                             {user && (
                                 <>
                                     <li>
-                                        <Link to="/schedules" className="block py-2 pr-4 pl-3 text-black md:p-0">Schedules</Link>
+                                        <Link
+                                            to="/schedules"
+                                            className={`block py-2 pr-4 pl-3 md:p-0 ${
+                                                isActive("/schedules")
+                                                    ? "text-red-700 font-semibold"
+                                                    : "text-black"
+                                            }`}
+                                        >
+                                            Schedules
+                                        </Link>
                                     </li>
                                     <li>
-                                        <Link to="/oncall" className="block py-2 pr-4 pl-3 text-black md:p-0">On-Call</Link>
+                                        <Link
+                                            to="/oncall"
+                                            className={`block py-2 pr-4 pl-3 md:p-0 ${
+                                                location.pathname === "/oncall"
+                                                    ? "text-red-700 font-semibold"
+                                                    : "text-black"
+                                            }`}
+                                        >
+                                            On-Call
+                                        </Link>
                                     </li>
                                     <li>
-                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Messages</Link>
+                                        <Link
+                                            to="/"
+                                            className={`block py-2 pr-4 pl-3 md:p-0 ${
+                                                isActive("/")
+                                                    ? "text-red-700 font-semibold"
+                                                    : "text-black"
+                                            }`}
+                                        >
+                                            Messages
+                                            {unreadMessageCount > 0 && (
+                                                <span
+                                                    className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                                                    {unreadMessageCount}
+                                                </span>
+                                            )}
+                                        </Link>
                                     </li>
                                     <li>
-                                        <Link to="/" className="block py-2 pr-4 pl-3 text-black md:p-0">Contacts</Link>
+                                        <Link
+                                            to="/contacts"
+                                            className={`block py-2 pr-4 pl-3 md:p-0 ${
+                                                isActive("/contacts")
+                                                    ? "text-red-700 font-semibold"
+                                                    : "text-black"
+                                            }`}
+                                        >
+                                            Contacts
+                                        </Link>
                                     </li>
                                 </>
                             )}
@@ -83,7 +129,7 @@ export function Navbar() {
                                                 <hr className="border-gray-200"/>
                                                 <button
                                                     onClick={logout}
-                                                    className="block w-full  px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                                    className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                                                 >
                                                     Logout
                                                 </button>
@@ -91,17 +137,24 @@ export function Navbar() {
                                         )}
                                     </>
                                 ) : (
-                                    <Link to="/login" className="block py-2 pr-4 pl-3 text-black md:p-0">Login</Link>
+                                    <Link
+                                        to="/login"
+                                        className={`block py-2 pr-4 pl-3 md:p-0 ${
+                                            isActive("/login")
+                                                ? "text-red-700 font-semibold"
+                                                : "text-black"
+                                        }`}
+                                    >
+                                        Login
+                                    </Link>
                                 )}
                             </li>
                         </ul>
                     </div>
-
-
                 </div>
             </nav>
 
-            {/* Main content area with adequate spacing */}
+            {/* Main content area */}
             <div className="max-w-5xl mx-auto py-6 bg-white text-black">
                 <Outlet/>
             </div>
