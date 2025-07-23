@@ -27,7 +27,7 @@ export function Navbar() {
     return (
         <>
             <div className="flex flex-col min-h-screen">
-                <nav className="bg-white shadow-md px-4 sm:px-6 py-2.5 rounded ">
+                <nav className="bg-white shadow-md px-4 sm:px-6 py-2.5 rounded">
                     <div className="max-w-5xl mx-auto flex flex-wrap justify-between items-center">
                         <Link to="/" className="flex items-center">
                         <span className="self-center text-xl font-semibold whitespace-nowrap text-black">
@@ -154,6 +154,8 @@ export function Navbar() {
                         </div>
                     </div>
                 </nav>
+
+                <hr className="border-t border-gray-300"/>
 
                 {/* Main content area */}
                 <div className="flex-1 overflow-auto bg-white ">
