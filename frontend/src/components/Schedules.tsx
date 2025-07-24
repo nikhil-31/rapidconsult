@@ -81,7 +81,7 @@ export const CalendarView = () => {
     };
 
     useEffect(() => {
-        fetchEvents();
+        // fetchEvents();
     }, []);
 
     const handleSelectEvent = (event: EventData) => {

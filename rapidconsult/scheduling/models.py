@@ -55,10 +55,9 @@ class Department(models.Model):
 
 
 class UserOrgProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    # profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='org_profiles')
     organisation = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="on_call_shifts", null=True, blank=True)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="org_roles", null=True, blank=True)
     job_title = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):

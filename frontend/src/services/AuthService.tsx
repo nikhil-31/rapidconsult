@@ -14,6 +14,10 @@ class AuthService {
 
     setUserInLocalStorage(data: UserModel) {
         localStorage.setItem("user", JSON.stringify(data));
+        if (data.organizations && data.organizations.length > 0) {
+            const firstOrg = data.organizations[0];
+            localStorage.setItem("org_select", JSON.stringify(firstOrg));
+        }
     }
 
     async login(username: string, password: string): Promise<UserModel> {
@@ -27,6 +31,7 @@ class AuthService {
 
     logout() {
         localStorage.removeItem("user");
+        localStorage.removeItem("org_select");
     }
 
     getCurrentUser() {

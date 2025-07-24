@@ -11,6 +11,7 @@ from rest_framework.authtoken.models import Token
 from rapidconsult.users.models import User
 
 from .serializers import UserSerializer
+from config.roles import get_permissions_for_role
 
 
 class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericViewSet):
@@ -41,11 +42,23 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
-        return Response(
-            {
-                "token": token.key,
-                "username": user.username,
-                "profile_picture": request.build_absolute_uri(user.profile_picture.url)
-                if user.profile_picture else None
-            }
-        )
+
+        org_profiles = user.org_profiles.select_related('organisation', 'role')
+        orgs_data = []
+        for profile in org_profiles:
+            orgs_data.append({
+                "organization_id": profile.organisation.id,
+                "organization_name": profile.organisation.name,
+                "role": profile.role.name if profile.role else None,
+                "job_title": profile.job_title,
+                # Add any derived permissions if needed:
+                "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
+            })
+
+        return Response({
+            "token": token.key,
+            "username": user.username,
+            "profile_picture": request.build_absolute_uri(user.profile_picture.url)
+            if user.profile_picture else None,
+            "organizations": orgs_data
+        })

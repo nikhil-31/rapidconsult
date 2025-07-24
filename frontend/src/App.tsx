@@ -11,45 +11,48 @@ import {NotificationContextProvider} from "./contexts/NotificationContext";
 import CalendarView from "./components/Schedules";
 import {OnCall} from "./components/OnCall";
 import {Contacts} from "./components/Contacts";
+import {OrgProvider} from "./contexts/OrgContext";
 
 
 export default function App() {
     return (
         <BrowserRouter>
-            <Routes>
-                <Route
-                    path="/"
-                    element={
-                        <AuthContextProvider>
-                            <NotificationContextProvider>
-                                <Navbar/>
-                            </NotificationContextProvider>
-                        </AuthContextProvider>
-                    }
-                >
-                    <Route path="login" element={<Login/>}/>
-                    <Route path="" element={<Conversations/>}/>
+            <OrgProvider>
+                <Routes>
                     <Route
-                        path="chats/:conversationName"
+                        path="/"
                         element={
-                            <ProtectedRoute>
-                                <Chat/>
-                            </ProtectedRoute>
+                            <AuthContextProvider>
+                                <NotificationContextProvider>
+                                    <Navbar/>
+                                </NotificationContextProvider>
+                            </AuthContextProvider>
                         }
-                    />
-                    <Route path="/oncall" element={<OnCall/>}/>
-                    <Route path="/contacts" element={<Contacts/>}/>
-                    <Route path="/schedules" element={<CalendarView/>}/>
-                    <Route
-                        path="conversations/"
-                        element={
-                            <ProtectedRoute>
-                                <ActiveConversations/>
-                            </ProtectedRoute>
-                        }
-                    />
-                </Route>
-            </Routes>
+                    >
+                        <Route path="login" element={<Login/>}/>
+                        <Route path="" element={<Conversations/>}/>
+                        <Route
+                            path="chats/:conversationName"
+                            element={
+                                <ProtectedRoute>
+                                    <Chat/>
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="/oncall" element={<OnCall/>}/>
+                        <Route path="/contacts" element={<Contacts/>}/>
+                        <Route path="/schedules" element={<CalendarView/>}/>
+                        <Route
+                            path="conversations/"
+                            element={
+                                <ProtectedRoute>
+                                    <ActiveConversations/>
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Route>
+                </Routes>
+            </OrgProvider>
         </BrowserRouter>
     );
 }

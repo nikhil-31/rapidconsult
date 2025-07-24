@@ -59,7 +59,7 @@ class ImageMessageUploadView(APIView):
     def post(self, request):
         file = request.data.get('file')
         conversation_name = request.data.get('conversation')
-        content = request.data.get('content')
+        content = request.data.get('content') or ""
 
         if not file or not conversation_name:
             return Response({'error': 'Missing data'}, status=400)
