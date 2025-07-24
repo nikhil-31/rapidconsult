@@ -44,11 +44,23 @@ class UserOrgProfileAdmin(admin.ModelAdmin):
     list_filter = ('organisation', 'role')
 
 
+class UnitMembershipInline(admin.TabularInline):
+    model = UnitMembership
+    extra = 1
+    autocomplete_fields = ['user']
+
+
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'department')
+    inlines = [UnitMembershipInline]
+    list_display = ('id', 'name', 'department', "get_members")
     search_fields = ('name',)
     list_filter = ('department',)
+
+    def get_members(self, obj):
+        return ", ".join([str(user) for user in obj.members.all()])
+
+    get_members.short_description = "Members"
 
 
 @admin.register(UnitMembership)

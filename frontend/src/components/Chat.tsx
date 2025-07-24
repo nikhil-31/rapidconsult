@@ -13,7 +13,7 @@ import { ChatLoader } from "./ChatLoader";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useHotkeys } from "react-hotkeys-hook";
 import { ConversationModel } from "../models/Conversation";
-import { UploadCloud } from "lucide-react"; // ← Icon import
+import { UploadCloud } from "lucide-react";
 
 export function Chat() {
     const [welcomeMessage, setWelcomeMessage] = useState("");
