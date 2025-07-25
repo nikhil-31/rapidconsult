@@ -206,6 +206,20 @@ export function Navbar() {
                                                         Logged in: <strong>{user.username}</strong>
                                                     </div>
                                                     <hr className="border-gray-200"/>
+                                                    <Link
+                                                        to="/profile"
+                                                        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        Profile
+                                                    </Link>
+                                                    <hr className="border-gray-200"/>
+                                                    <Link
+                                                        to="/admin"
+                                                        className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                                    >
+                                                        Admin
+                                                    </Link>
+                                                    <hr className="border-gray-200"/>
                                                     <button
                                                         onClick={logout}
                                                         className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
@@ -236,7 +250,7 @@ export function Navbar() {
                 <hr className="border-t border-gray-300"/>
 
                 {/* Main content area */}
-                <div className="flex-1 overflow-auto bg-green-600 ">
+                <div className="flex-1 overflow-auto bg-white ">
                     <Outlet/>
                 </div>
             </div>

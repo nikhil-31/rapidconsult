@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership
+from scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role
+from users.api.serializers import ContactSerializer
+from rapidconsult.users.models import User
 
 User = get_user_model()
 
@@ -59,15 +61,28 @@ class UnitSerializer(serializers.ModelSerializer):
         ]
 
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name']
+
+
 class UserOrgProfileSerializer(serializers.ModelSerializer):
+    organisation = OrganizationSerializer()
+    role = RoleSerializer()
+
     class Meta:
         model = UserOrgProfile
-        fields = ['id', 'user', 'job_title', 'role']
+        fields = ['id', 'organisation', 'role', 'job_title']
 
 
-class UnitMembershipSerializer(serializers.ModelSerializer):
-    user = UserOrgProfileSerializer()
+class UserProfileSerializer(serializers.ModelSerializer):
+    contacts = ContactSerializer(source='phone_numbers', many=True)
+    organizations = UserOrgProfileSerializer(source='org_profiles', many=True)
 
     class Meta:
-        model = UnitMembership
-        fields = ['user', 'joined_at', 'is_admin']
+        model = User
+        fields = [
+            'id', 'username', 'name', 'email', 'profile_picture',
+            'contacts', 'organizations'
+        ]

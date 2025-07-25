@@ -1,7 +1,12 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from scheduling.models import Location, Department, Unit, Organization
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer
-from rest_framework.permissions import IsAuthenticated
+from .serializers import UserProfileSerializer
+from rapidconsult.users.models import User
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -47,3 +52,12 @@ class UnitViewSet(viewsets.ModelViewSet):
         if department_id:
             queryset = queryset.filter(department__id=department_id)
         return queryset
+
+
+
+class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)

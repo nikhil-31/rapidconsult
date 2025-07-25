@@ -4,7 +4,8 @@ from rest_framework.routers import SimpleRouter
 
 from rapidconsult.chats.api.views import ConversationViewSet, MessageViewSet
 from rapidconsult.users.api.views import UserViewSet
-from rapidconsult.scheduling.api.views import LocationViewSet, DepartmentViewSet, UnitViewSet, OrganizationViewSet
+from rapidconsult.scheduling.api.views import (LocationViewSet, DepartmentViewSet, UnitViewSet, OrganizationViewSet,
+                                               UserProfileViewSet)
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
@@ -15,6 +16,7 @@ router.register("locations", LocationViewSet)
 router.register("departments", DepartmentViewSet)
 router.register("units", UnitViewSet)
 router.register("organizations", OrganizationViewSet)
+router.register("profile", UserProfileViewSet, basename="profile")
 
 app_name = "api"
 urlpatterns = router.urls
