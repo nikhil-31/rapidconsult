@@ -9,11 +9,15 @@ class UserSerializer(serializers.ModelSerializer[User]):
         fields = ["username", "name", "profile_picture", "pk"]
 
 
-
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = [
-            'id', 'number', 'country_code', 'label',
-            'verified', 'primary', 'type'
-        ]
+        fields = ['id', 'label', 'type', 'country_code', 'number', 'primary']
+        read_only_fields = ['id']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if data.get('primary'):
+            # Unset any other primary contact
+            Contact.objects.filter(user=user, primary=True).update(primary=False)
+        return data

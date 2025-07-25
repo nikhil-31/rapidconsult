@@ -8,10 +8,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.authtoken.models import Token
 
-from rapidconsult.users.models import User
+from rapidconsult.users.models import User, Contact
 
 from .serializers import UserSerializer
 from config.roles import get_permissions_for_role
+from rest_framework import viewsets, permissions
+from .serializers import ContactSerializer
 
 
 class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericViewSet):
@@ -62,3 +64,14 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
             if user.profile_picture else None,
             "organizations": orgs_data
         })
+
+
+class ContactViewSet(viewsets.ModelViewSet):
+    serializer_class = ContactSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Contact.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

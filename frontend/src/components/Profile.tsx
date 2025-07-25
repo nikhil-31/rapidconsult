@@ -1,66 +1,61 @@
+// pages/Profile.tsx
 import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from "../contexts/AuthContext";
-
-interface Address {
-    address_1: string;
-    address_2?: string;
-    city: string;
-    state: string;
-    zip_code: string;
-    lat?: number;
-    lon?: number;
-    label?: string;
-}
-
-interface Contact {
-    label: string;
-    number: string;
-    country_code: string;
-    type: string;
-    primary: boolean;
-}
-
-interface OrganizationProfile {
-    id: number;
-    organisation: {
-        id: number;
-        name: string;
-        address: Address;
-        display_picture: string | null;
-    };
-    role: {
-        id: number;
-        name: string;
-    };
-    job_title: string;
-}
-
-interface UserProfile {
-    id: number;
-    username: string;
-    name: string;
-    email: string;
-    profile_picture: string;
-    contacts: Contact[];
-    organizations: OrganizationProfile[];
-}
+import ContactFormModal from "../components/ContactModal";
 
 const Profile = () => {
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const {user} = useContext(AuthContext);
+    const [profile, setProfile] = useState<any>(null);
+    const [showForm, setShowForm] = useState(false);
+    const [editingContact, setEditingContact] = useState<any | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
+    const {user} = useContext(AuthContext);
+
+    const fetchProfile = async () => {
+        try {
+            const res = await axios.get(`${apiUrl}/api/profile/`, {
+                headers: {Authorization: `Token ${user?.token}`}
+            });
+            setProfile(res.data[0]);
+        } catch (err) {
+            console.error('Failed to load profile', err);
+        }
+    };
 
     useEffect(() => {
-        axios.get(`${apiUrl}/api/profile/`, {
-            headers: {
-                Authorization: `Token ${user?.token}`,
-            },
-        }).then(res => {
-            const userData = res.data[0]; // assuming the current user is always the first
-            setProfile(userData);
-        }).catch(err => console.error('Failed to load profile', err));
+        fetchProfile();
     }, []);
+
+    const handleSubmitContact = async (contact: any) => {
+        try {
+            if (editingContact?.id) {
+                await axios.put(`${apiUrl}/api/contacts/${editingContact.id}/`, contact, {
+                    headers: {Authorization: `Token ${user?.token}`}
+                });
+            } else {
+                await axios.post(`${apiUrl}/api/contacts/`, contact, {
+                    headers: {Authorization: `Token ${user?.token}`}
+                });
+            }
+            setShowForm(false);
+            setEditingContact(null);
+            fetchProfile();
+        } catch (err) {
+            console.error('Failed to save contact', err);
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Delete this contact?')) return;
+        try {
+            await axios.delete(`${apiUrl}/api/contacts/${id}/`, {
+                headers: {Authorization: `Token ${user?.token}`}
+            });
+            fetchProfile();
+        } catch (err) {
+            console.error('Delete failed', err);
+        }
+    };
 
     if (!profile) return <div>Loading...</div>;
 
@@ -80,44 +75,89 @@ const Profile = () => {
                 </div>
             </div>
 
+            {/* Contact Table */}
             <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-4">Contact Info</h2>
-                <div className="overflow-x-auto">
+                <div className="mb-4 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">Contact Info</h2>
+                    <button
+                        onClick={() => {
+                            setEditingContact(null);
+                            setShowForm(true);
+                        }}
+                        className="bg-red-600 text-white font-semibold hover:bg-red-700 px-3 py-1 rounded"
+                    >
+                        + Add Contact
+                    </button>
+                </div>
+                <div className="overflow-x-auto mb-4">
                     <table className="min-w-full bg-white border border-gray-200 text-sm">
                         <thead>
                         <tr className="bg-gray-100 text-left">
                             <th className="py-2 px-4 border-b">Label</th>
                             <th className="py-2 px-4 border-b">Type</th>
-                            <th className="py-2 px-4 border-b">Country Code</th>
-                            <th className="py-2 px-4 border-b">Number</th>
+                            {/*<th className="py-2 px-4 border-b">Country Code</th>*/}
+                            <th className="py-2 px-4 border-b">Number/Contact</th>
                             <th className="py-2 px-4 border-b">Primary</th>
+                            <th className="py-2 px-4 border-b">Actions</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {profile.contacts.map((c, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
+                        {profile.contacts.map((c: any) => (
+                            <tr key={c.id} className="hover:bg-gray-50">
                                 <td className="py-2 px-4 border-b">{c.label || '-'}</td>
                                 <td className="py-2 px-4 border-b">{c.type}</td>
-                                <td className="py-2 px-4 border-b">{c.country_code}</td>
+                                {/*<td className="py-2 px-4 border-b">{c.country_code}</td>*/}
                                 <td className="py-2 px-4 border-b">{c.number}</td>
                                 <td className="py-2 px-4 border-b">{c.primary ? 'Yes' : 'No'}</td>
+                                <td className="py-2 px-4 border-b flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setEditingContact(c);
+                                            setShowForm(true);
+                                        }}
+                                        className="text-blue-600"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(c.id)}
+                                        className="text-red-600"
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
                 </div>
+
             </div>
 
+            {/* Contact Modal */}
+            <ContactFormModal
+                open={showForm}
+                onClose={() => {
+                    setShowForm(false);
+                    setEditingContact(null);
+                }}
+                onSubmit={handleSubmitContact}
+                initialData={editingContact}
+            />
 
+            {/* Organizations List */}
             <div>
                 <h2 className="text-xl font-semibold mb-2">Organizations</h2>
                 <ul className="space-y-4">
-                    {profile.organizations.map((org, idx) => (
-                        <li key={idx} className="border p-4 rounded-lg bg-gray-50">
+                    {profile.organizations.map((org: any) => (
+                        <li key={org.id} className="border p-4 rounded-lg bg-gray-50">
                             <div className="text-lg font-semibold">{org.organisation.name}</div>
-                            <div className="text-gray-700">{org.job_title} ({org.role.name})</div>
+                            <div className="text-gray-700">
+                                {org.job_title} ({org.role.name})
+                            </div>
                             <div className="text-sm text-gray-500 mt-1">
-                                {org.organisation.address.address_1}, {org.organisation.address.city}, {org.organisation.address.state} - {org.organisation.address.zip_code}
+                                {org.organisation.address.address_1}, {org.organisation.address.city},{' '}
+                                {org.organisation.address.state} - {org.organisation.address.zip_code}
                             </div>
                         </li>
                     ))}
