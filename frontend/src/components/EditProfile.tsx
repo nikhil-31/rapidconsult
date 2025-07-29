@@ -359,13 +359,11 @@ const EditProfile = () => {
                         Profile Picture
                     </label>
                     <div className="flex items-center space-x-4">
-                        {previewUrl && (
-                            <img
-                                src={previewUrl}
-                                alt="Profile preview"
-                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                            />
-                        )}
+                        <img
+                            src={previewUrl || "/doctor-default.png"}
+                            alt="Profile preview"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                        />
                         <div>
                             <input
                                 type="file"
@@ -577,41 +575,41 @@ const EditProfile = () => {
 
                             {/* Country Code and Number */}
                             {/*<div className="grid grid-cols-3 gap-2">*/}
-                                {/*<div>*/}
-                                {/*    <label htmlFor="country-code"*/}
-                                {/*           className="block text-sm font-medium text-gray-700 mb-1">*/}
-                                {/*        Country Code*/}
-                                {/*    </label>*/}
-                                {/*    <select*/}
-                                {/*        id="country-code"*/}
-                                {/*        name="country_code"*/}
-                                {/*        value={contactForm.country_code}*/}
-                                {/*        onChange={handleContactFormChange}*/}
-                                {/*        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"*/}
-                                {/*    >*/}
-                                {/*        <option value="+91">+91 (India)</option>*/}
-                                {/*        <option value="+1">+1 (US)</option>*/}
-                                {/*        <option value="+44">+44 (UK)</option>*/}
-                                {/*        <option value="+61">+61 (Australia)</option>*/}
-                                {/*        <option value="">None</option>*/}
-                                {/*    </select>*/}
-                                {/*</div>*/}
-                                <div className="col-span-2">
-                                    <label htmlFor="contact-number"
-                                           className="block text-sm font-medium text-gray-700 mb-1">
-                                        Number/contact
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        id="contact-number"
-                                        name="number"
-                                        value={contactForm.number}
-                                        onChange={handleContactFormChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                        placeholder="Enter phone/contact"
-                                        required
-                                    />
-                                </div>
+                            {/*<div>*/}
+                            {/*    <label htmlFor="country-code"*/}
+                            {/*           className="block text-sm font-medium text-gray-700 mb-1">*/}
+                            {/*        Country Code*/}
+                            {/*    </label>*/}
+                            {/*    <select*/}
+                            {/*        id="country-code"*/}
+                            {/*        name="country_code"*/}
+                            {/*        value={contactForm.country_code}*/}
+                            {/*        onChange={handleContactFormChange}*/}
+                            {/*        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"*/}
+                            {/*    >*/}
+                            {/*        <option value="+91">+91 (India)</option>*/}
+                            {/*        <option value="+1">+1 (US)</option>*/}
+                            {/*        <option value="+44">+44 (UK)</option>*/}
+                            {/*        <option value="+61">+61 (Australia)</option>*/}
+                            {/*        <option value="">None</option>*/}
+                            {/*    </select>*/}
+                            {/*</div>*/}
+                            <div className="col-span-2">
+                                <label htmlFor="contact-number"
+                                       className="block text-sm font-medium text-gray-700 mb-1">
+                                    Number/contact
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="contact-number"
+                                    name="number"
+                                    value={contactForm.number}
+                                    onChange={handleContactFormChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                    placeholder="Enter phone/contact"
+                                    required
+                                />
+                            </div>
                             {/*</div>*/}
 
                             {/* Primary */}

@@ -67,13 +67,11 @@ const Profile = () => {
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-6">
-                    {profile.profile_picture && (
-                        <img
-                            src={profile.profile_picture}
-                            alt="Profile"
-                            className="w-24 h-24 rounded-full object-cover"
-                        />
-                    )}
+                    <img
+                        src={profile.profile_picture || "/doctor-default.png"}
+                        alt="Profile"
+                        className="w-24 h-24 rounded-full object-cover"
+                    />
                     <div>
                         <h1 className="text-2xl font-bold">{profile.name}</h1>
                         <p className="text-gray-600">{profile.email}</p>
