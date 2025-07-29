@@ -6,7 +6,7 @@ from rapidconsult.users.models import User, Contact
 class UserSerializer(serializers.ModelSerializer[User]):
     class Meta:
         model = User
-        fields = ["username", "name", "profile_picture", "pk"]
+        fields = ["username", "name", "profile_picture", "pk", "email"]
 
 
 class ContactSerializer(serializers.ModelSerializer):

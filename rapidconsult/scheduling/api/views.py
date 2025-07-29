@@ -1,12 +1,16 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
+from .serializers import UserProfileSerializer
 
 from scheduling.models import Location, Department, Unit, Organization
-from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer
-from .serializers import UserProfileSerializer
-from rapidconsult.users.models import User
+from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
+    UserProfileSerializer
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -54,10 +58,36 @@ class UnitViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+# class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+#     serializer_class = UserProfileSerializer
+#     permission_classes = [IsAuthenticated]
+#
+#     def get_queryset(self):
+#         return User.objects.filter(id=self.request.user.id)
+#
 
-class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+
+User = get_user_model()
+
+
+class UserProfileViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+    def get_object(self):
+        return self.request.user
+
+    @action(detail=False, methods=["get", "put", "patch"])
+    def me(self, request):
+        user = self.request.user
+        if request.method in ["PUT", "PATCH"]:
+            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)

@@ -3,6 +3,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from "../contexts/AuthContext";
 import ContactFormModal from "../components/ContactModal";
+import {useNavigate} from 'react-router-dom';
 
 const Profile = () => {
     const [profile, setProfile] = useState<any>(null);
@@ -10,13 +11,16 @@ const Profile = () => {
     const [editingContact, setEditingContact] = useState<any | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
     const {user} = useContext(AuthContext);
+    const navigate = useNavigate();
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/profile/`, {
-                headers: {Authorization: `Token ${user?.token}`}
-            });
-            setProfile(res.data[0]);
+            const res = await axios.get(
+                `${apiUrl}/api/profile/me/`, {
+                    headers: {Authorization: `Token ${user?.token}`}
+                })
+                .then(res => setProfile(res.data))
+                .catch(err => console.error(err));
         } catch (err) {
             console.error('Failed to load profile', err);
         }
@@ -61,33 +65,43 @@ const Profile = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-6">
-            <div className="flex items-center space-x-6 mb-6">
-                {profile.profile_picture && (
-                    <img
-                        src={profile.profile_picture}
-                        alt="Profile"
-                        className="w-24 h-24 rounded-full object-cover"
-                    />
-                )}
-                <div>
-                    <h1 className="text-2xl font-bold">{profile.name || profile.username}</h1>
-                    <p className="text-gray-600">{profile.email}</p>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-6">
+                    {profile.profile_picture && (
+                        <img
+                            src={profile.profile_picture}
+                            alt="Profile"
+                            className="w-24 h-24 rounded-full object-cover"
+                        />
+                    )}
+                    <div>
+                        <h1 className="text-2xl font-bold">{profile.name}</h1>
+                        <p className="text-gray-600">{profile.email}</p>
+                        {/*<h1 className="text-gray-600">username-{profile.username}</h1>*/}
+                    </div>
                 </div>
+
+                <button
+                    onClick={() => navigate('/profile/edit')}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                >
+                    Edit Profile
+                </button>
             </div>
 
             {/* Contact Table */}
             <div className="mb-6">
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold">Contact Info</h2>
-                    <button
-                        onClick={() => {
-                            setEditingContact(null);
-                            setShowForm(true);
-                        }}
-                        className="bg-red-600 text-white font-semibold hover:bg-red-700 px-3 py-1 rounded"
-                    >
-                        + Add Contact
-                    </button>
+                    {/*<button*/}
+                    {/*    onClick={() => {*/}
+                    {/*        setEditingContact(null);*/}
+                    {/*        setShowForm(true);*/}
+                    {/*    }}*/}
+                    {/*    className="bg-red-600 text-white font-semibold hover:bg-red-700 px-3 py-1 rounded"*/}
+                    {/*>*/}
+                    {/*    + Add Contact*/}
+                    {/*</button>*/}
                 </div>
                 <div className="overflow-x-auto mb-4">
                     <table className="min-w-full bg-white border border-gray-200 text-sm">
