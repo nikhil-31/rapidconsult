@@ -1,15 +1,17 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
 from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from .serializers import RoleSerializer
 
-from scheduling.models import Location, Department, Unit, Organization, Role
+from scheduling.models import Location, Department, Unit, Organization, Role, UserOrgProfile
+from .permissions import check_org_admin_or_raise
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer
+from .serializers import RoleSerializer
 
 User = get_user_model()
 
@@ -21,16 +23,32 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
 
 class LocationViewSet(viewsets.ModelViewSet):
-    queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Location.objects.all()
-        org_id = self.request.query_params.get('organization_id')
+        org_id = self.request.query_params.get("organization_id")
+        qs = Location.objects.all()
+
         if org_id:
-            queryset = queryset.filter(organization__id=org_id)
-        return queryset
+            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+                raise PermissionDenied("You do not belong to this organization.")
+            qs = qs.filter(organization_id=org_id)
+
+        return qs
+
+    def perform_create(self, serializer):
+        org = serializer.validated_data.get("organization")
+        check_org_admin_or_raise(self.request.user, org)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        check_org_admin_or_raise(self.request.user, serializer.instance.organization)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        check_org_admin_or_raise(self.request.user, instance.organization)
+        instance.delete()
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):

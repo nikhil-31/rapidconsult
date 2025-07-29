@@ -22,12 +22,38 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    organization = OrganizationSerializer()
     address = AddressSerializer()
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
+    display_picture = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Location
-        fields = '__all__'
+        fields = ["id", "name", "organization", "address", "display_picture"]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if instance.display_picture and request:
+            data['display_picture'] = request.build_absolute_uri(instance.display_picture.url)
+        return data
+
+    def create(self, validated_data):
+        address_data = validated_data.pop("address", None)
+        if address_data:
+            address, _ = Address.objects.get_or_create(**address_data)
+            validated_data["address"] = address
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        address_data = validated_data.pop("address", None)
+        if address_data:
+            if instance.address:
+                for key, value in address_data.items():
+                    setattr(instance.address, key, value)
+                instance.address.save()
+            else:
+                instance.address = Address.objects.create(**address_data)
+        return super().update(instance, validated_data)
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -86,3 +112,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'username', 'name', 'email', 'profile_picture',
             'contacts', 'organizations'
         ]
+        read_only_fields = ['username']
