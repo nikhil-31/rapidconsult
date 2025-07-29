@@ -16,27 +16,53 @@ from rest_framework import viewsets, permissions
 from .serializers import ContactSerializer
 
 
+# class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericViewSet):
+#     serializer_class = UserSerializer
+#     queryset = User.objects.all()
+#     lookup_field = "username"
+#
+#     # def get_queryset(self, *args, **kwargs):
+#     #     assert isinstance(self.request.user.id, int)
+#     #     return self.queryset.filter(id=self.request.user.id)
+#     #
+#     # @action(detail=False)
+#     # def me(self, request):
+#     #     serializer = UserSerializer(request.user, context={"request": request})
+#     #     return Response(status=status.HTTP_200_OK, data=serializer.data)
+#
+#     @action(detail=False)
+#     def all(self, request):
+#         serializer = UserSerializer(
+#             User.objects.all(), many=True, context={"request": request}
+#         )
+#         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
 class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     lookup_field = "username"
 
-    # def get_queryset(self, *args, **kwargs):
-    #     assert isinstance(self.request.user.id, int)
-    #     return self.queryset.filter(id=self.request.user.id)
-    #
-    # @action(detail=False)
-    # def me(self, request):
-    #     serializer = UserSerializer(request.user, context={"request": request})
-    #     return Response(status=status.HTTP_200_OK, data=serializer.data)
+    @action(detail=False, methods=["post"], url_path="register")
+    def register_user(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=False)
+    @action(detail=False, methods=["get"])
     def all(self, request):
+        org_id = request.query_params.get("organization")
+        queryset = self.queryset
+
+        if org_id:
+            queryset = queryset.filter(
+                org_profiles__organisation_id=org_id
+            ).distinct()
+
         serializer = UserSerializer(
-            User.objects.all(), many=True, context={"request": request}
+            queryset, many=True, context={"request": request}
         )
         return Response(status=status.HTTP_200_OK, data=serializer.data)
-
 
 class CustomObtainAuthTokenView(ObtainAuthToken):
     def post(self, request, *args, **kwargs):

@@ -1,16 +1,17 @@
-from rest_framework import viewsets, mixins
+from django.contrib.auth import get_user_model
+from rest_framework import mixins
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import get_user_model
-from .serializers import UserProfileSerializer
+from rest_framework.viewsets import ModelViewSet
+from .serializers import RoleSerializer
 
-from scheduling.models import Location, Department, Unit, Organization
+from scheduling.models import Location, Department, Unit, Organization, Role
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer
+
+User = get_user_model()
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -58,18 +59,6 @@ class UnitViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-# class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
-#     serializer_class = UserProfileSerializer
-#     permission_classes = [IsAuthenticated]
-#
-#     def get_queryset(self):
-#         return User.objects.filter(id=self.request.user.id)
-#
-
-
-User = get_user_model()
-
-
 class UserProfileViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -91,3 +80,8 @@ class UserProfileViewSet(
             return Response(serializer.data)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+
+
+class RoleViewSet(ModelViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer

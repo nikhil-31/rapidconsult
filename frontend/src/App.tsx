@@ -12,7 +12,7 @@ import CalendarView from "./components/Schedules";
 import {OnCall} from "./components/OnCall";
 import {Contacts} from "./components/Contacts";
 import {OrgProvider} from "./contexts/OrgContext";
-import {Admin} from "./components/Admin";
+import Admin from "./components/Admin";
 import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
 // import {Profile} from "./components/Profile";
@@ -48,7 +48,7 @@ export default function App() {
                         <Route path="/schedules" element={<CalendarView/>}/>
                         <Route path="/admin" element={<Admin/>}/>
                         <Route path="/profile" element={<Profile/>}/>
-                        <Route path="/profile/edit" Component={EditProfile} />
+                        <Route path="/profile/edit" Component={EditProfile}/>
                         <Route
                             path="conversations/"
                             element={
