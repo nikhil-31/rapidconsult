@@ -8,7 +8,7 @@ interface Contact {
     id: number;
     label: string;
     type: string;
-    country_code: string | null;
+    // country_code: string | null;
     number: string;
     primary: boolean;
 }
@@ -78,7 +78,7 @@ const EditProfile = () => {
     const [contactForm, setContactForm] = useState({
         label: '',
         type: 'mobile',
-        country_code: '+91',
+        // country_code: '+91',
         number: '',
         primary: false
     });
@@ -239,7 +239,7 @@ const EditProfile = () => {
             setContactForm({
                 label: contact.label,
                 type: contact.type,
-                country_code: contact.country_code || '+91',
+                // country_code: contact.country_code || '+91',
                 number: contact.number,
                 primary: contact.primary
             });
@@ -248,7 +248,7 @@ const EditProfile = () => {
             setContactForm({
                 label: '',
                 type: 'mobile',
-                country_code: '+91',
+                // country_code: '+91',
                 number: '',
                 primary: false
             });
@@ -262,7 +262,7 @@ const EditProfile = () => {
         setContactForm({
             label: '',
             type: 'mobile',
-            country_code: '+91',
+            // country_code: '+91',
             number: '',
             primary: false
         });
@@ -283,7 +283,7 @@ const EditProfile = () => {
             const contactData = {
                 label: contactForm.label,
                 type: contactForm.type,
-                country_code: contactForm.country_code,
+                // country_code: contactForm.country_code,
                 number: contactForm.number,
                 primary: contactForm.primary
             };
@@ -327,7 +327,7 @@ const EditProfile = () => {
 
     // Get primary contact for display
     const primaryContact = profile.contacts.find(contact => contact.primary);
-    const primaryPhone = primaryContact ? `${primaryContact.country_code || ''}${primaryContact.number}` : '';
+    const primaryPhone = primaryContact ? `${primaryContact.number}` : '';
 
     if (loading) {
         return (
@@ -477,7 +477,6 @@ const EditProfile = () => {
                                                 )}
                                             </div>
                                             <div className="text-sm text-gray-600">
-                                                {contact.country_code && contact.country_code !== 'null' ? contact.country_code : ''}
                                                 {contact.number}
                                             </div>
                                             <div className="text-xs text-gray-500 capitalize">{contact.type}</div>
@@ -572,34 +571,35 @@ const EditProfile = () => {
                                     <option value="home">Home</option>
                                     <option value="work">Work</option>
                                     <option value="other">Other</option>
+                                    <option value="email">Email</option>
                                 </select>
                             </div>
 
                             {/* Country Code and Number */}
-                            <div className="grid grid-cols-3 gap-2">
-                                <div>
-                                    <label htmlFor="country-code"
-                                           className="block text-sm font-medium text-gray-700 mb-1">
-                                        Country Code
-                                    </label>
-                                    <select
-                                        id="country-code"
-                                        name="country_code"
-                                        value={contactForm.country_code}
-                                        onChange={handleContactFormChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                    >
-                                        <option value="+91">+91 (India)</option>
-                                        <option value="+1">+1 (US)</option>
-                                        <option value="+44">+44 (UK)</option>
-                                        <option value="+61">+61 (Australia)</option>
-                                        <option value="">None</option>
-                                    </select>
-                                </div>
+                            {/*<div className="grid grid-cols-3 gap-2">*/}
+                                {/*<div>*/}
+                                {/*    <label htmlFor="country-code"*/}
+                                {/*           className="block text-sm font-medium text-gray-700 mb-1">*/}
+                                {/*        Country Code*/}
+                                {/*    </label>*/}
+                                {/*    <select*/}
+                                {/*        id="country-code"*/}
+                                {/*        name="country_code"*/}
+                                {/*        value={contactForm.country_code}*/}
+                                {/*        onChange={handleContactFormChange}*/}
+                                {/*        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"*/}
+                                {/*    >*/}
+                                {/*        <option value="+91">+91 (India)</option>*/}
+                                {/*        <option value="+1">+1 (US)</option>*/}
+                                {/*        <option value="+44">+44 (UK)</option>*/}
+                                {/*        <option value="+61">+61 (Australia)</option>*/}
+                                {/*        <option value="">None</option>*/}
+                                {/*    </select>*/}
+                                {/*</div>*/}
                                 <div className="col-span-2">
                                     <label htmlFor="contact-number"
                                            className="block text-sm font-medium text-gray-700 mb-1">
-                                        Number
+                                        Number/contact
                                     </label>
                                     <input
                                         type="tel"
@@ -608,11 +608,11 @@ const EditProfile = () => {
                                         value={contactForm.number}
                                         onChange={handleContactFormChange}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                        placeholder="Enter phone number"
+                                        placeholder="Enter phone/contact"
                                         required
                                     />
                                 </div>
-                            </div>
+                            {/*</div>*/}
 
                             {/* Primary */}
                             <div className="flex items-center">

@@ -112,7 +112,7 @@ const Profile = () => {
                             {/*<th className="py-2 px-4 border-b">Country Code</th>*/}
                             <th className="py-2 px-4 border-b">Number/Contact</th>
                             <th className="py-2 px-4 border-b">Primary</th>
-                            <th className="py-2 px-4 border-b">Actions</th>
+                            {/*<th className="py-2 px-4 border-b">Actions</th>*/}
                         </tr>
                         </thead>
                         <tbody>
@@ -123,23 +123,23 @@ const Profile = () => {
                                 {/*<td className="py-2 px-4 border-b">{c.country_code}</td>*/}
                                 <td className="py-2 px-4 border-b">{c.number}</td>
                                 <td className="py-2 px-4 border-b">{c.primary ? 'Yes' : 'No'}</td>
-                                <td className="py-2 px-4 border-b flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            setEditingContact(c);
-                                            setShowForm(true);
-                                        }}
-                                        className="text-blue-600"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(c.id)}
-                                        className="text-red-600"
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
+                                {/*<td className="py-2 px-4 border-b flex gap-2">*/}
+                                {/*    <button*/}
+                                {/*        onClick={() => {*/}
+                                {/*            setEditingContact(c);*/}
+                                {/*            setShowForm(true);*/}
+                                {/*        }}*/}
+                                {/*        className="text-blue-600"*/}
+                                {/*    >*/}
+                                {/*        Edit*/}
+                                {/*    </button>*/}
+                                {/*    <button*/}
+                                {/*        onClick={() => handleDelete(c.id)}*/}
+                                {/*        className="text-red-600"*/}
+                                {/*    >*/}
+                                {/*        Delete*/}
+                                {/*    </button>*/}
+                                {/*</td>*/}
                             </tr>
                         ))}
                         </tbody>
