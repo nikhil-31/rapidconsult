@@ -7,8 +7,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework import serializers
 
-from scheduling.models import Location, Department, Unit, Organization, Role
+from scheduling.models import Location, Department, Unit, Organization, Role, UserOrgProfile, UnitMembership
 from .permissions import check_org_admin_or_raise
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer
@@ -110,17 +111,51 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class UnitMembershipSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=UserOrgProfile.objects.all())
+
+    class Meta:
+        model = UnitMembership
+        fields = ['user', 'is_admin']
+
+
 class UnitViewSet(viewsets.ModelViewSet):
-    queryset = Unit.objects.all()
+    queryset = Unit.objects.select_related('department', 'department__location').prefetch_related('unitmembership_set')
     serializer_class = UnitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Unit.objects.all()
-        department_id = self.request.query_params.get('department_id')
-        if department_id:
-            queryset = queryset.filter(department__id=department_id)
+        org_id = self.request.query_params.get('organization_id')
+        dept_id = self.request.query_params.get('department_id')
+
+        queryset = self.queryset
+
+        if org_id:
+            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+                raise PermissionDenied("You do not belong to this organization.")
+            queryset = queryset.filter(department__location__organization_id=org_id)
+
+        if dept_id:
+            queryset = queryset.filter(department_id=dept_id)
+
         return queryset
+
+    def perform_create(self, serializer):
+        department = serializer.validated_data['department']
+        org = department.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        unit = serializer.instance
+        org = unit.department.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        org = instance.department.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+        instance.delete()
 
 
 class UserProfileViewSet(

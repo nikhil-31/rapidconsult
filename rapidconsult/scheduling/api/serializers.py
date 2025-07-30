@@ -67,27 +67,41 @@ class DepartmentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'location', 'location_details', 'display_picture']
 
 
+class UnitMembershipSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=UserOrgProfile.objects.all())
+
+    class Meta:
+        model = UnitMembership
+        fields = ['user', 'is_admin']
+
+
 class UnitSerializer(serializers.ModelSerializer):
-    department = DepartmentSerializer()
-    members = serializers.SerializerMethodField()
+    department = DepartmentSerializer(read_only=True)
+    members = UnitMembershipSerializer(source='unitmembership_set', many=True, required=False)
 
     class Meta:
         model = Unit
-        fields = '__all__'
+        fields = ['id', 'name', 'department', 'display_picture', 'members']
 
-    def get_members(self, obj):
-        memberships = UnitMembership.objects.filter(unit=obj)
-        return [
-            {
-                "id": membership.user.id,
-                "user": str(membership.user.user),
-                "job_title": membership.user.job_title,
-                "role": str(membership.user.role.name) if membership.user.role else None,
-                "is_admin": membership.is_admin,
-                "joined_at": membership.joined_at
-            }
-            for membership in memberships
-        ]
+    def create(self, validated_data):
+        members_data = validated_data.pop('unitmembership_set', [])
+        unit = Unit.objects.create(**validated_data)
+        for member in members_data:
+            UnitMembership.objects.create(unit=unit, **member)
+        return unit
+
+    def update(self, instance, validated_data):
+        members_data = validated_data.pop('unitmembership_set', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if members_data is not None:
+            # Clear existing and replace
+            instance.unitmembership_set.all().delete()
+            for member in members_data:
+                UnitMembership.objects.create(unit=instance, **member)
+        return instance
 
 
 class RoleSerializer(serializers.ModelSerializer):

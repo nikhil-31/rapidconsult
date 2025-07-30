@@ -10,6 +10,7 @@ import UserTableSection from './UserTable';
 import DepartmentTable from "./DepartmentTable";
 import DepartmentModal from "./DepartmentModal";
 import {Department} from "../models/Department"
+import UnitTable from "./UnitTable";
 
 
 export default function Admin() {
@@ -19,8 +20,8 @@ export default function Admin() {
     const [users, setUsers] = useState<UserModel[]>([]);
     const [selectedOrgId, setSelectedOrgId] = useState<string>('');
     const [locations, setLocations] = useState<Location[]>([]);
-    const [showLocationModal, setShowLocationModal] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
     const [showDepartmentModal, setShowDepartmentModal] = useState(false);
     const [editingUser, setEditingUser] = useState<UserModel | null>(null);
     const [editingLocation, setEditingLocation] = useState<Location | null>(null);
@@ -183,13 +184,18 @@ export default function Admin() {
                         setEditingDepartment(null)
                     }}
                     onSuccess={() => {
-                        // reloadDepartments();
                         setShowDepartmentModal(false)
                         setEditingDepartment(null)
                     }}
                     editingDepartment={editingDepartment}
                 />
             )}
+
+            {/*  Unit and UnitMembership  */}
+            <UnitTable
+                selectedOrgId={selectedOrgId}
+            />
+
         </div>
     );
 }
