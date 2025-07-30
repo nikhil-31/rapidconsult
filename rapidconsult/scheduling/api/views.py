@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from scheduling.models import Location, Department, Unit, Organization, Role, UserOrgProfile
+from scheduling.models import Location, Department, Unit, Organization, Role
 from .permissions import check_org_admin_or_raise
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer

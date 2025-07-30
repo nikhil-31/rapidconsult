@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from rapidconsult.users.models import User, Contact
-from scheduling.models import UserOrgProfile
+from config.roles import get_permissions_for_role
+from scheduling.models import UserOrgProfile, Role, Organization
 
 
 # class UserSerializer(serializers.ModelSerializer[User]):
@@ -33,13 +34,30 @@ class UserOrgProfileCreateSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     org_profile = UserOrgProfileCreateSerializer(write_only=True)
     password = serializers.CharField(write_only=True)
+    organizations = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["username", "name", "email", "profile_picture", "id", "org_profile", "password"]
+        fields = ["username", "name", "email", "profile_picture", "id", "org_profile", "password", "organizations", ]
         extra_kwargs = {
             "profile_picture": {"required": False},
         }
+
+    def get_organizations(self, user):
+        org_profiles = user.org_profiles.select_related("organisation", "role")
+        return [
+            {
+                "organization_id": profile.organisation.id,
+                "organization_name": profile.organisation.name,
+                "role": {
+                    "name": profile.role.name if profile.role else None,
+                    "id": profile.role.id if profile.role else None,
+                },
+                "job_title": profile.job_title,
+                "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
+            }
+            for profile in org_profiles
+        ]
 
     def get_queryset(self):
         user = self.request.user
@@ -59,3 +77,29 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         UserOrgProfile.objects.create(user=user, **org_profile_data)
         return user
+
+    def update(self, instance, validated_data):
+        # Handle updates to basic user fields
+        password = validated_data.pop("password", None)
+        org_profile_data = validated_data.pop("org_profile", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+
+        # Update org profile if included
+        if org_profile_data:
+            user_org_profile = instance.org_profiles.filter(
+                organisation_id=org_profile_data["organisation"]
+            ).first()
+
+            if user_org_profile:
+                user_org_profile.role_id = org_profile_data.get("role", user_org_profile.role_id)
+                user_org_profile.job_title = org_profile_data.get("job_title", user_org_profile.job_title)
+                user_org_profile.save()
+
+        return instance

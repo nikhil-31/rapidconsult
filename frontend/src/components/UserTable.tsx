@@ -1,16 +1,21 @@
 import React from 'react';
 import {UserModel} from '../models/UserModel';
+import {Pencil, Trash2} from 'lucide-react'; // optional icons
 
 interface UserTableSectionProps {
     users: UserModel[];
     selectedOrgId: string;
     onCreateUser: () => void;
+    onEditUser: (user: UserModel) => void;
+    onDeleteUser: (user: UserModel) => void;
 }
 
 export default function UserTableSection({
                                              users,
                                              selectedOrgId,
                                              onCreateUser,
+                                             onEditUser,
+                                             onDeleteUser,
                                          }: UserTableSectionProps) {
     const handleCreateClick = () => {
         if (!selectedOrgId) {
@@ -42,6 +47,7 @@ export default function UserTableSection({
                         <th className="px-4 py-2 text-left">Email</th>
                         <th className="px-4 py-2 text-left">Name</th>
                         <th className="px-4 py-2 text-left">Picture</th>
+                        <th className="px-4 py-2 text-left">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -55,11 +61,30 @@ export default function UserTableSection({
                                     <img
                                         src={user.profile_picture}
                                         alt="Profile"
-                                        className="w-10 h-10 rounded-full"
+                                        className="w-10 h-10 rounded-full object-cover"
                                     />
                                 ) : (
                                     '—'
                                 )}
+                            </td>
+                            <td className="px-4 py-2 flex gap-2">
+                                <button
+                                    className="text-blue-600 hover:underline"
+                                    onClick={() => onEditUser(user)}
+                                >
+                                    <Pencil className="w-4 h-4 inline-block mr-1"/>
+                                    Edit
+                                </button>
+                                <button
+                                    className="text-red-600 hover:underline"
+                                    onClick={() =>
+                                        window.confirm('Not supported!!!') &&
+                                        onDeleteUser(user)
+                                    }
+                                >
+                                    <Trash2 className="w-4 h-4 inline-block mr-1"/>
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}

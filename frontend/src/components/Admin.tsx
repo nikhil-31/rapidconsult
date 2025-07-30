@@ -12,26 +12,32 @@ import UserTableSection from './UserTable';
 export default function Admin() {
     const {user} = useContext(AuthContext);
     const orgs = user?.organizations || [];
+    const apiUrl = process.env.REACT_APP_API_URL;
     const [users, setUsers] = useState<UserModel[]>([]);
     const [selectedOrgId, setSelectedOrgId] = useState<string>('');
     const [locations, setLocations] = useState<Location[]>([]);
-    const apiUrl = process.env.REACT_APP_API_URL;
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<UserModel | null>(null);
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get<UserModel[]>(`${apiUrl}/api/users/all`, {
-                headers: {Authorization: `Token ${user?.token}`},
-                params: {
-                    organization: selectedOrgId,
-                },
-            });
+            const res =
+                await axios.get<UserModel[]>(`${apiUrl}/api/users/all`, {
+                    headers: {Authorization: `Token ${user?.token}`},
+                    params: {
+                        organization: selectedOrgId,
+                    },
+                });
             setUsers(res.data);
         } catch (error) {
             console.error('Error fetching users', error);
         }
     };
+
+    const deleteUser = async (user: UserModel) => {
+        // Not supported
+    }
 
     const fetchLocations = async () => {
         if (!selectedOrgId) return;
@@ -97,6 +103,13 @@ export default function Admin() {
                 users={users}
                 selectedOrgId={selectedOrgId}
                 onCreateUser={() => setShowUserModal(true)}
+                onEditUser={(user) => {
+                    setEditingUser(user);
+                    setShowUserModal(true);
+                }}
+                onDeleteUser={(user) => {
+                    deleteUser(user)
+                }}
             />
 
             {showUserModal && (
@@ -104,7 +117,11 @@ export default function Admin() {
                     selectedOrgId={selectedOrgId}
                     orgs={orgs}
                     onSuccess={() => fetchUsers()}
-                    onClose={() => setShowUserModal(false)}
+                    onClose={() => {
+                        setEditingUser(null)
+                        setShowUserModal(false)
+                    }}
+                    editingUser={editingUser}
                 />
             )}
 

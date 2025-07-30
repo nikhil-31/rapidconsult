@@ -3,22 +3,23 @@ import React, {useContext, useEffect, useState} from 'react';
 import {Role} from "../models/Role";
 import {OrganizationProfile} from "../models/OrganizationProfile";
 import {AuthContext} from "../contexts/AuthContext";
-
+import {UserModel} from "../models/UserModel";
 
 interface CreateUserModalProps {
     selectedOrgId: string;
     orgs: OrganizationProfile[];
     onClose: () => void;
     onSuccess: () => void;
+    editingUser?: UserModel | null;
 }
 
 export default function CreateUserModal({
                                             selectedOrgId,
                                             orgs,
                                             onClose,
-                                            onSuccess
+                                            onSuccess,
+                                            editingUser = null
                                         }: CreateUserModalProps) {
-
     const {user} = useContext(AuthContext);
     const [roles, setRoles] = useState<Role[]>([]);
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
@@ -34,6 +35,26 @@ export default function CreateUserModal({
         },
     });
     const apiUrl = process.env.REACT_APP_API_URL;
+    const isEditMode = Boolean(editingUser);
+
+    useEffect(() => {
+        if (editingUser) {
+            const userOrg: OrganizationProfile | undefined = editingUser?.organizations.find(
+                (org) => org.organization_id.toString() === selectedOrgId
+            )
+            setForm({
+                username: editingUser.username || '',
+                email: editingUser.email || '',
+                password: '',
+                name: editingUser.name || '',
+                org_profile: {
+                    organisation: selectedOrgId,
+                    role: userOrg?.role.id.toString() || '',
+                    job_title: userOrg?.job_title || '',
+                },
+            });
+        }
+    }, [editingUser]);
 
     const fetchRoles = async () => {
         try {
@@ -46,7 +67,6 @@ export default function CreateUserModal({
         }
     };
 
-    // Fetch roles on mount
     useEffect(() => {
         fetchRoles();
     }, []);
@@ -77,8 +97,10 @@ export default function CreateUserModal({
 
         const formData = new FormData();
         formData.append('username', form.username);
+        if (!isEditMode || form.password) {
+            formData.append('password', form.password);
+        }
         formData.append('email', form.email);
-        formData.append('password', form.password);
         formData.append('name', form.name);
         formData.append('org_profile.organisation', selectedOrgId.toString());
         formData.append('org_profile.role', form.org_profile.role);
@@ -88,25 +110,26 @@ export default function CreateUserModal({
         }
 
         try {
-            await axios.post(`${apiUrl}/api/users/register/`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Token ${user?.token}`,
-                },
-            });
-            setForm({
-                username: '',
-                email: '',
-                password: '',
-                name: '',
-                org_profile: {organisation: '', role: '', job_title: ''},
-            });
-            setProfilePicture(null);
-            onSuccess()
-            onClose()
+            if (isEditMode) {
+                await axios.patch(`${apiUrl}/api/users/${editingUser?.username}/`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Token ${user?.token}`,
+                    },
+                });
+            } else {
+                await axios.post(`${apiUrl}/api/users/register/`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Token ${user?.token}`,
+                    },
+                });
+            }
+            onSuccess();
+            onClose();
         } catch (error: any) {
-            console.error('Error creating user', error);
-            alert('User creation failed');
+            console.error('Error saving user', error);
+            alert('User save failed');
         }
     };
 
@@ -119,16 +142,40 @@ export default function CreateUserModal({
                 >
                     ✖
                 </button>
-                <h3 className="text-xl font-semibold mb-4">Create New User</h3>
+                <h3 className="text-xl font-semibold mb-4">
+                    {isEditMode ? 'Edit User' : 'Create New User'}
+                </h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <h2 className="font-semibold">User details</h2>
+
                     <input
                         name="username"
                         placeholder="Username"
                         value={form.username}
                         onChange={handleChange}
-                        className="border w-full p-2 rounded"
+                        className={`border w-full p-2 rounded ${
+                            isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                        }`}
                         required
+                        disabled={isEditMode}
+                    />
+                    <input
+                        name="password"
+                        type="password"
+                        placeholder={isEditMode ? 'Change Password (optional)' : 'Password'}
+                        value={form.password}
+                        onChange={handleChange}
+                        className={`border w-full p-2 rounded ${
+                            isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isEditMode}
+                    />
+                    <input
+                        name="name"
+                        placeholder="Full Name"
+                        value={form.name}
+                        onChange={handleChange}
+                        className="border w-full p-2 rounded"
                     />
                     <input
                         name="email"
@@ -138,22 +185,6 @@ export default function CreateUserModal({
                         onChange={handleChange}
                         className="border w-full p-2 rounded"
                         required
-                    />
-                    <input
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={handleChange}
-                        className="border w-full p-2 rounded"
-                        required
-                    />
-                    <input
-                        name="name"
-                        placeholder="Full Name"
-                        value={form.name}
-                        onChange={handleChange}
-                        className="border w-full p-2 rounded"
                     />
                     <input
                         name="profile_picture"
@@ -168,7 +199,6 @@ export default function CreateUserModal({
                         className="border w-full p-2 rounded bg-gray-100"
                         disabled
                     >
-                        <option value="">Select Organization</option>
                         {orgs.map((op) => (
                             <option key={op.organization_id} value={op.organization_id}>
                                 {op.organization_name}
@@ -200,10 +230,10 @@ export default function CreateUserModal({
                         type="submit"
                         className="bg-blue-600 text-white px-4 py-2 rounded w-full"
                     >
-                        Submit
+                        {isEditMode ? 'Save Changes' : 'Create User'}
                     </button>
                 </form>
             </div>
         </div>
     );
-};
+}
