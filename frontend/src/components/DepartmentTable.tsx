@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useContext} from 'react';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import {Pencil, Trash, Plus} from 'lucide-react';
+import {Pencil, Trash2} from 'lucide-react';
 import {Department} from '../models/Department';
 
 interface DepartmentTableProps {
@@ -120,7 +120,7 @@ export default function DepartmentTable({
                                     onClick={() => handleDelete(dept.id)}
                                     className="text-red-600 hover:text-red-800"
                                 >
-                                    <Trash size={18}/>
+                                    <Trash2 size={18}/>
                                 </button>
                             </td>
                         </tr>
