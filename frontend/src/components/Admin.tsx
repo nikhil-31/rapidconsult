@@ -3,7 +3,9 @@ import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {UserModel} from '../models/UserModel';
 import {Location} from '../models/Location';
-
+import CreateLocationModal from '../components/CreateLocationModal';
+import CreateUserModal from '../components/CreateUserModal';
+import LocationTable from './LocationTable';
 
 export default function Admin() {
     const {user} = useContext(AuthContext);
@@ -26,6 +28,8 @@ export default function Admin() {
     });
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
+    const [showLocationModal, setShowLocationModal] = useState(false);
+
 
     const fetchUsers = async () => {
         try {
@@ -226,157 +230,34 @@ export default function Admin() {
                 </table>
             </div>
 
-            {locations.length > 0 && (
-                <div className="mt-6">
-                    <h2 className="text-lg font-semibold mb-3">Locations: </h2>
-                    <div className="overflow-x-auto border rounded-lg">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-100">
-                            <tr>
-                                <th className="px-4 py-2 text-left">Name</th>
-                                <th className="px-4 py-2 text-left">Address</th>
-                                <th className="px-4 py-2 text-left">Picture</th>
-                            </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                            {locations.map((loc) => (
-                                <tr key={loc.id}>
-                                    <td className="px-4 py-2">{loc.name}</td>
-                                    <td className="px-4 py-2">
-                                        {loc.address ? (
-                                            <>
-                                                {loc.address.label && `${loc.address.label}, `}
-                                                {loc.address.address_1 && `${loc.address.address_1}, `}
-                                                {loc.address.address_2 && `${loc.address.address_2}, `}
-                                                {loc.address.city && `${loc.address.city}, `}
-                                                {loc.address.state && `${loc.address.state}`}
-                                                {loc.address.zip_code && ` - ${loc.address.zip_code}`}
-                                            </>
-                                        ) : (
-                                            '—'
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        {loc.display_picture ? (
-                                            <img
-                                                src={loc.display_picture}
-                                                alt="Location"
-                                                className="w-10 h-10 rounded-full object-cover"
-                                            />
-                                        ) : (
-                                            '—'
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <LocationTable
+                locations={locations}
+                selectedOrgId={selectedOrgId}
+                onCreateLocation={() => setShowLocationModal(true)}
+            />
+
+            {/*Location modal */}
+            {showLocationModal && (
+                <CreateLocationModal
+                    organizationId={selectedOrgId}
+                    token={user?.token || ''}
+                    onClose={() => setShowLocationModal(false)}
+                    onSuccess={() => fetchLocations()}
+                    organizationName={orgs.find(org => org.organization_id.toString() === selectedOrgId)?.organization_name}
+                />
             )}
 
+            <CreateUserModal
+                show={showModal}
+                onClose={() => setShowModal(false)}
+                form={form}
+                selectedOrgId={selectedOrgId}
+                orgs={orgs}
+                roles={roles}
+                onSubmit={handleSubmit}
+                onChange={handleChange}
+            />
 
-            {
-                showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="absolute top-2 right-2 text-gray-500 hover:text-black"
-                            >
-                                ✖
-                            </button>
-                            <h3 className="text-xl font-semibold mb-4">Create New User</h3>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <h2 className="font-semibold">User details</h2>
-                                <input
-                                    name="username"
-                                    placeholder="Username"
-                                    value={form.username}
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                    required
-                                />
-                                <input
-                                    name="email"
-                                    type="email"
-                                    placeholder="Email"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                    required
-                                />
-                                <input
-                                    name="password"
-                                    type="password"
-                                    placeholder="Password"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                    required
-                                />
-                                <input
-                                    name="name"
-                                    placeholder="Full Name"
-                                    value={form.name}
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                />
-                                <input
-                                    name="profile_picture"
-                                    type="file"
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                />
-                                <h2 className="font-semibold">Org details</h2>
-                                <select
-                                    name="organisation"
-                                    value={selectedOrgId}
-                                    onChange={() => {
-                                    }}
-                                    className="border w-full p-2 rounded bg-gray-100"
-                                    disabled
-                                >
-                                    <option value="">Select Organization</option>
-                                    {orgs.map((op) => (
-                                        <option key={op.organization_id} value={op.organization_id}>
-                                            {op.organization_name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <select
-                                    name="role"
-                                    value={form.org_profile.role}
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                    required
-                                >
-                                    <option value="">Select Role</option>
-                                    {roles.map((role) => (
-                                        <option key={role.id} value={role.id}>
-                                            {role.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <input
-                                    name="job_title"
-                                    placeholder="Job Title"
-                                    value={form.org_profile.job_title}
-                                    onChange={handleChange}
-                                    className="border w-full p-2 rounded"
-                                />
-                                <button
-                                    type="submit"
-                                    className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-                                >
-                                    Submit
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                )
-            }
         </div>
-    )
-        ;
+    );
 }
