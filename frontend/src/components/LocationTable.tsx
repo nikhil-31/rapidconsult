@@ -21,7 +21,7 @@ export default function LocationTable({
     return (
         <div className="mt-6">
             <div className="flex justify-between items-center mb-4">
-                <label className="mr-2 font-medium">Locations:</label>
+                <label className="text-xl font-semibold">Locations</label>
                 <button
                     className="bg-red-600 text-white px-4 py-2 rounded"
                     onClick={() => {

@@ -29,7 +29,7 @@ export default function UserTableSection({
         <div className="mt-6">
             <div className="flex justify-between items-center mb-4">
                 <div>
-                    <label className="mr-2 font-medium">Create User:</label>
+                    <label className="text-xl font-semibold">Users</label>
                 </div>
                 <button
                     className="bg-red-600 text-white px-4 py-2 rounded"

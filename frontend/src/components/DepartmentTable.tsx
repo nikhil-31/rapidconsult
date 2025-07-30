@@ -79,7 +79,6 @@ export default function DepartmentTable({
                     onClick={onCreate}
                     className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                 >
-                    <Plus size={18}/>
                     Create Department
                 </button>
             </div>
