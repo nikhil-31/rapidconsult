@@ -13,24 +13,12 @@ export default function Admin() {
     const orgs = user?.organizations || [];
     const [users, setUsers] = useState<UserModel[]>([]);
     const [selectedOrgId, setSelectedOrgId] = useState<string>('');
-    const [showModal, setShowModal] = useState(false);
-    const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
-    const [form, setForm] = useState({
-        username: '',
-        email: '',
-        password: '',
-        name: '',
-        org_profile: {
-            organisation: '',
-            role: '',
-            job_title: '',
-        },
-    });
-    const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
     const [showLocationModal, setShowLocationModal] = useState(false);
+    const [showUserModal, setShowUserModal] = useState(false);
 
+    const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
 
     const fetchUsers = async () => {
         try {
@@ -101,65 +89,6 @@ export default function Admin() {
         fetchRoles();
     }, []);
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) => {
-        const {name, value} = e.target;
-
-        if (
-            name === 'profile_picture' &&
-            e.target instanceof HTMLInputElement &&
-            e.target.files
-        ) {
-            setProfilePicture(e.target.files[0]);
-        } else if (['role', 'job_title'].includes(name)) {
-            setForm(prev => ({
-                ...prev,
-                org_profile: {...prev.org_profile, [name]: value},
-            }));
-        } else {
-            setForm(prev => ({...prev, [name]: value}));
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const formData = new FormData();
-        formData.append('username', form.username);
-        formData.append('email', form.email);
-        formData.append('password', form.password);
-        formData.append('name', form.name);
-        formData.append('org_profile.organisation', selectedOrgId.toString());
-        formData.append('org_profile.role', form.org_profile.role);
-        formData.append('org_profile.job_title', form.org_profile.job_title);
-        if (profilePicture) {
-            formData.append('profile_picture', profilePicture);
-        }
-
-        try {
-            await axios.post(`${apiUrl}/api/users/register/`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Token ${user?.token}`,
-                },
-            });
-            setShowModal(false);
-            setForm({
-                username: '',
-                email: '',
-                password: '',
-                name: '',
-                org_profile: {organisation: '', role: '', job_title: ''},
-            });
-            setProfilePicture(null);
-            fetchUsers();
-        } catch (error: any) {
-            console.error('Error creating user', error);
-            alert('User creation failed');
-        }
-    };
-
     return (
         <div className="p-6 max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-10">Admin Page</h1>
@@ -180,30 +109,31 @@ export default function Admin() {
                 </select>
             </div>
 
+            {/* User Section */}
             <UserTableSection
                 users={users}
                 selectedOrgId={selectedOrgId}
-                onCreateUser={() => setShowModal(true)}
+                onCreateUser={() => setShowUserModal(true)}
             />
 
-            <CreateUserModal
-                show={showModal}
-                onClose={() => setShowModal(false)}
-                form={form}
-                selectedOrgId={selectedOrgId}
-                orgs={orgs}
-                roles={roles}
-                onSubmit={handleSubmit}
-                onChange={handleChange}
-            />
+            {showUserModal && (
+                <CreateUserModal
+                    selectedOrgId={selectedOrgId}
+                    orgs={orgs}
+                    roles={roles}
+                    onSuccess={() => fetchUsers()}
+                    onClose={() => setShowUserModal(false)}
+                />
+            )}
 
+
+            {/* Location Section */}
             <LocationTable
                 locations={locations}
                 selectedOrgId={selectedOrgId}
                 onCreateLocation={() => setShowLocationModal(true)}
             />
 
-            {/*Location modal */}
             {showLocationModal && (
                 <CreateLocationModal
                     organizationId={selectedOrgId}
@@ -213,8 +143,6 @@ export default function Admin() {
                     organizationName={orgs.find(org => org.organization_id.toString() === selectedOrgId)?.organization_name}
                 />
             )}
-
-
         </div>
     );
 }
