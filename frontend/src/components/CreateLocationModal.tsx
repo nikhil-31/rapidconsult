@@ -1,13 +1,15 @@
-import React, {useState, ChangeEvent, FormEvent, useContext} from 'react';
+import React, {useState, useEffect, ChangeEvent, FormEvent, useContext} from 'react';
 import axios from 'axios';
 import {OrganizationProfile} from "../models/OrganizationProfile";
 import {AuthContext} from "../contexts/AuthContext";
+import {Location} from "../models/Location";
 
 interface CreateLocationModalProps {
     selectedOrgId: string;
     orgs: OrganizationProfile[];
     onSuccess: () => void;
     onClose: () => void;
+    editingLocation?: Location | null;
 }
 
 export default function CreateLocationModal({
@@ -15,7 +17,9 @@ export default function CreateLocationModal({
                                                 orgs,
                                                 onSuccess,
                                                 onClose,
+                                                editingLocation = null,
                                             }: CreateLocationModalProps) {
+    const {user} = useContext(AuthContext);
     const [form, setForm] = useState({
         name: '',
         address_1: '',
@@ -27,11 +31,27 @@ export default function CreateLocationModal({
         lon: '',
         label: '',
     });
-    const {user} = useContext(AuthContext);
     const [displayPicture, setDisplayPicture] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
 
     const apiUrl = process.env.REACT_APP_API_URL;
+    const isEditMode = Boolean(editingLocation);
+
+    useEffect(() => {
+        if (editingLocation) {
+            setForm({
+                name: editingLocation.name || '',
+                address_1: editingLocation.address?.address_1 || '',
+                address_2: editingLocation.address?.address_2 || '',
+                city: editingLocation.address?.city || '',
+                state: editingLocation.address?.state || '',
+                zip_code: editingLocation.address?.zip_code || '',
+                lat: editingLocation.address?.lat.toString() || '',
+                lon: editingLocation.address?.lon.toString() || '',
+                label: editingLocation.address?.label || '',
+            });
+        }
+    }, [editingLocation]);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target;
@@ -64,17 +84,26 @@ export default function CreateLocationModal({
         formData.append('address.label', form.label);
 
         try {
-            await axios.post(`${apiUrl}/api/locations/`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Token ${user?.token}`,
-                },
-            });
+            if (isEditMode && editingLocation) {
+                await axios.patch(`${apiUrl}/api/locations/${editingLocation.id}/`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Token ${user?.token}`,
+                    },
+                });
+            } else {
+                await axios.post(`${apiUrl}/api/locations/`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Token ${user?.token}`,
+                    },
+                });
+            }
             onSuccess();
             onClose();
         } catch (error) {
-            console.error('Error creating location', error);
-            alert('Failed to create location');
+            console.error('Error saving location', error);
+            alert('Failed to save location');
         } finally {
             setLoading(false);
         }
@@ -90,7 +119,7 @@ export default function CreateLocationModal({
                     ✖
                 </button>
                 <div className="overflow-y-auto p-6 space-y-4 max-h-[calc(90vh-3rem)]">
-                    <h3 className="text-xl font-semibold">Create New Location</h3>
+                    <h3 className="text-xl font-semibold">{isEditMode ? 'Edit Location' : 'Create New Location'}</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <h3 className="font-semibold">Organization</h3>
                         <select
@@ -99,7 +128,6 @@ export default function CreateLocationModal({
                             className="border w-full p-2 rounded bg-gray-100"
                             disabled
                         >
-                            <option value="">Select Organization</option>
                             {orgs.map((op) => (
                                 <option key={op.organization_id} value={op.organization_id}>
                                     {op.organization_name}
@@ -111,6 +139,7 @@ export default function CreateLocationModal({
                         <input
                             name="name"
                             placeholder="Location Name"
+                            value={form.name}
                             onChange={handleChange}
                             required
                             className="border w-full p-2 rounded"
@@ -123,61 +152,29 @@ export default function CreateLocationModal({
                         />
 
                         <h3 className="font-semibold">Address</h3>
-                        <input
-                            name="address_1"
-                            placeholder="Address Line 1"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="address_2"
-                            placeholder="Address Line 2"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="city"
-                            placeholder="City"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="state"
-                            placeholder="State"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="zip_code"
-                            placeholder="Zip Code"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="lat"
-                            placeholder="Latitude"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="lon"
-                            placeholder="Longitude"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
-                        <input
-                            name="label"
-                            placeholder="Label (e.g. HQ)"
-                            onChange={handleChange}
-                            className="border w-full p-2 rounded"
-                        />
+                        <input name="address_1" placeholder="Address Line 1" value={form.address_1}
+                               onChange={handleChange} className="border w-full p-2 rounded"/>
+                        <input name="address_2" placeholder="Address Line 2" value={form.address_2}
+                               onChange={handleChange} className="border w-full p-2 rounded"/>
+                        <input name="city" placeholder="City" value={form.city} onChange={handleChange}
+                               className="border w-full p-2 rounded"/>
+                        <input name="state" placeholder="State" value={form.state} onChange={handleChange}
+                               className="border w-full p-2 rounded"/>
+                        <input name="zip_code" placeholder="Zip Code" value={form.zip_code} onChange={handleChange}
+                               className="border w-full p-2 rounded"/>
+                        <input name="lat" placeholder="Latitude" value={form.lat} onChange={handleChange}
+                               className="border w-full p-2 rounded"/>
+                        <input name="lon" placeholder="Longitude" value={form.lon} onChange={handleChange}
+                               className="border w-full p-2 rounded"/>
+                        <input name="label" placeholder="Label (e.g. HQ)" value={form.label} onChange={handleChange}
+                               className="border w-full p-2 rounded"/>
 
                         <button
                             type="submit"
                             className="bg-blue-600 text-white px-4 py-2 rounded w-full"
                             disabled={loading}
                         >
-                            {loading ? 'Creating...' : 'Create Location'}
+                            {loading ? (isEditMode ? 'Saving...' : 'Creating...') : isEditMode ? 'Save Changes' : 'Create Location'}
                         </button>
                     </form>
                 </div>

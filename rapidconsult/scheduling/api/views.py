@@ -43,6 +43,8 @@ class LocationViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_update(self, serializer):
+        if 'organization' in serializer.validated_data:
+            serializer.validated_data.pop('organization')
         check_org_admin_or_raise(self.request.user, serializer.instance.organization)
         serializer.save()
 

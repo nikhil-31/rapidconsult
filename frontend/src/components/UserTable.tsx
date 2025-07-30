@@ -73,7 +73,7 @@ export default function UserTableSection({
                                     onClick={() => onEditUser(user)}
                                 >
                                     <Pencil className="w-4 h-4 inline-block mr-1"/>
-                                    Edit
+
                                 </button>
                                 <button
                                     className="text-red-600 hover:underline"
@@ -83,7 +83,7 @@ export default function UserTableSection({
                                     }
                                 >
                                     <Trash2 className="w-4 h-4 inline-block mr-1"/>
-                                    Delete
+
                                 </button>
                             </td>
                         </tr>

@@ -1,24 +1,27 @@
 import {Location} from '../models/Location';
+import {Pencil, Trash2} from 'lucide-react';
 
 interface LocationTableProps {
     locations: Location[];
     selectedOrgId: string;
     onCreateLocation: () => void;
+    onEditLocation: (location: Location) => void;
+    onDeleteLocation: (location: Location) => void;
 }
 
 export default function LocationTable({
                                           locations,
                                           selectedOrgId,
                                           onCreateLocation,
+                                          onEditLocation,
+                                          onDeleteLocation,
                                       }: LocationTableProps) {
     if (!locations.length) return null;
 
     return (
         <div className="mt-6">
             <div className="flex justify-between items-center mb-4">
-                <div>
-                    <label className="mr-2 font-medium">Locations:</label>
-                </div>
+                <label className="mr-2 font-medium">Locations:</label>
                 <button
                     className="bg-red-600 text-white px-4 py-2 rounded"
                     onClick={() => {
@@ -40,6 +43,7 @@ export default function LocationTable({
                         <th className="px-4 py-2 text-left">Name</th>
                         <th className="px-4 py-2 text-left">Address</th>
                         <th className="px-4 py-2 text-left">Picture</th>
+                        <th className="px-4 py-2 text-left">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -70,6 +74,30 @@ export default function LocationTable({
                                 ) : (
                                     '—'
                                 )}
+                            </td>
+                            <td className="px-4 py-2 flex items-center gap-2">
+                                <button
+                                    onClick={() => onEditLocation(loc)}
+                                    className="text-blue-600 hover:text-blue-800"
+                                    title="Edit"
+                                >
+                                    <Pencil size={16}/>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (
+                                            window.confirm(
+                                                `Deletion not supported "${loc.name}"?`
+                                            )
+                                        ) {
+                                            onDeleteLocation(loc);
+                                        }
+                                    }}
+                                    className="text-red-600 hover:text-red-800"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={16}/>
+                                </button>
                             </td>
                         </tr>
                     ))}

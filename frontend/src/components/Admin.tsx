@@ -19,6 +19,7 @@ export default function Admin() {
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
     const [editingUser, setEditingUser] = useState<UserModel | null>(null);
+    const [editingLocation, setEditingLocation] = useState<Location | null>(null);
 
     const fetchUsers = async () => {
         try {
@@ -53,6 +54,10 @@ export default function Admin() {
             console.error('Error fetching locations', error);
         }
     };
+
+    const deleteLocation = async (user: Location) => {
+        // Not supported
+    }
 
     // Set default selected organization
     useEffect(() => {
@@ -130,6 +135,13 @@ export default function Admin() {
                 locations={locations}
                 selectedOrgId={selectedOrgId}
                 onCreateLocation={() => setShowLocationModal(true)}
+                onEditLocation={(location) => {
+                    setEditingLocation(location)
+                    setShowLocationModal(true)
+                }}
+                onDeleteLocation={(location) => {
+                    deleteLocation(location)
+                }}
             />
 
             {showLocationModal && (
@@ -138,6 +150,7 @@ export default function Admin() {
                     selectedOrgId={selectedOrgId}
                     onSuccess={() => fetchLocations()}
                     onClose={() => setShowLocationModal(false)}
+                    editingLocation={editingLocation}
                 />
             )}
         </div>
