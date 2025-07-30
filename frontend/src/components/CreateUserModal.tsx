@@ -1,9 +1,9 @@
 import axios from "axios";
-import React, {useContext, useEffect, useState} from 'react';
-import {Role} from "../models/Role";
-import {OrganizationProfile} from "../models/OrganizationProfile";
-import {AuthContext} from "../contexts/AuthContext";
-import {UserModel} from "../models/UserModel";
+import React, { useContext, useEffect, useState } from 'react';
+import { Role } from "../models/Role";
+import { OrganizationProfile } from "../models/OrganizationProfile";
+import { AuthContext } from "../contexts/AuthContext";
+import { UserModel } from "../models/UserModel";
 
 interface CreateUserModalProps {
     selectedOrgId: string;
@@ -14,13 +14,13 @@ interface CreateUserModalProps {
 }
 
 export default function CreateUserModal({
-                                            selectedOrgId,
-                                            orgs,
-                                            onClose,
-                                            onSuccess,
-                                            editingUser = null
-                                        }: CreateUserModalProps) {
-    const {user} = useContext(AuthContext);
+    selectedOrgId,
+    orgs,
+    onClose,
+    onSuccess,
+    editingUser = null
+}: CreateUserModalProps) {
+    const { user } = useContext(AuthContext);
     const [roles, setRoles] = useState<Role[]>([]);
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [form, setForm] = useState({
@@ -34,6 +34,7 @@ export default function CreateUserModal({
             job_title: '',
         },
     });
+
     const apiUrl = process.env.REACT_APP_API_URL;
     const isEditMode = Boolean(editingUser);
 
@@ -41,7 +42,7 @@ export default function CreateUserModal({
         if (editingUser) {
             const userOrg: OrganizationProfile | undefined = editingUser?.organizations.find(
                 (org) => org.organization_id.toString() === selectedOrgId
-            )
+            );
             setForm({
                 username: editingUser.username || '',
                 email: editingUser.email || '',
@@ -59,7 +60,7 @@ export default function CreateUserModal({
     const fetchRoles = async () => {
         try {
             const res = await axios.get(`${apiUrl}/api/roles/`, {
-                headers: {Authorization: `Token ${user?.token}`},
+                headers: { Authorization: `Token ${user?.token}` },
             });
             setRoles(res.data);
         } catch (error) {
@@ -74,7 +75,7 @@ export default function CreateUserModal({
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
 
         if (
             name === 'profile_picture' &&
@@ -85,10 +86,10 @@ export default function CreateUserModal({
         } else if (['role', 'job_title'].includes(name)) {
             setForm(prev => ({
                 ...prev,
-                org_profile: {...prev.org_profile, [name]: value},
+                org_profile: { ...prev.org_profile, [name]: value },
             }));
         } else {
-            setForm(prev => ({...prev, [name]: value}));
+            setForm(prev => ({ ...prev, [name]: value }));
         }
     };
 
@@ -135,7 +136,7 @@ export default function CreateUserModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg max-h-screen overflow-y-auto relative">
                 <button
                     onClick={onClose}
                     className="absolute top-2 right-2 text-gray-500 hover:text-black"
@@ -153,9 +154,7 @@ export default function CreateUserModal({
                         placeholder="Username"
                         value={form.username}
                         onChange={handleChange}
-                        className={`border w-full p-2 rounded ${
-                            isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-                        }`}
+                        className={`border w-full p-2 rounded ${isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                         required
                         disabled={isEditMode}
                     />
@@ -165,9 +164,7 @@ export default function CreateUserModal({
                         placeholder={isEditMode ? 'Change Password (optional)' : 'Password'}
                         value={form.password}
                         onChange={handleChange}
-                        className={`border w-full p-2 rounded ${
-                            isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-                        }`}
+                        className={`border w-full p-2 rounded ${isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                         disabled={isEditMode}
                     />
                     <input
