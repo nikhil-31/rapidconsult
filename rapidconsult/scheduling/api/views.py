@@ -3,6 +3,7 @@ from django.core.exceptions import PermissionDenied
 from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -54,16 +55,59 @@ class LocationViewSet(viewsets.ModelViewSet):
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):
-    queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Department.objects.all()
+        queryset = Department.objects.select_related('location', 'location__organization').all()
         location_id = self.request.query_params.get('location_id')
+        org_id = self.request.query_params.get('organization_id')
+
+        if org_id:
+            # Filter departments through organization relationship via location
+            queryset = queryset.filter(location__organization__id=org_id)
+            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+                raise PermissionDenied("You do not belong to this organization.")
+
         if location_id:
-            queryset = queryset.filter(location__id=location_id)
+            queryset = queryset.filter(location_id=location_id)
+
         return queryset
+
+    def perform_create(self, serializer):
+        org = serializer.validated_data['location'].organization
+        check_org_admin_or_raise(self.request.user, org)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        org = serializer.instance.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+
+        # Prevent changing organization via location reassignment
+        if 'location' in serializer.validated_data:
+            new_org = serializer.validated_data['location'].organization
+            if new_org != org:
+                raise PermissionDenied("Cannot change the organization of the department.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        org = instance.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+        instance.delete()
+
+    @action(detail=False, methods=["get"], url_path="org")
+    def by_organization(self, request):
+        org_id = request.query_params.get("organization_id")
+        if not org_id:
+            return Response({"detail": "Missing organization_id"}, status=400)
+
+        if not request.user.org_profiles.filter(organisation_id=org_id).exists():
+            raise PermissionDenied("You do not belong to this organization.")
+
+        queryset = Department.objects.filter(location__organization__id=org_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class UnitViewSet(viewsets.ModelViewSet):

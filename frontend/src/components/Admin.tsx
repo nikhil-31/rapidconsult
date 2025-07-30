@@ -7,6 +7,9 @@ import CreateLocationModal from '../components/CreateLocationModal';
 import CreateUserModal from '../components/CreateUserModal';
 import LocationTable from './LocationTable';
 import UserTableSection from './UserTable';
+import DepartmentTable from "./DepartmentTable";
+import DepartmentModal from "./DepartmentModal";
+import {Department} from "../models/Department"
 
 
 export default function Admin() {
@@ -18,8 +21,10 @@ export default function Admin() {
     const [locations, setLocations] = useState<Location[]>([]);
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
+    const [showDepartmentModal, setShowDepartmentModal] = useState(false);
     const [editingUser, setEditingUser] = useState<UserModel | null>(null);
     const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+    const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
 
     const fetchUsers = async () => {
         try {
@@ -151,6 +156,38 @@ export default function Admin() {
                     onSuccess={() => fetchLocations()}
                     onClose={() => setShowLocationModal(false)}
                     editingLocation={editingLocation}
+                />
+            )}
+
+            {/* Department Section */}
+            <DepartmentTable
+                selectedOrgId={selectedOrgId}
+                onEdit={(dept) => {
+                    setEditingDepartment(dept); // Set modal state
+                    setShowDepartmentModal(true);
+                }}
+                onReload={() => {
+
+                }}
+                onCreate={() => {
+                    setShowDepartmentModal(true)
+                }}
+            />
+
+            {showDepartmentModal && (
+                <DepartmentModal
+                    selectedOrgId={selectedOrgId}
+                    locations={locations}
+                    onClose={() => {
+                        setShowDepartmentModal(false)
+                        setEditingDepartment(null)
+                    }}
+                    onSuccess={() => {
+                        // reloadDepartments();
+                        setShowDepartmentModal(false)
+                        setEditingDepartment(null)
+                    }}
+                    editingDepartment={editingDepartment}
                 />
             )}
         </div>

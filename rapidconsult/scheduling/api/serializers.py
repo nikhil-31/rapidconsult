@@ -57,11 +57,14 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
-    location = LocationSerializer()
+    location = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), write_only=True
+    )
+    location_details = LocationSerializer(source='location', read_only=True)
 
     class Meta:
         model = Department
-        fields = '__all__'
+        fields = ['id', 'name', 'location', 'location_details', 'display_picture']
 
 
 class UnitSerializer(serializers.ModelSerializer):
