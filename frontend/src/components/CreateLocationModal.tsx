@@ -3,7 +3,7 @@ import axios from 'axios';
 
 interface CreateLocationModalProps {
     organizationId: string;
-    organizationName?: string; // optional
+    organizationName?: string;
     token: string;
     onClose: () => void;
     onSuccess: () => void;
@@ -81,51 +81,97 @@ export default function CreateLocationModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-lg relative max-h-[90vh] overflow-hidden">
                 <button
                     onClick={onClose}
-                    className="absolute top-2 right-2 text-gray-500 hover:text-black"
+                    className="absolute top-2 right-2 text-gray-500 hover:text-black z-10"
                 >
                     ✖
                 </button>
-                <h3 className="text-xl font-semibold mb-4">Create New Location</h3>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <h3 className="font-semibold">Organization</h3>
-                    <input
-                        name="organization_display"
-                        value={organizationName || `Org ID: ${organizationId}`}
-                        disabled
-                        className="border w-full p-2 rounded bg-gray-100 text-gray-700"
-                    />
-                    <h3 className="font-semibold">Location</h3>
-                    <input name="name" placeholder="Location Name" onChange={handleChange} required
-                           className="border w-full p-2 rounded"/>
-                    <input name="address_1" placeholder="Address Line 1" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="address_2" placeholder="Address Line 2" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="city" placeholder="City" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="state" placeholder="State" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="zip_code" placeholder="Zip Code" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="lat" placeholder="Latitude" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="lon" placeholder="Longitude" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input name="label" placeholder="Label (e.g. HQ)" onChange={handleChange}
-                           className="border w-full p-2 rounded"/>
-                    <input type="file" onChange={handleFileChange} className="border w-full p-2 rounded"/>
+                <div className="overflow-y-auto p-6 space-y-4 max-h-[calc(90vh-3rem)]">
+                    <h3 className="text-xl font-semibold">Create New Location</h3>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <h3 className="font-semibold">Organization</h3>
+                        <input
+                            name="organization_display"
+                            value={organizationName || `Org ID: ${organizationId}`}
+                            disabled
+                            className="border w-full p-2 rounded bg-gray-100 text-gray-700"
+                        />
+                        <h3 className="font-semibold">Location</h3>
+                        <input
+                            name="name"
+                            placeholder="Location Name"
+                            onChange={handleChange}
+                            required
+                            className="border w-full p-2 rounded"
+                        />
+                        <p className="font-medium mb-1">Display Picture</p>
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            className="border w-full p-2 rounded"
+                        />
 
-                    <button
-                        type="submit"
-                        className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-                        disabled={loading}
-                    >
-                        {loading ? 'Creating...' : 'Create Location'}
-                    </button>
-                </form>
+                        <h3 className="font-semibold">Address</h3>
+                        <input
+                            name="address_1"
+                            placeholder="Address Line 1"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="address_2"
+                            placeholder="Address Line 2"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="city"
+                            placeholder="City"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="state"
+                            placeholder="State"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="zip_code"
+                            placeholder="Zip Code"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="lat"
+                            placeholder="Latitude"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="lon"
+                            placeholder="Longitude"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+                        <input
+                            name="label"
+                            placeholder="Label (e.g. HQ)"
+                            onChange={handleChange}
+                            className="border w-full p-2 rounded"
+                        />
+
+                        <button
+                            type="submit"
+                            className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+                            disabled={loading}
+                        >
+                            {loading ? 'Creating...' : 'Create Location'}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     );

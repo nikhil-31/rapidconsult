@@ -6,6 +6,7 @@ import {Location} from '../models/Location';
 import CreateLocationModal from '../components/CreateLocationModal';
 import CreateUserModal from '../components/CreateUserModal';
 import LocationTable from './LocationTable';
+import UserTableSection from './UserTable';
 
 export default function Admin() {
     const {user} = useContext(AuthContext);
@@ -179,56 +180,22 @@ export default function Admin() {
                 </select>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
-                <div>
-                    <label className="mr-2 font-medium">Create User:</label>
-                </div>
-                <button
-                    className="bg-red-600 text-white px-4 py-2 rounded"
-                    onClick={() => {
-                        if (!selectedOrgId) {
-                            alert('Please select an organization first.');
-                            return;
-                        }
-                        setShowModal(true);
-                    }}
-                >
-                    Create User
-                </button>
-            </div>
+            <UserTableSection
+                users={users}
+                selectedOrgId={selectedOrgId}
+                onCreateUser={() => setShowModal(true)}
+            />
 
-            <div className="overflow-x-auto border rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100">
-                    <tr>
-                        <th className="px-4 py-2 text-left">Username</th>
-                        <th className="px-4 py-2 text-left">Email</th>
-                        <th className="px-4 py-2 text-left">Name</th>
-                        <th className="px-4 py-2 text-left">Picture</th>
-                    </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((user) => (
-                        <tr key={user.id}>
-                            <td className="px-4 py-2">{user.username}</td>
-                            <td className="px-4 py-2">{user.email}</td>
-                            <td className="px-4 py-2">{user.name}</td>
-                            <td className="px-4 py-2">
-                                {user.profile_picture ? (
-                                    <img
-                                        src={`${user.profile_picture}`}
-                                        alt="Profile"
-                                        className="w-10 h-10 rounded-full"
-                                    />
-                                ) : (
-                                    '—'
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+            <CreateUserModal
+                show={showModal}
+                onClose={() => setShowModal(false)}
+                form={form}
+                selectedOrgId={selectedOrgId}
+                orgs={orgs}
+                roles={roles}
+                onSubmit={handleSubmit}
+                onChange={handleChange}
+            />
 
             <LocationTable
                 locations={locations}
@@ -247,16 +214,6 @@ export default function Admin() {
                 />
             )}
 
-            <CreateUserModal
-                show={showModal}
-                onClose={() => setShowModal(false)}
-                form={form}
-                selectedOrgId={selectedOrgId}
-                orgs={orgs}
-                roles={roles}
-                onSubmit={handleSubmit}
-                onChange={handleChange}
-            />
 
         </div>
     );
