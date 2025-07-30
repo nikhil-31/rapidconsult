@@ -8,6 +8,7 @@ import CreateUserModal from '../components/CreateUserModal';
 import LocationTable from './LocationTable';
 import UserTableSection from './UserTable';
 
+
 export default function Admin() {
     const {user} = useContext(AuthContext);
     const orgs = user?.organizations || [];
@@ -17,8 +18,6 @@ export default function Admin() {
     const apiUrl = process.env.REACT_APP_API_URL;
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showUserModal, setShowUserModal] = useState(false);
-
-    const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
 
     const fetchUsers = async () => {
         try {
@@ -31,17 +30,6 @@ export default function Admin() {
             setUsers(res.data);
         } catch (error) {
             console.error('Error fetching users', error);
-        }
-    };
-
-    const fetchRoles = async () => {
-        try {
-            const res = await axios.get(`${apiUrl}/api/roles/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            setRoles(res.data);
-        } catch (error) {
-            console.error('Error fetching roles', error);
         }
     };
 
@@ -84,11 +72,6 @@ export default function Admin() {
         }
     }, [selectedOrgId]);
 
-    // Fetch roles on mount
-    useEffect(() => {
-        fetchRoles();
-    }, []);
-
     return (
         <div className="p-6 max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-10">Admin Page</h1>
@@ -120,12 +103,10 @@ export default function Admin() {
                 <CreateUserModal
                     selectedOrgId={selectedOrgId}
                     orgs={orgs}
-                    roles={roles}
                     onSuccess={() => fetchUsers()}
                     onClose={() => setShowUserModal(false)}
                 />
             )}
-
 
             {/* Location Section */}
             <LocationTable
@@ -136,11 +117,10 @@ export default function Admin() {
 
             {showLocationModal && (
                 <CreateLocationModal
-                    organizationId={selectedOrgId}
-                    token={user?.token || ''}
-                    onClose={() => setShowLocationModal(false)}
+                    orgs={orgs}
+                    selectedOrgId={selectedOrgId}
                     onSuccess={() => fetchLocations()}
-                    organizationName={orgs.find(org => org.organization_id.toString() === selectedOrgId)?.organization_name}
+                    onClose={() => setShowLocationModal(false)}
                 />
             )}
         </div>

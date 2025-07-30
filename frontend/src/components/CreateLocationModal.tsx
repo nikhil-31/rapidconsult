@@ -1,20 +1,20 @@
-import {useState, ChangeEvent, FormEvent} from 'react';
+import React, {useState, ChangeEvent, FormEvent, useContext} from 'react';
 import axios from 'axios';
+import {OrganizationProfile} from "../models/OrganizationProfile";
+import {AuthContext} from "../contexts/AuthContext";
 
 interface CreateLocationModalProps {
-    organizationId: string;
-    organizationName?: string;
-    token: string;
-    onClose: () => void;
+    selectedOrgId: string;
+    orgs: OrganizationProfile[];
     onSuccess: () => void;
+    onClose: () => void;
 }
 
 export default function CreateLocationModal({
-                                                organizationId,
-                                                organizationName,
-                                                token,
-                                                onClose,
+                                                selectedOrgId,
+                                                orgs,
                                                 onSuccess,
+                                                onClose,
                                             }: CreateLocationModalProps) {
     const [form, setForm] = useState({
         name: '',
@@ -27,6 +27,7 @@ export default function CreateLocationModal({
         lon: '',
         label: '',
     });
+    const {user} = useContext(AuthContext);
     const [displayPicture, setDisplayPicture] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -49,7 +50,7 @@ export default function CreateLocationModal({
 
         const formData = new FormData();
         formData.append('name', form.name);
-        formData.append('organization', organizationId);
+        formData.append('organization', selectedOrgId);
         if (displayPicture) {
             formData.append('display_picture', displayPicture);
         }
@@ -66,7 +67,7 @@ export default function CreateLocationModal({
             await axios.post(`${apiUrl}/api/locations/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    Authorization: `Token ${token}`,
+                    Authorization: `Token ${user?.token}`,
                 },
             });
             onSuccess();
@@ -92,12 +93,20 @@ export default function CreateLocationModal({
                     <h3 className="text-xl font-semibold">Create New Location</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <h3 className="font-semibold">Organization</h3>
-                        <input
-                            name="organization_display"
-                            value={organizationName || `Org ID: ${organizationId}`}
+                        <select
+                            name="organisation"
+                            value={selectedOrgId}
+                            className="border w-full p-2 rounded bg-gray-100"
                             disabled
-                            className="border w-full p-2 rounded bg-gray-100 text-gray-700"
-                        />
+                        >
+                            <option value="">Select Organization</option>
+                            {orgs.map((op) => (
+                                <option key={op.organization_id} value={op.organization_id}>
+                                    {op.organization_name}
+                                </option>
+                            ))}
+                        </select>
+
                         <h3 className="font-semibold">Location</h3>
                         <input
                             name="name"

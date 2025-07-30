@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, {useContext, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Role} from "../models/Role";
 import {OrganizationProfile} from "../models/OrganizationProfile";
 import {AuthContext} from "../contexts/AuthContext";
@@ -8,7 +8,6 @@ import {AuthContext} from "../contexts/AuthContext";
 interface CreateUserModalProps {
     selectedOrgId: string;
     orgs: OrganizationProfile[];
-    roles: Role[];
     onClose: () => void;
     onSuccess: () => void;
 }
@@ -16,14 +15,12 @@ interface CreateUserModalProps {
 export default function CreateUserModal({
                                             selectedOrgId,
                                             orgs,
-                                            roles,
                                             onClose,
                                             onSuccess
-
                                         }: CreateUserModalProps) {
 
     const {user} = useContext(AuthContext);
-    // const [roles, setRoles] = useState< Role[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [form, setForm] = useState({
         username: '',
@@ -37,6 +34,22 @@ export default function CreateUserModal({
         },
     });
     const apiUrl = process.env.REACT_APP_API_URL;
+
+    const fetchRoles = async () => {
+        try {
+            const res = await axios.get(`${apiUrl}/api/roles/`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+            setRoles(res.data);
+        } catch (error) {
+            console.error('Error fetching roles', error);
+        }
+    };
+
+    // Fetch roles on mount
+    useEffect(() => {
+        fetchRoles();
+    }, []);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
