@@ -1,12 +1,12 @@
 import {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import {UserModel} from '../models/UserModel';
 import CreateUserModal from '../components/CreateUserModal';
 import UserTableSection from './UserTable';
-import {Location} from '../models/Location';
+import {UserModel} from '../models/UserModel';
 import CreateLocationModal from '../components/CreateLocationModal';
 import LocationTable from './LocationTable';
+import {Location} from '../models/Location';
 import DepartmentTable from "./DepartmentTable";
 import DepartmentModal from "./DepartmentModal";
 import {Department} from "../models/Department"
@@ -246,6 +246,8 @@ export default function Admin() {
                     unitToEdit={editingUnit}
                 />
             )}
+
+
 
         </div>
     );

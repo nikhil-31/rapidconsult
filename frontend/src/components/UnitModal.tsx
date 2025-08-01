@@ -73,7 +73,6 @@ export default function UnitModal({
                     Authorization: `Token ${user?.token}`,
                 },
             });
-
         request.then((response) => {
             console.log('Unit submitted successfully:', response.data);
             onSuccess();
@@ -119,7 +118,7 @@ export default function UnitModal({
                             required
                             className="border w-full p-2 rounded"
                         >
-                            <option value="">Select Department</option>
+                            <option value="">Select Department - Location</option>
                             {departments
                                 .filter(dep => String(dep.location_details?.organization) === selectedOrgId)
                                 .map(dep => (

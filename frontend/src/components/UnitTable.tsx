@@ -58,8 +58,8 @@ export default function UnitTable({
         //     setUnits(prev => prev.filter(u => u.id !== unitId));
         // } catch (err) {
         //     console.error('Delete failed:', err);
-        alert('Failed to delete unit.');
         // }
+        alert('Failed to delete unit.');
     };
 
     if (!selectedOrgId) {

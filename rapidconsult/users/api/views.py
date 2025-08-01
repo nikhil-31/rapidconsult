@@ -55,6 +55,7 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
         orgs_data = []
         for profile in org_profiles:
             orgs_data.append({
+                "org_user_id": profile.id,
                 "organization_id": profile.organisation.id,
                 "organization_name": profile.organisation.name,
                 "role": {

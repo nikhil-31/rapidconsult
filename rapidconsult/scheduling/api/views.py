@@ -7,10 +7,11 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework import serializers
 
-from scheduling.models import Location, Department, Unit, Organization, Role, UserOrgProfile, UnitMembership
-from .permissions import check_org_admin_or_raise
+from scheduling.api.permissions import check_org_admin_or_raise
+from scheduling.api.serializers import UnitMembershipSerializer
+from scheduling.models import Location, Department, Organization, Role
+from scheduling.models import UnitMembership, Unit
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer, UnitWriteSerializer
 from .serializers import RoleSerializer
@@ -111,25 +112,26 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class UnitMembershipSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=UserOrgProfile.objects.all())
-
-    class Meta:
-        model = UnitMembership
-        fields = ['user', 'is_admin']
-
-
 class UnitViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         org_id = self.request.query_params.get('organization_id')
-        queryset = Unit.objects.select_related('department', 'department__location', 'department__location__organization')
+        department_id = self.request.query_params.get('department_id')
+
+        queryset = Unit.objects.select_related(
+            'department',
+            'department__location',
+            'department__location__organization'
+        )
 
         if org_id:
             if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
                 raise PermissionDenied("You do not belong to this organization.")
             queryset = queryset.filter(department__location__organization_id=org_id)
+
+        if department_id:
+            queryset = queryset.filter(department_id=department_id)
 
         return queryset
 
@@ -161,6 +163,81 @@ class UnitViewSet(viewsets.ModelViewSet):
         check_org_admin_or_raise(self.request.user, org)
         instance.delete()
 
+
+class UnitMembershipViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UnitMembershipSerializer
+
+    def get_queryset(self):
+        """
+        Optionally, filters UnitMemberships by `organization_id`
+        if provided as a query parameter.
+        """
+        org_id = self.request.query_params.get('organization_id')
+        unit_id = self.request.query_params.get('unit_id')
+
+        queryset = UnitMembership.objects.select_related(
+            'unit', 'unit__department', 'unit__department__location__organization',
+            'user', 'user__organisation', 'user__role'
+        )
+
+        if org_id:
+            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+                raise PermissionDenied("You do not belong to this organization.")
+            queryset = queryset.filter(
+                unit__department__location__organization_id=org_id
+            )
+
+        if unit_id:
+            queryset = queryset.filter(unit_id=unit_id)
+
+        return queryset
+
+    def validate_org_membership(self, unit, user_profile):
+        unit_org = unit.department.location.organization
+        if user_profile.organisation != unit_org:
+            raise PermissionDenied("User must belong to the same organization as the unit.")
+
+    def perform_create(self, serializer):
+        """
+        Enforce that only org admins can create unit memberships.
+        """
+        unit = serializer.validated_data.get('unit')
+        user_profile = serializer.validated_data.get('user')
+
+        org = unit.department.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+
+        # Check if the user being assigned belongs to the same org
+        self.validate_org_membership(unit, user_profile)
+
+        serializer.save()
+
+    def perform_update(self, serializer):
+        """
+        Enforce that only org admins can update unit memberships.
+        """
+        unit = serializer.instance.unit
+        org = unit.department.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+
+        user_profile = serializer.validated_data.get('user')
+        self.validate_org_membership(unit, user_profile)
+
+        # Optional: prevent changing unit across orgs
+        new_unit = serializer.validated_data.get('unit')
+        if new_unit and new_unit.department.location.organization != org:
+            raise PermissionDenied("Cannot change to a unit from another organization.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """
+        Enforce that only org admins can delete unit memberships.
+        """
+        org = instance.unit.department.location.organization
+        check_org_admin_or_raise(self.request.user, org)
+        instance.delete()
 
 
 class UserProfileViewSet(

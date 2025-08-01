@@ -1,14 +1,8 @@
 from rest_framework import serializers
 
-from rapidconsult.users.models import User, Contact
 from config.roles import get_permissions_for_role
-from scheduling.models import UserOrgProfile, Role, Organization
-
-
-# class UserSerializer(serializers.ModelSerializer[User]):
-#     class Meta:
-#         model = User
-#         fields = ["username", "name", "profile_picture", "pk", "email"]
+from rapidconsult.users.models import User, Contact
+from scheduling.models import UserOrgProfile
 
 
 class ContactSerializer(serializers.ModelSerializer):
@@ -47,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
         org_profiles = user.org_profiles.select_related("organisation", "role")
         return [
             {
+                "org_user_id": profile.id,
                 "organization_id": profile.organisation.id,
                 "organization_name": profile.organisation.name,
                 "role": {

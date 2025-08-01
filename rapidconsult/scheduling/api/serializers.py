@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 from scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role
 from users.api.serializers import ContactSerializer
-from rapidconsult.users.models import User
 
 User = get_user_model()
 
@@ -72,7 +72,8 @@ class UnitMembershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UnitMembership
-        fields = ['user', 'is_admin']
+        fields = ['id', 'unit', 'user', 'is_admin', 'joined_at']
+        read_only_fields = ['id', 'joined_at']
 
 
 class UnitWriteSerializer(serializers.ModelSerializer):
