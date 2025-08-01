@@ -2,15 +2,17 @@ import {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {UserModel} from '../models/UserModel';
+import CreateUserModal from '../components/CreateUserModal';
+import UserTableSection from './UserTable';
 import {Location} from '../models/Location';
 import CreateLocationModal from '../components/CreateLocationModal';
-import CreateUserModal from '../components/CreateUserModal';
 import LocationTable from './LocationTable';
-import UserTableSection from './UserTable';
 import DepartmentTable from "./DepartmentTable";
 import DepartmentModal from "./DepartmentModal";
 import {Department} from "../models/Department"
 import UnitTable from "./UnitTable";
+import UnitModal from "./UnitModal";
+import {Unit} from "../models/Unit";
 
 
 export default function Admin() {
@@ -23,9 +25,13 @@ export default function Admin() {
     const [showUserModal, setShowUserModal] = useState(false);
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [showDepartmentModal, setShowDepartmentModal] = useState(false);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [showUnitModal, setShowUnitModal] = useState(false);
     const [editingUser, setEditingUser] = useState<UserModel | null>(null);
     const [editingLocation, setEditingLocation] = useState<Location | null>(null);
     const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+    const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+
 
     const fetchUsers = async () => {
         try {
@@ -65,6 +71,24 @@ export default function Admin() {
         // Not supported
     }
 
+    const fetchDepartments = async () => {
+        try {
+            const response = await axios.get(
+                `${apiUrl}/api/departments/org?organization_id=${selectedOrgId}`,
+                {
+                    headers: {
+                        Authorization: `Token ${user?.token}`,
+                    },
+                }
+            );
+            setDepartments(response.data);
+            console.log(`Departments - ${JSON.stringify(response.data)}`)
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
+        }
+    };
+
+
     // Set default selected organization
     useEffect(() => {
         if (orgs.length > 0) {
@@ -86,6 +110,7 @@ export default function Admin() {
         if (selectedOrgId) {
             fetchLocations();
             fetchUsers();
+            fetchDepartments();
         }
     }, [selectedOrgId]);
 
@@ -164,7 +189,7 @@ export default function Admin() {
             <DepartmentTable
                 selectedOrgId={selectedOrgId}
                 onEdit={(dept) => {
-                    setEditingDepartment(dept); // Set modal state
+                    setEditingDepartment(dept);
                     setShowDepartmentModal(true);
                 }}
                 onReload={() => {
@@ -194,7 +219,33 @@ export default function Admin() {
             {/*  Unit and UnitMembership  */}
             <UnitTable
                 selectedOrgId={selectedOrgId}
+                onCreate={() => {
+                    setShowUnitModal(true)
+                }}
+                onEdit={(unit) => {
+                    setEditingUnit(unit)
+                    setShowUnitModal(true)
+                }}
+                onReload={() => {
+
+                }}
             />
+
+            {showUnitModal && (
+                <UnitModal
+                    selectedOrgId={selectedOrgId}
+                    departments={departments}
+                    onClose={() => {
+                        setShowUnitModal(false)
+                        setEditingUnit(null)
+                    }}
+                    onSuccess={() => {
+                        setShowUnitModal(false)
+                        setEditingUnit(null)
+                    }}
+                    unitToEdit={editingUnit}
+                />
+            )}
 
         </div>
     );

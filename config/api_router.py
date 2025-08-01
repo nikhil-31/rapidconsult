@@ -9,13 +9,13 @@ from rapidconsult.scheduling.api.views import (LocationViewSet, DepartmentViewSe
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
-router.register("users", UserViewSet)
-router.register("conversations", ConversationViewSet)
-router.register("messages", MessageViewSet)
+router.register("users", UserViewSet, basename="users")
+router.register("conversations", ConversationViewSet, basename="conversations")
+router.register("messages", MessageViewSet, basename="messages")
 router.register("locations", LocationViewSet, basename="locations")
 router.register("departments", DepartmentViewSet, basename="departments")
-router.register("units", UnitViewSet)
-router.register("organizations", OrganizationViewSet)
+router.register("units", UnitViewSet, basename="units")
+router.register("organizations", OrganizationViewSet, basename="organizations")
 router.register("profile", UserProfileViewSet, basename="profile")
 router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'roles', RoleViewSet, basename='roles')

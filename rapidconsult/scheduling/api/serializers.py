@@ -75,6 +75,34 @@ class UnitMembershipSerializer(serializers.ModelSerializer):
         fields = ['user', 'is_admin']
 
 
+class UnitWriteSerializer(serializers.ModelSerializer):
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
+    members = UnitMembershipSerializer(source='unitmembership_set', many=True, required=False)
+
+    class Meta:
+        model = Unit
+        fields = ['id', 'name', 'department', 'display_picture', 'members']
+
+    def create(self, validated_data):
+        members_data = validated_data.pop('unitmembership_set', [])
+        unit = Unit.objects.create(**validated_data)
+        for member in members_data:
+            UnitMembership.objects.create(unit=unit, **member)
+        return unit
+
+    def update(self, instance, validated_data):
+        members_data = validated_data.pop('unitmembership_set', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if members_data is not None:
+            instance.unitmembership_set.all().delete()
+            for member in members_data:
+                UnitMembership.objects.create(unit=instance, **member)
+        return instance
+
+
 class UnitSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
     members = UnitMembershipSerializer(source='unitmembership_set', many=True, required=False)

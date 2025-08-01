@@ -12,7 +12,7 @@ from rest_framework import serializers
 from scheduling.models import Location, Department, Unit, Organization, Role, UserOrgProfile, UnitMembership
 from .permissions import check_org_admin_or_raise
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
-    UserProfileSerializer
+    UserProfileSerializer, UnitWriteSerializer
 from .serializers import RoleSerializer
 
 User = get_user_model()
@@ -120,25 +120,23 @@ class UnitMembershipSerializer(serializers.ModelSerializer):
 
 
 class UnitViewSet(viewsets.ModelViewSet):
-    queryset = Unit.objects.select_related('department', 'department__location').prefetch_related('unitmembership_set')
-    serializer_class = UnitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         org_id = self.request.query_params.get('organization_id')
-        dept_id = self.request.query_params.get('department_id')
-
-        queryset = self.queryset
+        queryset = Unit.objects.select_related('department', 'department__location', 'department__location__organization')
 
         if org_id:
             if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
                 raise PermissionDenied("You do not belong to this organization.")
             queryset = queryset.filter(department__location__organization_id=org_id)
 
-        if dept_id:
-            queryset = queryset.filter(department_id=dept_id)
-
         return queryset
+
+    def get_serializer_class(self):
+        if self.request.method in ['GET']:
+            return UnitSerializer
+        return UnitWriteSerializer
 
     def perform_create(self, serializer):
         department = serializer.validated_data['department']
@@ -147,15 +145,22 @@ class UnitViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_update(self, serializer):
-        unit = serializer.instance
-        org = unit.department.location.organization
+        department = serializer.instance.department
+        org = department.location.organization
         check_org_admin_or_raise(self.request.user, org)
+
+        if 'department' in serializer.validated_data:
+            new_org = serializer.validated_data['department'].location.organization
+            if new_org != org:
+                raise PermissionDenied("Cannot change the organization of the unit.")
+
         serializer.save()
 
     def perform_destroy(self, instance):
         org = instance.department.location.organization
         check_org_admin_or_raise(self.request.user, org)
         instance.delete()
+
 
 
 class UserProfileViewSet(
