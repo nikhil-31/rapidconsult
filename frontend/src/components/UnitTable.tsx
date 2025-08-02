@@ -59,7 +59,7 @@ export default function UnitTable({
         // } catch (err) {
         //     console.error('Delete failed:', err);
         // }
-        alert('Failed to delete unit.');
+        alert('Delete not supported.');
     };
 
     if (!selectedOrgId) {

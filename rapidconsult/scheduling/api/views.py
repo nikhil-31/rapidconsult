@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework import status
 
 from scheduling.api.permissions import check_org_admin_or_raise
 from scheduling.api.serializers import UnitMembershipSerializer
@@ -221,8 +222,8 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
         org = unit.department.location.organization
         check_org_admin_or_raise(self.request.user, org)
 
-        user_profile = serializer.validated_data.get('user')
-        self.validate_org_membership(unit, user_profile)
+        # user_profile = serializer.validated_data.get('user')
+        # self.validate_org_membership(unit, user_profile)
 
         # Optional: prevent changing unit across orgs
         new_unit = serializer.validated_data.get('unit')

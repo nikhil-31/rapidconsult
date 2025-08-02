@@ -47,7 +47,7 @@ export default function UserTableSection({
                         <th className="px-4 py-2 text-left">Email</th>
                         <th className="px-4 py-2 text-left">Name</th>
                         <th className="px-4 py-2 text-left">Picture</th>
-                        <th className="px-4 py-2 text-left">Actions</th>
+                        <th className="px-4 py-2 text-right">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -67,29 +67,29 @@ export default function UserTableSection({
                                     '—'
                                 )}
                             </td>
-                            <td className="px-4 py-2 flex gap-2">
-                                <button
-                                    className="text-blue-600 hover:underline"
-                                    onClick={() => onEditUser(user)}
-                                >
-                                    <Pencil className="w-4 h-4 inline-block mr-1"/>
-
-                                </button>
-                                <button
-                                    className="text-red-600 hover:underline"
-                                    onClick={() =>
-                                        window.confirm('Not supported!!!') &&
-                                        onDeleteUser(user)
-                                    }
-                                >
-                                    <Trash2 className="w-4 h-4 inline-block mr-1"/>
-
-                                </button>
+                            <td className="px-4 py-2">
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        className="text-blue-600 hover:underline"
+                                        onClick={() => onEditUser(user)}
+                                    >
+                                        <Pencil className="w-4 h-4 inline-block mr-1"/>
+                                    </button>
+                                    <button
+                                        className="text-red-600 hover:underline"
+                                        onClick={() =>
+                                            window.confirm('Not supported!!!') && onDeleteUser(user)
+                                        }
+                                    >
+                                        <Trash2 className="w-4 h-4 inline-block mr-1"/>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
                     </tbody>
                 </table>
+
             </div>
         </div>
     );

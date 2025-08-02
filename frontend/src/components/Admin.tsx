@@ -82,7 +82,6 @@ export default function Admin() {
                 }
             );
             setDepartments(response.data);
-            console.log(`Departments - ${JSON.stringify(response.data)}`)
         } catch (error) {
             console.error('Failed to fetch departments:', error);
         }
@@ -235,6 +234,7 @@ export default function Admin() {
                 <UnitModal
                     selectedOrgId={selectedOrgId}
                     departments={departments}
+                    users={users}
                     onClose={() => {
                         setShowUnitModal(false)
                         setEditingUnit(null)
@@ -246,8 +246,6 @@ export default function Admin() {
                     unitToEdit={editingUnit}
                 />
             )}
-
-
 
         </div>
     );

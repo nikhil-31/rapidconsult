@@ -67,12 +67,41 @@ class DepartmentSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'location', 'location_details', 'display_picture']
 
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name']
+
+
+class UserOrgProfileSerializer(serializers.ModelSerializer):
+    organisation = OrganizationSerializer()
+    role = RoleSerializer()
+
+    class Meta:
+        model = UserOrgProfile
+        fields = ['id', 'organisation', 'role', 'job_title']
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    contacts = ContactSerializer(source='phone_numbers', many=True)
+    organizations = UserOrgProfileSerializer(source='org_profiles', many=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'name', 'email', 'profile_picture',
+            'contacts', 'organizations'
+        ]
+        read_only_fields = ['username']
+
+
 class UnitMembershipSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=UserOrgProfile.objects.all())
+    user_details = UserOrgProfileSerializer(source='user', read_only=True)
 
     class Meta:
         model = UnitMembership
-        fields = ['id', 'unit', 'user', 'is_admin', 'joined_at']
+        fields = ['id', 'unit', 'user', 'is_admin', 'joined_at', 'user_details']
         read_only_fields = ['id', 'joined_at']
 
 
@@ -131,31 +160,3 @@ class UnitSerializer(serializers.ModelSerializer):
             for member in members_data:
                 UnitMembership.objects.create(unit=instance, **member)
         return instance
-
-
-class RoleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Role
-        fields = ['id', 'name']
-
-
-class UserOrgProfileSerializer(serializers.ModelSerializer):
-    organisation = OrganizationSerializer()
-    role = RoleSerializer()
-
-    class Meta:
-        model = UserOrgProfile
-        fields = ['id', 'organisation', 'role', 'job_title']
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    contacts = ContactSerializer(source='phone_numbers', many=True)
-    organizations = UserOrgProfileSerializer(source='org_profiles', many=True)
-
-    class Meta:
-        model = User
-        fields = [
-            'id', 'username', 'name', 'email', 'profile_picture',
-            'contacts', 'organizations'
-        ]
-        read_only_fields = ['username']
