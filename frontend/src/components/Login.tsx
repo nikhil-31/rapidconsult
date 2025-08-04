@@ -1,78 +1,94 @@
-import {useFormik} from "formik";
-import {useContext, useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useFormik} from 'formik';
+import {useContext, useEffect, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {Form, Input, Button, Typography, Alert, Card, Row, Col} from 'antd';
+import {AuthContext} from '../contexts/AuthContext';
 
-import {AuthContext} from "../contexts/AuthContext";
+const {Title} = Typography;
 
 export function Login() {
     const navigate = useNavigate();
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const {user, login} = useContext(AuthContext);
 
     const formik = useFormik({
         initialValues: {
-            username: "",
-            password: ""
+            username: '',
+            password: '',
         },
         onSubmit: async (values, {setSubmitting}) => {
             setSubmitting(true);
             const {username, password} = values;
             const res = await login(username, password);
             if (res.error || res.data) {
-                if (res.data && res.data.detail) {
+                if (res.data?.detail) {
                     setError(res.data.detail);
+                } else {
+                    setError('Login failed');
                 }
             } else {
-                navigate("/");
+                navigate('/');
             }
             setSubmitting(false);
-        }
+        },
     });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (user) {
-            navigate("/");
+            navigate('/');
         }
-    }, [user]);
+    }, [user, navigate]);
 
     return (
-        <div className="flex flex-1 items-center justify-center bg-white h-[calc(60vh-80px)]">
-            <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg shadow-md">
-                <div>
-                    <h1 className="mt-6 text-3xl font-bold text-gray-900 text-center">Rapidconsult</h1>
-                </div>
+        <Row justify="center" align="middle" style={{minHeight: '60vh'}}>
+            <Col xs={22} sm={16} md={10} lg={8}>
+                <Card bordered className="shadow-md">
+                    <Title level={2} className="text-center">
+                        Rapidconsult
+                    </Title>
 
-                <form className="mt-4 space-y-2" onSubmit={formik.handleSubmit}>
-                    {error && <div>{JSON.stringify(error)}</div>}
-
-                    <div className="-space-y-px rounded-md">
-                        <input
-                            value={formik.values.username}
-                            onChange={formik.handleChange}
-                            type="text"
-                            name="username"
-                            placeholder="Username"
-                            className="border-gray-300 text-gray-900 placeholder-gray-300 focus:ring-gray-500 focus:border-gray-500 block w-full pr-10 focus:outline-none sm:text-sm rounded-md"
+                    {error && (
+                        <Alert
+                            message="Login Failed"
+                            description={error}
+                            type="error"
+                            showIcon
+                            style={{marginBottom: 16}}
                         />
-                        <input
-                            value={formik.values.password}
-                            onChange={formik.handleChange}
-                            type="password"
-                            name="password"
-                            className="border-gray-300 text-gray-900 placeholder-gray-300 focus:ring-gray-500 focus:border-gray-500 block w-full pr-10 focus:outline-none sm:text-sm rounded-md"
-                            placeholder="Password"
-                        />
-                    </div>
+                    )}
 
-                    <button
-                        type="submit"
-                        className="group relative flex w-full justify-center rounded-md border border-transparent bg-sky-600 py-2 px-4 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
-                    >
-                        {formik.isSubmitting ? "Signing in..." : "Sign in"}
-                    </button>
-                </form>
-            </div>
-        </div>
+                    <Form layout="vertical" onFinish={formik.handleSubmit}>
+                        <Form.Item label="Username" required>
+                            <Input
+                                name="username"
+                                value={formik.values.username}
+                                onChange={formik.handleChange}
+                                placeholder="Enter your username"
+                            />
+                        </Form.Item>
+
+                        <Form.Item label="Password" required>
+                            <Input.Password
+                                name="password"
+                                value={formik.values.password}
+                                onChange={formik.handleChange}
+                                placeholder="Enter your password"
+                            />
+                        </Form.Item>
+
+                        <Form.Item>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                block
+                                loading={formik.isSubmitting}
+                            >
+                                {formik.isSubmitting ? 'Signing in...' : 'Sign in'}
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                </Card>
+            </Col>
+        </Row>
     );
 }

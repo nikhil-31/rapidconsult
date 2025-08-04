@@ -11,8 +11,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
+    "antd": "^5.26.7",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "formik": "^2.4.6",
@@ -54,7 +53,9 @@
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
+    "@types/react": "^19.1.9",
     "@types/react-big-calendar": "^1.16.2",
+    "@types/react-dom": "^19.1.7",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.4",
     "tailwindcss": "^3.4.17"

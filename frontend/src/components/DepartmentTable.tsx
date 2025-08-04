@@ -1,8 +1,11 @@
 import React, {useEffect, useState, useContext} from 'react';
 import axios from 'axios';
-import {AuthContext} from '../contexts/AuthContext';
+import {Table, Button, Avatar, Typography, Space, Spin, message} from 'antd';
 import {Pencil, Trash2} from 'lucide-react';
+import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
+
+const {Title} = Typography;
 
 interface DepartmentTableProps {
     selectedOrgId: string;
@@ -20,7 +23,6 @@ export default function DepartmentTable({
     const {user} = useContext(AuthContext);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
-
     const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
@@ -39,6 +41,7 @@ export default function DepartmentTable({
                 setDepartments(response.data);
             } catch (error) {
                 console.error('Failed to fetch departments:', error);
+                message.error('Failed to fetch departments');
             } finally {
                 setLoading(false);
             }
@@ -48,84 +51,82 @@ export default function DepartmentTable({
     }, [selectedOrgId, onReload]);
 
     const handleDelete = async (deptId: number) => {
-        // if (!window.confirm('Are you sure you want to delete this department?')) return;
-        //
-        // try {
-        //     await axios.delete(`${apiUrl}/api/departments/${deptId}/`, {
-        //         headers: {
-        //             Authorization: `Token ${user?.token}`,
-        //         },
-        //     });
-        //     onReload();
-        // } catch (error) {
-        // console.error('Error deleting department:', error);
-        alert('This is not supported!!!');
-        // }
+        message.warning('Delete is not supported.');
     };
 
-    if (!selectedOrgId) {
-        return <p className="text-gray-500">Please select an organization.</p>;
-    }
+    const columns = [
+        {
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text: string) => text || '—',
+        },
+        {
+            title: 'Location',
+            dataIndex: ['location_details', 'name'],
+            key: 'location',
+            render: (text: string) => text || '—',
+        },
+        {
+            title: 'Picture',
+            dataIndex: 'display_picture',
+            key: 'display_picture',
+            render: (url: string | null) =>
+                url ? (
+                    <Avatar src={url} size={40}/>
+                ) : (
+                    '—'
+                ),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_: any, record: Department) => (
+                <Space>
+                    <Button
+                        type="link"
+                        icon={<Pencil size={16}/>}
+                        onClick={() => onEdit(record)}
+                    />
+                    <Button
+                        type="link"
+                        danger
+                        icon={<Trash2 size={16}/>}
+                        onClick={() => handleDelete(record.id)}
+                    />
+                </Space>
+            ),
+        },
+    ];
 
-    if (loading) {
-        return <p className="text-gray-500">Loading departments...</p>;
+    if (!selectedOrgId) {
+        return <p style={{color: '#999'}}>Please select an organization.</p>;
     }
 
     return (
-        <div className="mt-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Departments</h2>
-                <button
-                    onClick={onCreate}
-                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                >
+        <div style={{marginTop: 24}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 16}}>
+                <Title level={4} style={{margin: 0}}>
+                    Departments
+                </Title>
+                <Button type="primary" danger onClick={onCreate}>
                     Create Department
-                </button>
+                </Button>
             </div>
 
-            <div className="overflow-x-auto border rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100">
-                    <tr>
-                        <th className="px-4 py-2 text-left">Name</th>
-                        <th className="px-4 py-2 text-left">Location</th>
-                        <th className="px-4 py-2 text-left">Picture</th>
-                        <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                    {departments.map((dept) => (
-                        <tr key={dept.id}>
-                            <td className="px-4 py-2">{dept.name || '—'}</td>
-                            <td className="px-4 py-2">{dept.location_details?.name || '—'}</td>
-                            <td className="px-4 py-2">
-                                {dept.display_picture ? (
-                                    <img
-                                        src={dept.display_picture}
-                                        alt="Department"
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    '—'
-                                )}
-                            </td>
-                            <td className="px-4 py-2 flex gap-3">
-                                <button
-                                    onClick={() => onEdit(dept)}
-                                    className="text-blue-600 hover:text-blue-800">
-                                    <Pencil size={18}/>
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(dept.id)}
-                                    className="text-red-600 hover:text-red-800">
-                                    <Trash2 size={18}/>
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+            {loading ? (
+                <div style={{textAlign: 'center', padding: '2rem'}}>
+                    <Spin size="large"/>
+                </div>
+            ) : (
+                <Table
+                    columns={columns}
+                    dataSource={departments}
+                    rowKey="id"
+                    pagination={false}
+                    bordered
+                />
+            )}
         </div>
     );
 }

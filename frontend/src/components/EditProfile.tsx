@@ -3,50 +3,8 @@ import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from "../contexts/AuthContext";
 import {useNavigate} from 'react-router-dom';
-
-interface Contact {
-    id: number;
-    label: string;
-    type: string;
-    // country_code: string | null;
-    number: string;
-    primary: boolean;
-}
-
-interface Organization {
-    id: number;
-    organisation: {
-        id: number;
-        name: string;
-        display_picture: string | null;
-        address: {
-            id: number;
-            address_1: string;
-            address_2: string;
-            city: string;
-            state: string;
-            zip_code: string;
-            lat: number;
-            lon: number;
-            label: string;
-        };
-    };
-    role: {
-        id: number;
-        name: string;
-    };
-    job_title: string;
-}
-
-interface ProfileData {
-    id?: number;
-    name: string;
-    username: string;
-    email: string;
-    profile_picture?: string;
-    contacts: Contact[];
-    organizations: Organization[];
-}
+import {ProfileData} from "../models/ProfileData";
+import {Contact} from "../models/Contact";
 
 interface FormErrors {
     name?: string;

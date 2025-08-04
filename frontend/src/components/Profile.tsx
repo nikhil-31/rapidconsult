@@ -1,9 +1,22 @@
-// pages/Profile.tsx
 import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
-import {AuthContext} from "../contexts/AuthContext";
-import ContactFormModal from "../components/ContactModal";
+import {AuthContext} from '../contexts/AuthContext';
+import ContactFormModal from '../components/ContactModal';
 import {useNavigate} from 'react-router-dom';
+import {
+    Avatar,
+    Button,
+    Card,
+    Col,
+    Divider,
+    List,
+    Row,
+    Table,
+    Typography,
+    message,
+} from 'antd';
+
+const {Title, Text} = Typography;
 
 const Profile = () => {
     const [profile, setProfile] = useState<any>(null);
@@ -15,14 +28,13 @@ const Profile = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get(
-                `${apiUrl}/api/profile/me/`, {
-                    headers: {Authorization: `Token ${user?.token}`}
-                })
-                .then(res => setProfile(res.data))
-                .catch(err => console.error(err));
+            const res = await axios.get(`${apiUrl}/api/profile/me/`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+            setProfile(res.data);
         } catch (err) {
             console.error('Failed to load profile', err);
+            message.error('Failed to load profile');
         }
     };
 
@@ -34,117 +46,114 @@ const Profile = () => {
         try {
             if (editingContact?.id) {
                 await axios.put(`${apiUrl}/api/contacts/${editingContact.id}/`, contact, {
-                    headers: {Authorization: `Token ${user?.token}`}
+                    headers: {Authorization: `Token ${user?.token}`},
                 });
             } else {
                 await axios.post(`${apiUrl}/api/contacts/`, contact, {
-                    headers: {Authorization: `Token ${user?.token}`}
+                    headers: {Authorization: `Token ${user?.token}`},
                 });
             }
+            message.success('Contact saved successfully');
             setShowForm(false);
             setEditingContact(null);
             fetchProfile();
         } catch (err) {
             console.error('Failed to save contact', err);
+            message.error('Failed to save contact');
         }
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm('Delete this contact?')) return;
         try {
             await axios.delete(`${apiUrl}/api/contacts/${id}/`, {
-                headers: {Authorization: `Token ${user?.token}`}
+                headers: {Authorization: `Token ${user?.token}`},
             });
+            message.success('Contact deleted');
             fetchProfile();
         } catch (err) {
             console.error('Delete failed', err);
+            message.error('Failed to delete contact');
         }
     };
 
     if (!profile) return <div>Loading...</div>;
 
+    const contactColumns = [
+        {
+            title: 'Label',
+            dataIndex: 'label',
+            key: 'label',
+        },
+        {
+            title: 'Type',
+            dataIndex: 'type',
+            key: 'type',
+        },
+        {
+            title: 'Number/Contact',
+            dataIndex: 'number',
+            key: 'number',
+        },
+        {
+            title: 'Primary',
+            dataIndex: 'primary',
+            key: 'primary',
+            render: (val: boolean) => (val ? 'Yes' : 'No'),
+        },
+    ];
+
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-6">
-                    <img
-                        src={profile.profile_picture || "/doctor-default.png"}
-                        alt="Profile"
-                        className="w-24 h-24 rounded-full object-cover"
-                    />
-                    <div>
-                        <h1 className="text-2xl font-bold">{profile.name}</h1>
-                        <p className="text-gray-600">{profile.email}</p>
-                        {/*<h1 className="text-gray-600">username-{profile.username}</h1>*/}
-                    </div>
-                </div>
+        <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
+            <Card>
+                <Row justify="space-between" align="middle">
+                    <Col>
+                        <Row gutter={16} align="middle">
+                            <Col>
+                                <Avatar
+                                    size={96}
+                                    src={profile.profile_picture || '/doctor-default.png'}
+                                />
+                            </Col>
+                            <Col>
+                                <Title level={3} style={{marginBottom: 0}}>
+                                    {profile.name}
+                                </Title>
+                                <Text type="secondary">{profile.email}</Text>
+                            </Col>
+                        </Row>
+                    </Col>
+                    <Col>
+                        <Button type="primary" danger onClick={() => navigate('/profile/edit')}>
+                            Edit Profile
+                        </Button>
+                    </Col>
+                </Row>
+            </Card>
 
-                <button
-                    onClick={() => navigate('/profile/edit')}
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                >
-                    Edit Profile
-                </button>
-            </div>
+            <Divider/>
 
-            {/* Contact Table */}
-            <div className="mb-6">
-                <div className="mb-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">Contact Info</h2>
-                    {/*<button*/}
-                    {/*    onClick={() => {*/}
-                    {/*        setEditingContact(null);*/}
-                    {/*        setShowForm(true);*/}
-                    {/*    }}*/}
-                    {/*    className="bg-red-600 text-white font-semibold hover:bg-red-700 px-3 py-1 rounded"*/}
-                    {/*>*/}
-                    {/*    + Add Contact*/}
-                    {/*</button>*/}
-                </div>
-                <div className="overflow-x-auto mb-4">
-                    <table className="min-w-full bg-white border border-gray-200 text-sm">
-                        <thead>
-                        <tr className="bg-gray-100 text-left">
-                            <th className="py-2 px-4 border-b">Label</th>
-                            <th className="py-2 px-4 border-b">Type</th>
-                            {/*<th className="py-2 px-4 border-b">Country Code</th>*/}
-                            <th className="py-2 px-4 border-b">Number/Contact</th>
-                            <th className="py-2 px-4 border-b">Primary</th>
-                            {/*<th className="py-2 px-4 border-b">Actions</th>*/}
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {profile.contacts.map((c: any) => (
-                            <tr key={c.id} className="hover:bg-gray-50">
-                                <td className="py-2 px-4 border-b">{c.label || '-'}</td>
-                                <td className="py-2 px-4 border-b">{c.type}</td>
-                                {/*<td className="py-2 px-4 border-b">{c.country_code}</td>*/}
-                                <td className="py-2 px-4 border-b">{c.number}</td>
-                                <td className="py-2 px-4 border-b">{c.primary ? 'Yes' : 'No'}</td>
-                                {/*<td className="py-2 px-4 border-b flex gap-2">*/}
-                                {/*    <button*/}
-                                {/*        onClick={() => {*/}
-                                {/*            setEditingContact(c);*/}
-                                {/*            setShowForm(true);*/}
-                                {/*        }}*/}
-                                {/*        className="text-blue-600"*/}
-                                {/*    >*/}
-                                {/*        Edit*/}
-                                {/*    </button>*/}
-                                {/*    <button*/}
-                                {/*        onClick={() => handleDelete(c.id)}*/}
-                                {/*        className="text-red-600"*/}
-                                {/*    >*/}
-                                {/*        Delete*/}
-                                {/*    </button>*/}
-                                {/*</td>*/}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
+            {/* Contacts */}
+            <Card
+                title="Contact Info"
+                // extra={
+                    // <Button
+                    //     type="primary"
+                    //     onClick={() => {
+                    //         setEditingContact(null);
+                    //         setShowForm(true);
+                    //     }}
+                    // >
+                    //     + Add Contact
+                    // </Button>
+                //{
+            >
+                <Table
+                    rowKey="id"
+                    dataSource={profile.contacts}
+                    columns={contactColumns}
+                    pagination={false}
+                />
+            </Card>
 
             {/* Contact Modal */}
             <ContactFormModal
@@ -157,24 +166,36 @@ const Profile = () => {
                 initialData={editingContact}
             />
 
-            {/* Organizations List */}
-            <div>
-                <h2 className="text-xl font-semibold mb-2">Organizations</h2>
-                <ul className="space-y-4">
-                    {profile.organizations.map((org: any) => (
-                        <li key={org.id} className="border p-4 rounded-lg bg-gray-50">
-                            <div className="text-lg font-semibold">{org.organisation.name}</div>
-                            <div className="text-gray-700">
-                                {org.job_title} ({org.role.name})
-                            </div>
-                            <div className="text-sm text-gray-500 mt-1">
-                                {org.organisation.address.address_1}, {org.organisation.address.city},{' '}
-                                {org.organisation.address.state} - {org.organisation.address.zip_code}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <Divider/>
+
+            {/* Organizations */}
+            <Card title="Organizations">
+                <List
+                    itemLayout="vertical"
+                    dataSource={profile.organizations}
+                    renderItem={(org: any) => (
+                        <List.Item key={org.id}>
+                            <List.Item.Meta
+                                title={<Text strong>{org.organisation.name}</Text>}
+                                description={
+                                    <>
+                                        <Text type="secondary">
+                                            {org.job_title} ({org.role.name})
+                                        </Text>
+                                        <br/>
+                                        <Text type="secondary" style={{fontSize: 12}}>
+                                            {org.organisation.address?.address_1},{' '}
+                                            {org.organisation.address?.city},{' '}
+                                            {org.organisation.address?.state} -{' '}
+                                            {org.organisation.address?.zip_code}
+                                        </Text>
+                                    </>
+                                }
+                            />
+                        </List.Item>
+                    )}
+                />
+            </Card>
         </div>
     );
 };

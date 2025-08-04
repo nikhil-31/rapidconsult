@@ -1,8 +1,10 @@
 import React, {useEffect, useState, useContext} from 'react';
-import axios from 'axios';
+import {Table, Button, Avatar, Space, Typography, message} from 'antd';
 import {AuthContext} from '../contexts/AuthContext';
 import {Unit} from '../models/Unit';
-import {Pencil, Trash2} from "lucide-react";
+import {Pencil, Trash2} from 'lucide-react';
+import axios from 'axios';
+const {Title} = Typography;
 
 interface UnitTableProps {
     selectedOrgId: string;
@@ -24,6 +26,7 @@ export default function UnitTable({
 
     const fetchUnits = async () => {
         if (!selectedOrgId) return;
+        setLoading(true);
         try {
             const response = await axios.get(
                 `${apiUrl}/api/units/?organization_id=${selectedOrgId}`,
@@ -36,6 +39,7 @@ export default function UnitTable({
             setUnits(response.data);
         } catch (error) {
             console.error('Failed to fetch units:', error);
+            message.error('Failed to load units');
         } finally {
             setLoading(false);
         }
@@ -46,93 +50,100 @@ export default function UnitTable({
     }, [selectedOrgId, onReload]);
 
     const handleDelete = async (unitId: number) => {
+        message.warning('Delete not supported.');
+        // Uncomment below if delete is supported
         // const confirmed = window.confirm('Are you sure you want to delete this unit?');
         // if (!confirmed) return;
-        //
         // try {
-        //     await axios.delete(`${apiUrl}/api/units/${unitId}/`, {
-        //         headers: {
-        //             Authorization: `Token ${user?.token}`,
-        //         },
-        //     });
-        //     setUnits(prev => prev.filter(u => u.id !== unitId));
+        //   await axios.delete(`${apiUrl}/api/units/${unitId}/`, {
+        //     headers: {
+        //       Authorization: `Token ${user?.token}`,
+        //     },
+        //   });
+        //   setUnits(prev => prev.filter(u => u.id !== unitId));
+        //   message.success('Unit deleted');
         // } catch (err) {
-        //     console.error('Delete failed:', err);
+        //   console.error('Delete failed:', err);
+        //   message.error('Failed to delete unit');
         // }
-        alert('Delete not supported.');
     };
 
-    if (!selectedOrgId) {
-        return <p className="text-gray-500">Please select an organization.</p>;
-    }
+    const columns = [
+        {
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text: string) => text || '—',
+        },
+        {
+            title: 'Department',
+            key: 'department',
+            render: (_: any, record: Unit) =>
+                record.department?.name || '—',
+        },
+        {
+            title: 'Location',
+            key: 'location',
+            render: (_: any, record: Unit) =>
+                record.department?.location_details?.name || '—',
+        },
+        {
+            title: 'Members',
+            key: 'members',
+            render: (_: any, record: Unit) => record.members?.length || 0,
+        },
+        {
+            title: 'Picture',
+            key: 'display_picture',
+            render: (_: any, record: Unit) =>
+                record.display_picture ? (
+                    <Avatar src={record.display_picture} shape="circle"/>
+                ) : (
+                    '—'
+                ),
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_: any, record: Unit) => (
+                <Space>
+                    <Button
+                        type="link"
+                        onClick={() => onEdit(record)}
+                        icon={<Pencil size={16}/>}
+                    />
+                    <Button
+                        type="link"
+                        danger
+                        onClick={() => handleDelete(record.id)}
+                        icon={<Trash2 size={16}/>}
+                    />
+                </Space>
+            ),
+        },
+    ];
 
-    if (loading) {
-        return <p className="text-gray-500">Loading units...</p>;
+    if (!selectedOrgId) {
+        return <p style={{color: '#999'}}>Please select an organization.</p>;
     }
 
     return (
         <div className="mt-6">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Units</h2>
-                <button
-                    onClick={onCreate}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2"
-                >
+                <Title level={4}>Units</Title>
+                <Button type="primary" danger onClick={onCreate}>
                     Create Unit
-                </button>
+                </Button>
             </div>
 
-            <div className="overflow-x-auto border rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100">
-                    <tr>
-                        <th className="px-4 py-2 text-left">Name</th>
-                        <th className="px-4 py-2 text-left">Department</th>
-                        <th className="px-4 py-2 text-left">Location</th>
-                        <th className="px-4 py-2 text-left">Members</th>
-                        <th className="px-4 py-2 text-left">Picture</th>
-                        <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                    {units.map((unit) => (
-                        <tr key={unit.id}>
-                            <td className="px-4 py-2">{unit.name || '—'}</td>
-                            <td className="px-4 py-2">{unit.department?.name || '—'}</td>
-                            <td className="px-4 py-2">
-                                {unit.department?.location_details?.name || '—'}
-                            </td>
-                            <td className="px-4 py-2">{unit.members?.length || 0}</td>
-                            <td className="px-4 py-2">
-                                {unit.display_picture ? (
-                                    <img
-                                        src={unit.display_picture}
-                                        alt="Unit"
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    '—'
-                                )}
-                            </td>
-                            <td className="px-4 py-2 space-x-2">
-                                <button
-                                    onClick={() => onEdit(unit)}
-                                    className="text-blue-600 hover:underline"
-                                >
-                                    <Pencil size={18}/>
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(unit.id)}
-                                    className="text-red-600 hover:underline"
-                                >
-                                    <Trash2 size={18}/>
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+            <Table
+                rowKey="id"
+                columns={columns}
+                dataSource={units}
+                loading={loading}
+                bordered
+                pagination={{pageSize: 10}}
+            />
         </div>
     );
 }
