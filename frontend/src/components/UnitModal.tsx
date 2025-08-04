@@ -243,6 +243,25 @@ export default function UnitModal({
                     </Upload>
                 </Form.Item>
 
+                {/*<Form.Item label="Add Member" style={{width: '100%'}}>*/}
+                {/*    <Input.Group compact style={{display: 'flex'}}>*/}
+                {/*        <Select*/}
+                {/*            value={selectedOrgUserId}*/}
+                {/*            onChange={setSelectedOrgUserId}*/}
+                {/*            style={{flex: 1}}*/}
+                {/*            placeholder="Select Member"*/}
+                {/*        >*/}
+                {/*            {getEligibleUsersForOrg().map((u) => (*/}
+                {/*                <Option key={u.org_user_id} value={u.org_user_id}>*/}
+                {/*                    {u.name} ({u.job_title})*/}
+                {/*                </Option>*/}
+                {/*            ))}*/}
+                {/*        </Select>*/}
+                {/*        <Button type="primary" onClick={handleAddMember} style={{marginLeft: 8}}>*/}
+                {/*            Add*/}
+                {/*        </Button>*/}
+                {/*    </Input.Group>*/}
+                {/*</Form.Item>*/}
                 <Form.Item label="Add Member" style={{width: '100%'}}>
                     <Input.Group compact style={{display: 'flex'}}>
                         <Select
@@ -250,19 +269,32 @@ export default function UnitModal({
                             onChange={setSelectedOrgUserId}
                             style={{flex: 1}}
                             placeholder="Select Member"
+                            optionFilterProp="children"
+                            showSearch
                         >
-                            {getEligibleUsersForOrg().map((u) => (
-                                <Option key={u.org_user_id} value={u.org_user_id}>
-                                    {u.name} ({u.job_title})
-                                </Option>
-                            ))}
+                            {getEligibleUsersForOrg().map((u) => {
+                                const isAlreadyMember = members.some((m) => m.user === u.org_user_id);
+                                return (
+                                    <Select.Option
+                                        key={u.org_user_id}
+                                        value={u.org_user_id}
+                                        disabled={isAlreadyMember}
+                                    >
+                                        {u.name} ({u.job_title}) {isAlreadyMember ? ' - Added' : ''}
+                                    </Select.Option>
+                                );
+                            })}
                         </Select>
-                        <Button type="primary" onClick={handleAddMember} style={{marginLeft: 8}}>
+                        <Button
+                            type="primary"
+                            onClick={handleAddMember}
+                            style={{marginLeft: 8}}
+                            disabled={!selectedOrgUserId}
+                        >
                             Add
                         </Button>
                     </Input.Group>
                 </Form.Item>
-
 
                 {members.length > 0 && (
                     <List
