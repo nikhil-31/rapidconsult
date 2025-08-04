@@ -1,17 +1,6 @@
 import React, {useState, useEffect, ChangeEvent, useContext} from 'react';
 import {
-    Modal,
-    Form,
-    Input,
-    Select,
-    Button,
-    Upload,
-    Checkbox,
-    List,
-    Typography,
-    message,
-    Tooltip,
-    Space,
+    Modal, Form, Input, Select, Button, Upload, Checkbox, List, Typography, message, Tooltip, Space,
 } from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
@@ -243,25 +232,6 @@ export default function UnitModal({
                     </Upload>
                 </Form.Item>
 
-                {/*<Form.Item label="Add Member" style={{width: '100%'}}>*/}
-                {/*    <Input.Group compact style={{display: 'flex'}}>*/}
-                {/*        <Select*/}
-                {/*            value={selectedOrgUserId}*/}
-                {/*            onChange={setSelectedOrgUserId}*/}
-                {/*            style={{flex: 1}}*/}
-                {/*            placeholder="Select Member"*/}
-                {/*        >*/}
-                {/*            {getEligibleUsersForOrg().map((u) => (*/}
-                {/*                <Option key={u.org_user_id} value={u.org_user_id}>*/}
-                {/*                    {u.name} ({u.job_title})*/}
-                {/*                </Option>*/}
-                {/*            ))}*/}
-                {/*        </Select>*/}
-                {/*        <Button type="primary" onClick={handleAddMember} style={{marginLeft: 8}}>*/}
-                {/*            Add*/}
-                {/*        </Button>*/}
-                {/*    </Input.Group>*/}
-                {/*</Form.Item>*/}
                 <Form.Item label="Add Member" style={{width: '100%'}}>
                     <Input.Group compact style={{display: 'flex'}}>
                         <Select
