@@ -1,25 +1,15 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {
-    Table,
-    Button,
-    Avatar,
-    Space,
-    Typography,
-    message,
-    Tooltip,
-    Row,
-    Col
+    Table, Button, Avatar, Space, Typography, message, Tooltip, Row, Col
 } from 'antd';
 import {
-    EditOutlined,
-    DeleteOutlined,
-    PlusOutlined
+    EditOutlined, DeleteOutlined, PlusOutlined
 } from '@ant-design/icons';
-import { AuthContext } from '../contexts/AuthContext';
-import { Unit } from '../models/Unit';
+import {AuthContext} from '../contexts/AuthContext';
+import {Unit} from '../models/Unit';
 import axios from 'axios';
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 interface UnitTableProps {
     selectedOrgId: string;
@@ -28,13 +18,9 @@ interface UnitTableProps {
     onReload: () => void;
 }
 
-export default function UnitTable({
-    selectedOrgId,
-    onCreate,
-    onEdit,
-    onReload,
-}: UnitTableProps) {
-    const { user } = useContext(AuthContext);
+export default function UnitTable({selectedOrgId, onCreate, onEdit, onReload,}: UnitTableProps) {
+
+    const {user} = useContext(AuthContext);
     const [units, setUnits] = useState<Unit[]>([]);
     const [loading, setLoading] = useState(true);
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -102,7 +88,7 @@ export default function UnitTable({
             align: 'center' as const,
             render: (_: any, record: Unit) =>
                 record.display_picture ? (
-                    <Avatar src={record.display_picture} shape="circle" size={40} />
+                    <Avatar src={record.display_picture} shape="circle" size={40}/>
                 ) : (
                     '—'
                 ),
@@ -116,7 +102,7 @@ export default function UnitTable({
                     <Tooltip title="Edit">
                         <Button
                             type="text"
-                            icon={<EditOutlined />}
+                            icon={<EditOutlined/>}
                             onClick={() => onEdit(record)}
                         />
                     </Tooltip>
@@ -124,7 +110,7 @@ export default function UnitTable({
                         <Button
                             type="text"
                             danger
-                            icon={<DeleteOutlined />}
+                            icon={<DeleteOutlined/>}
                             onClick={() => handleDelete(record.id)}
                         />
                     </Tooltip>
@@ -134,19 +120,19 @@ export default function UnitTable({
     ];
 
     if (!selectedOrgId) {
-        return <p style={{ color: '#999' }}>Please select an organization.</p>;
+        return <p style={{color: '#999'}}>Please select an organization.</p>;
     }
 
     return (
-        <div style={{ marginTop: 24 }}>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <div style={{marginTop: 24}}>
+            <Row justify="space-between" align="middle" style={{marginBottom: 16}}>
                 <Col>
-                    <Title level={4} style={{ margin: 0 }}>
+                    <Title level={4} style={{margin: 0}}>
                         Units
                     </Title>
                 </Col>
                 <Col>
-                    <Button type="primary" danger icon={<PlusOutlined />} onClick={onCreate}>
+                    <Button type="primary" danger icon={<PlusOutlined/>} onClick={onCreate}>
                         Create Unit
                     </Button>
                 </Col>
