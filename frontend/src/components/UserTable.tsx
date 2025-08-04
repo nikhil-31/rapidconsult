@@ -1,6 +1,20 @@
 import React from 'react';
-import {Table, Button, Avatar, Space, Typography, message} from 'antd';
-import {Pencil, Trash2} from 'lucide-react';
+import {
+    Table,
+    Button,
+    Avatar,
+    Space,
+    Typography,
+    Tooltip,
+    Row,
+    Col,
+    message,
+} from 'antd';
+import {
+    EditOutlined,
+    DeleteOutlined,
+    PlusOutlined,
+} from '@ant-design/icons';
 import {UserModel} from '../models/UserModel';
 
 const {Title} = Typography;
@@ -33,21 +47,25 @@ export default function UserTableSection({
             title: 'Username',
             dataIndex: 'username',
             key: 'username',
+            render: (text: string) => text || '—',
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
+            render: (text: string) => text || '—',
         },
         {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
+            render: (text: string) => text || '—',
         },
         {
             title: 'Picture',
             dataIndex: 'profile_picture',
             key: 'profile_picture',
+            align: 'center' as const,
             render: (url: string | null) =>
                 url ? <Avatar src={url} size={40}/> : '—',
         },
@@ -57,19 +75,25 @@ export default function UserTableSection({
             align: 'right' as const,
             render: (_: any, record: UserModel) => (
                 <Space>
-                    <Button
-                        type="link"
-                        icon={<Pencil size={16}/>}
-                        onClick={() => onEditUser(record)}
-                    />
-                    <Button
-                        type="link"
-                        danger
-                        icon={<Trash2 size={16}/>}
-                        onClick={() =>
-                            window.confirm('Not supported!!!') && onDeleteUser(record)
-                        }
-                    />
+                    <Tooltip title="Edit">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined/>}
+                            onClick={() => onEditUser(record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined/>}
+                            onClick={() => {
+                                message.warning('Delete not supported.');
+                                // Optional: confirm dialog and deletion logic
+                                // if (window.confirm('Are you sure?')) onDeleteUser(record);
+                            }}
+                        />
+                    </Tooltip>
                 </Space>
             ),
         },
@@ -77,14 +101,23 @@ export default function UserTableSection({
 
     return (
         <div style={{marginTop: 24}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 16}}>
-                <Title level={4} style={{margin: 0}}>
-                    Users
-                </Title>
-                <Button type="primary" danger onClick={handleCreateClick}>
-                    Create User
-                </Button>
-            </div>
+            <Row justify="space-between" align="middle" style={{marginBottom: 16}}>
+                <Col>
+                    <Title level={4} style={{margin: 0}}>
+                        Users
+                    </Title>
+                </Col>
+                <Col>
+                    <Button
+                        type="primary"
+                        danger
+                        icon={<PlusOutlined/>}
+                        onClick={handleCreateClick}
+                    >
+                        Create User
+                    </Button>
+                </Col>
+            </Row>
 
             <Table
                 columns={columns}
@@ -93,6 +126,7 @@ export default function UserTableSection({
                 bordered
                 pagination={false}
                 scroll={{x: true}}
+                size="middle"
             />
         </div>
     );

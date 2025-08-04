@@ -1,11 +1,24 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
-import {Table, Button, Avatar, Typography, Space, Spin, message} from 'antd';
-import {Pencil, Trash2} from 'lucide-react';
-import {AuthContext} from '../contexts/AuthContext';
-import {Department} from '../models/Department';
+import {
+    Table,
+    Button,
+    Avatar,
+    Typography,
+    Space,
+    Spin,
+    Tooltip,
+    message
+} from 'antd';
+import {
+    EditOutlined,
+    DeleteOutlined,
+    PlusOutlined
+} from '@ant-design/icons';
+import { AuthContext } from '../contexts/AuthContext';
+import { Department } from '../models/Department';
 
-const {Title} = Typography;
+const { Title } = Typography;
 
 interface DepartmentTableProps {
     selectedOrgId: string;
@@ -15,12 +28,12 @@ interface DepartmentTableProps {
 }
 
 export default function DepartmentTable({
-                                            selectedOrgId,
-                                            onEdit,
-                                            onReload,
-                                            onCreate,
-                                        }: DepartmentTableProps) {
-    const {user} = useContext(AuthContext);
+    selectedOrgId,
+    onEdit,
+    onReload,
+    onCreate,
+}: DepartmentTableProps) {
+    const { user } = useContext(AuthContext);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -59,13 +72,13 @@ export default function DepartmentTable({
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            render: (text: string) => text || '—',
+            ellipsis: true,
         },
         {
             title: 'Location',
             dataIndex: ['location_details', 'name'],
             key: 'location',
-            render: (text: string) => text || '—',
+            ellipsis: true,
         },
         {
             title: 'Picture',
@@ -73,7 +86,9 @@ export default function DepartmentTable({
             key: 'display_picture',
             render: (url: string | null) =>
                 url ? (
-                    <Avatar src={url} size={40}/>
+                    <Tooltip title="Department Image">
+                        <Avatar src={url} size={40} />
+                    </Tooltip>
                 ) : (
                     '—'
                 ),
@@ -81,42 +96,52 @@ export default function DepartmentTable({
         {
             title: 'Actions',
             key: 'actions',
+            align: 'right' as const,
             render: (_: any, record: Department) => (
                 <Space>
-                    <Button
-                        type="link"
-                        icon={<Pencil size={16}/>}
-                        onClick={() => onEdit(record)}
-                    />
-                    <Button
-                        type="link"
-                        danger
-                        icon={<Trash2 size={16}/>}
-                        onClick={() => handleDelete(record.id)}
-                    />
+                    <Tooltip title="Edit">
+                        <Button
+                            icon={<EditOutlined />}
+                            type="text"
+                            onClick={() => onEdit(record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <Button
+                            icon={<DeleteOutlined />}
+                            type="text"
+                            danger
+                            onClick={() => handleDelete(record.id)}
+                        />
+                    </Tooltip>
                 </Space>
             ),
         },
     ];
 
     if (!selectedOrgId) {
-        return <p style={{color: '#999'}}>Please select an organization.</p>;
+        return <p style={{ color: '#999' }}>Please select an organization.</p>;
     }
 
     return (
-        <div style={{marginTop: 24}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 16}}>
-                <Title level={4} style={{margin: 0}}>
+        <div style={{ marginTop: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                <Title level={4} style={{ margin: 0 }}>
                     Departments
                 </Title>
-                <Button type="primary" danger onClick={onCreate}>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    danger
+                    onClick={onCreate}
+                >
                     Create Department
                 </Button>
             </div>
 
             {loading ? (
-                <div style={{textAlign: 'center', padding: '2rem'}}>
-                    <Spin size="large"/>
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <Spin size="large" />
                 </div>
             ) : (
                 <Table
@@ -125,6 +150,7 @@ export default function DepartmentTable({
                     rowKey="id"
                     pagination={false}
                     bordered
+                    size="middle"
                 />
             )}
         </div>

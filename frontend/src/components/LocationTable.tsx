@@ -1,8 +1,19 @@
-import { Table, Button, Popconfirm, Space, Image, Typography, Row, Col } from 'antd';
-import { Pencil, Trash2 } from 'lucide-react';
-import { Location } from '../models/Location';
+import {
+    Table,
+    Button,
+    Popconfirm,
+    Space,
+    Image,
+    Typography,
+    Row,
+    Col,
+    Tooltip,
+    message,
+} from 'antd';
+import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
+import {Location} from '../models/Location';
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 interface LocationTableProps {
     locations: Location[];
@@ -13,23 +24,23 @@ interface LocationTableProps {
 }
 
 export default function LocationTable({
-    locations,
-    selectedOrgId,
-    onCreateLocation,
-    onEditLocation,
-    onDeleteLocation,
-}: LocationTableProps) {
-    if (!locations.length) return null;
-
+                                          locations,
+                                          selectedOrgId,
+                                          onCreateLocation,
+                                          onEditLocation,
+                                          onDeleteLocation,
+                                      }: LocationTableProps) {
     const columns = [
         {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
+            ellipsis: true,
         },
         {
             title: 'Address',
             key: 'address',
+            ellipsis: true,
             render: (_: any, loc: Location) => {
                 const addr = loc.address;
                 if (!addr) return '—';
@@ -50,14 +61,16 @@ export default function LocationTable({
             key: 'display_picture',
             render: (_: any, loc: Location) =>
                 loc.display_picture ? (
-                    <Image
-                        width={40}
-                        height={40}
-                        src={loc.display_picture}
-                        alt="Location"
-                        style={{ borderRadius: '50%', objectFit: 'cover' }}
-                        preview={false}
-                    />
+                    <Tooltip title="Location Picture">
+                        <Image
+                            width={40}
+                            height={40}
+                            src={loc.display_picture}
+                            alt="Location"
+                            style={{borderRadius: '50%', objectFit: 'cover'}}
+                            preview={false}
+                        />
+                    </Tooltip>
                 ) : (
                     '—'
                 ),
@@ -65,31 +78,40 @@ export default function LocationTable({
         {
             title: 'Actions',
             key: 'actions',
+            align: 'right' as const,
             render: (_: any, loc: Location) => (
-                <Space size="middle">
-                    <Button
-                        type="link"
-                        icon={<Pencil size={16} />}
-                        onClick={() => onEditLocation(loc)}
-                    />
-                    <Popconfirm
-                        title={`Are you sure to delete "${loc.name}"?`}
-                        onConfirm={() => onDeleteLocation(loc)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button type="link" danger icon={<Trash2 size={16} />} />
-                    </Popconfirm>
+                <Space>
+                    <Tooltip title="Edit">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined/>}
+                            onClick={() => onEditLocation(loc)}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <Popconfirm
+                            title={`Are you sure you want to delete "${loc.name}"?`}
+                            onConfirm={() => onDeleteLocation(loc)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button
+                                type="text"
+                                icon={<DeleteOutlined/>}
+                                danger
+                            />
+                        </Popconfirm>
+                    </Tooltip>
                 </Space>
             ),
         },
     ];
 
     return (
-        <div style={{ marginTop: 24 }}>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <div style={{marginTop: 24}}>
+            <Row justify="space-between" align="middle" style={{marginBottom: 16}}>
                 <Col>
-                    <Title level={4} style={{ margin: 0 }}>
+                    <Title level={4} style={{margin: 0}}>
                         Locations
                     </Title>
                 </Col>
@@ -97,9 +119,10 @@ export default function LocationTable({
                     <Button
                         type="primary"
                         danger
+                        icon={<PlusOutlined/>}
                         onClick={() => {
                             if (!selectedOrgId) {
-                                alert('Please select an organization first.');
+                                message.warning('Please select an organization first.');
                                 return;
                             }
                             onCreateLocation();
@@ -116,6 +139,7 @@ export default function LocationTable({
                 dataSource={locations}
                 pagination={false}
                 bordered
+                size="middle"
             />
         </div>
     );
