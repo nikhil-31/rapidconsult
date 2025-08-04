@@ -158,7 +158,7 @@ export default function UnitTable({
                 dataSource={units}
                 loading={loading}
                 bordered
-                pagination={{ pageSize: 10 }}
+                pagination={false}
                 size="middle"
             />
         </div>
