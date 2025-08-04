@@ -13,10 +13,11 @@ import {Department} from '../models/Department';
 import UnitTable from './UnitTable';
 import UnitModal from './UnitModal';
 import {Unit} from '../models/Unit';
-import {Select, Typography, Divider, Layout, message} from 'antd';
+
+import {Select, Typography, Divider, Layout, message, Row, Col} from 'antd';
 
 const {Option} = Select;
-const {Title} = Typography;
+const {Title, Text} = Typography;
 const {Content} = Layout;
 
 export default function Admin() {
@@ -102,22 +103,31 @@ export default function Admin() {
 
     return (
         <Content style={{padding: '2rem', maxWidth: '1000px', margin: '0 auto'}}>
-            <Title level={2}>Admin Page</Title>
+            <Title level={2} style={{marginBottom: 32}}>Admin Page</Title>
 
-            <div style={{marginBottom: 24}}>
-                <label style={{fontWeight: 500, marginRight: 8}}>Select Organization:</label>
-                <Select
-                    style={{width: 300}}
-                    value={selectedOrgId}
-                    onChange={(val) => setSelectedOrgId(val)}
-                >
-                    {orgs.map(org => (
-                        <Option key={org.organization_id} value={String(org.organization_id)}>
-                            {org.organization_name}
-                        </Option>
-                    ))}
-                </Select>
-            </div>
+            <Row align="middle" gutter={16} style={{marginBottom: 24}}>
+                <Col>
+                    <Text strong style={{fontSize: 16}}>Select Organization:</Text>
+                </Col>
+                <Col flex="auto">
+                    <Select
+                        style={{
+                            minWidth: 320,
+                            height: 44,
+                            fontSize: 16,
+                        }}
+                        value={selectedOrgId}
+                        size="large"
+                        onChange={(val) => setSelectedOrgId(val)}
+                    >
+                        {orgs.map(org => (
+                            <Option key={org.organization_id} value={String(org.organization_id)}>
+                                {org.organization_name}
+                            </Option>
+                        ))}
+                    </Select>
+                </Col>
+            </Row>
 
             <Divider/>
 
