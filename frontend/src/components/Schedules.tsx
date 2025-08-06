@@ -1,35 +1,24 @@
+import axios, {AxiosResponse} from 'axios';
 import React, {useContext, useEffect, useState} from 'react';
-import {
-    Calendar,
-    dateFnsLocalizer,
-    View,
-    Views,
-} from 'react-big-calendar';
+import {Calendar, dateFnsLocalizer, View, Views,} from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import {
-    Layout,
-    Menu,
-    Button,
-    Typography,
-    Select,
-    Space,
-} from 'antd';
+import {Layout, Menu, Button, Typography, Select, Space,} from 'antd';
 import {PlusOutlined} from '@ant-design/icons';
-import CreateShiftModal from "./ShiftModal";
+import CreateShiftModal from './ShiftModal';
+import {Locale} from 'date-fns';
 
+
+const locales: Record<string, Locale> = {
+    'en-US': require('date-fns/locale/en-US'),
+};
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
 const {Option} = Select;
-
-const locales = {
-    'en-US': require('date-fns/locale/en-US'),
-};
 
 const localizer = dateFnsLocalizer({
     format,
@@ -68,10 +57,10 @@ type Location = { id: number; name: string };
 type Department = { id: number; name: string };
 type Unit = { id: number; name: string };
 
-const CalendarView = () => {
+const CalendarView: React.FC = () => {
     const {user} = useContext(AuthContext);
     const orgs = user?.organizations || [];
-    const apiUrl = process.env.REACT_APP_API_URL;
+    const apiUrl = process.env.REACT_APP_API_URL as string;
 
     const [events, setEvents] = useState<EventData[]>([]);
     const [view, setView] = useState<View>(Views.MONTH);
@@ -81,11 +70,12 @@ const CalendarView = () => {
     const [units, setUnits] = useState<Record<number, Unit[]>>({});
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const [selectedOrgId, setSelectedOrgId] = useState<string>('');
-    const [shiftModalOpen, setShiftModalOpen] = useState(false);
+    const [shiftModalOpen, setShiftModalOpen] = useState<boolean>(false);
 
-    const fetchLocations = async () => {
+    const fetchLocations = async (): Promise<void> => {
         try {
-            const res = await axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
+            const res: AxiosResponse<Location[]> = await axios.get(`${apiUrl}/api/locations`, {
+                params: {organization_id: selectedOrgId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
             setLocations(res.data);
@@ -94,9 +84,10 @@ const CalendarView = () => {
         }
     };
 
-    const fetchDepartments = async (locationId: number) => {
+    const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
-            const res = await axios.get(`${apiUrl}/api/departments?location_id=${locationId}`, {
+            const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments`, {
+                params: {location_id: locationId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
             const deps = res.data;
@@ -110,9 +101,10 @@ const CalendarView = () => {
         }
     };
 
-    const fetchUnits = async (departmentId: number) => {
+    const fetchUnits = async (departmentId: number): Promise<void> => {
         try {
-            const res = await axios.get(`${apiUrl}/api/units?department_id=${departmentId}`, {
+            const res: AxiosResponse<Unit[]> = await axios.get(`${apiUrl}/api/units`, {
+                params: {department_id: departmentId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
             setUnits(prev => ({...prev, [departmentId]: res.data}));
@@ -121,13 +113,14 @@ const CalendarView = () => {
         }
     };
 
-    const handleUnitClick = async (unitId: number) => {
+    const handleUnitClick = async (unitId: number): Promise<void> => {
         try {
-            const res = await axios.get(`${apiUrl}/api/shifts?unit=${unitId}`, {
+            const res: AxiosResponse<Shift[]> = await axios.get(`${apiUrl}/api/shifts`, {
+                params: {unit: unitId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
 
-            const formatted = res.data.map((shift: Shift) => ({
+            const formatted: EventData[] = res.data.map((shift: Shift) => ({
                 id: shift.id,
                 title: `${shift.user_details.job_title} (${shift.user_details.role.name})`,
                 start: new Date(shift.start_time),
@@ -141,6 +134,12 @@ const CalendarView = () => {
             console.error('Failed to fetch shifts for unit:', err);
         }
     };
+
+    useEffect(() => {
+        if (locations.length > 0 && selectedLocationId === null) {
+            setSelectedLocationId(locations[0].id);
+        }
+    }, [locations, selectedLocationId]);
 
     useEffect(() => {
         if (orgs.length > 0) {
