@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role
+from scheduling.models import (Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role,
+                               OnCallShift)
 from users.api.serializers import ContactSerializer
 
 User = get_user_model()
@@ -160,3 +161,9 @@ class UnitSerializer(serializers.ModelSerializer):
             for member in members_data:
                 UnitMembership.objects.create(unit=instance, **member)
         return instance
+
+
+class OnCallShiftSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OnCallShift
+        fields = ['id', 'user', 'unit', 'start_time', 'end_time']

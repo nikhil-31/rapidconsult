@@ -1,14 +1,34 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {Calendar, dateFnsLocalizer, View, Views} from 'react-big-calendar';
+import {
+    Calendar,
+    dateFnsLocalizer,
+    View,
+    Views,
+} from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
-import axios from 'axios';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import {Link, useLocation} from 'react-router-dom';
-import {Plus} from 'lucide-react';
+import {useLocation} from 'react-router-dom';
+import {
+    Layout,
+    Menu,
+    Button,
+    Typography,
+    Select,
+    Space,
+    Spin,
+} from 'antd';
+import {PlusOutlined} from '@ant-design/icons';
+import CreateShiftModal from "./ShiftModal";
+
+const {Sider, Content} = Layout;
+const {Title} = Typography;
+const {Option} = Select;
+const {Text} = Typography;
 
 const locales = {
     'en-US': require('date-fns/locale/en-US'),
@@ -24,12 +44,8 @@ const localizer = dateFnsLocalizer({
 
 type Shift = {
     id: number;
-    user: {
-        username: string;
-    };
-    role: {
-        name: string;
-    };
+    user: { username: string };
+    role: { name: string };
     start_time: string;
     end_time: string;
     team: number;
@@ -47,131 +63,218 @@ type EventData = {
     role: number;
 };
 
-export const CalendarView = () => {
+type Location = { id: number; name: string };
+type Department = { id: number; name: string };
+type Unit = { id: number; name: string };
+
+const CalendarView = () => {
+    const {user} = useContext(AuthContext);
+    const orgs = user?.organizations || [];
+    const apiUrl = process.env.REACT_APP_API_URL;
+
     const [events, setEvents] = useState<EventData[]>([]);
     const [view, setView] = useState<View>(Views.MONTH);
     const [date, setDate] = useState<Date>(new Date());
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
-    const [selectedSlotTime, setSelectedSlotTime] = useState<{ start: Date; end: Date } | undefined>();
-    const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const location = useLocation();
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [departments, setDepartments] = useState<Record<number, Department[]>>({});
+    const [units, setUnits] = useState<Record<number, Unit[]>>({});
+    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+    const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+    const [shiftModalOpen, setShiftModalOpen] = useState(false);
 
-    const fetchEvents = async () => {
+    const fetchLocations = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/shifts/`, {
-                headers: {
-                    Authorization: `Token ${user?.token}`,
-                },
+            const res = await axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
+                headers: {Authorization: `Token ${user?.token}`},
             });
-            const formatted = res.data.map((shift: Shift) => ({
-                id: shift.id,
-                title: `${shift.user.username} (${shift.role.name})`,
-                start: new Date(shift.start_time),
-                end: new Date(shift.end_time),
-                user: shift.user_id,
-                team: shift.team,
-                role: shift.role_id,
-            }));
-            setEvents(formatted);
+            setLocations(res.data);
         } catch (err) {
-            console.error('Error loading shifts:', err);
+            console.error('Failed to fetch locations:', err);
+        }
+    };
+
+    const fetchDepartments = async (locationId: number) => {
+        try {
+            const res = await axios.get(`${apiUrl}/api/departments?location_id=${locationId}`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+            const deps = res.data;
+            setDepartments(prev => ({...prev, [locationId]: deps}));
+
+            // Fetch units for each department
+            deps.forEach((dep: Department) => {
+                fetchUnits(dep.id);
+            });
+        } catch (err) {
+            console.error('Failed to fetch departments:', err);
+        }
+    };
+
+    const fetchUnits = async (departmentId: number) => {
+        try {
+            const res = await axios.get(`${apiUrl}/api/units?department_id=${departmentId}`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+            setUnits(prev => ({...prev, [departmentId]: res.data}));
+        } catch (err) {
+            console.error('Failed to fetch units:', err);
         }
     };
 
     useEffect(() => {
-        // fetchEvents();
-    }, []);
+        if (orgs.length > 0) {
+            const storedOrg = localStorage.getItem('org_select');
+            const matchedOrg = storedOrg
+                ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
+                : null;
 
-    const handleSelectEvent = (event: EventData) => {
-        setSelectedShiftId(event.id);
-        setDialogOpen(true);
-    };
+            const defaultOrgId = matchedOrg
+                ? matchedOrg.organization_id.toString()
+                : orgs[0].organization_id.toString();
 
-    const handleSelectSlot = (slotInfo: { start: Date; end: Date }) => {
-        setSelectedShiftId(null);
-        setSelectedSlotTime({start: slotInfo.start, end: slotInfo.end});
-        setDialogOpen(true);
-    };
+            setSelectedOrgId(defaultOrgId);
+        }
+    }, [orgs]);
 
-    const isActive = (path: string) => location.pathname === path;
+
+    useEffect(() => {
+        if (selectedOrgId) {
+            fetchLocations();
+        }
+    }, [selectedOrgId]);
+
+    useEffect(() => {
+        if (selectedLocationId !== null) {
+            fetchDepartments(selectedLocationId);
+        }
+    }, [selectedLocationId]);
 
     return (
-        <div className="flex flex-col h-full">
 
-            <div className="flex flex-1 overflow-hidden">
-                <aside className="w-64 bg-gray-100 border-r border-gray-200 p-4">
-                    <nav className="space-y-2">
-                        <Link
-                            to="/schedules/department"
-                            className={`block px-4 py-2 rounded ${
-                                isActive('/schedules/department')
-                                    ? 'bg-blue-100 text-blue-700 font-semibold'
-                                    : 'text-gray-800 hover:bg-gray-200'
-                            }`}
-                        >
-                            Department Schedules
-                        </Link>
-                        <Link
-                            to="/schedules/unit"
-                            className={`block px-4 py-2 rounded ${
-                                isActive('/schedules/unit')
-                                    ? 'bg-blue-100 text-blue-700 font-semibold'
-                                    : 'text-gray-800 hover:bg-gray-200'
-                            }`}
-                        >
-                            Unit Schedules
-                        </Link>
-                        <Link
-                            to="/schedules/my"
-                            className={`block px-4 py-2 rounded ${
-                                isActive('/schedules/my')
-                                    ? 'bg-blue-100 text-blue-700 font-semibold'
-                                    : 'text-gray-800 hover:bg-gray-200'
-                            }`}
-                        >
-                            My Schedules
-                        </Link>
-                    </nav>
-                </aside>
+        <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
+            <Sider
+                width={350}
+                style={{
+                    backgroundColor: '#ffffff',
+                    borderRight: '1px solid #f0f0f0',
 
-                {/* Calendar Content */}
-                <main className="flex-1 overflow-auto p-6 bg-white flex flex-col">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">On-Call Shift Calendar</h2>
-                        <div className="space-x-2">
-                            <button
-                                className="px-3 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 flex items-center gap-2">
+                }}
+            >
+                <div style={{padding: 16}}>
+                    <Title level={5} style={{marginBottom: 16}}>
+                        Select Location
+                    </Title>
+                    <Select
+                        placeholder="Choose a location"
+                        style={{width: '100%'}}
+                        value={selectedLocationId || undefined}
+                        onChange={(val: number) => setSelectedLocationId(val)}
+                        loading={locations.length === 0}
+                    >
+                        {locations.map(loc => (
+                            <Option key={loc.id} value={loc.id}>
+                                <Text>{loc.name}</Text>
+                            </Option>
+                        ))}
+                    </Select>
+
+                </div>
+
+                <div style={{paddingLeft: 16, paddingRight: 16}}>
+                    <Title level={5} style={{marginBottom: 10}}>
+                        Departments
+                    </Title>
+                </div>
+                <Menu
+                    mode="inline"
+                    style={{borderInlineEnd: 'none'}}
+                    defaultOpenKeys={
+                        selectedLocationId && departments[selectedLocationId]
+                            ? departments[selectedLocationId].map(dep => `dep-${dep.id}`)
+                            : []
+                    }
+                >
+                    {selectedLocationId &&
+                        departments[selectedLocationId]?.map(department => (
+                            <Menu.SubMenu
+                                key={`dep-${department.id}`}
+                                title={<span style={{fontWeight: 500}}>{department.name}</span>}
+                            >
+                                {units[department.id]?.map(unit => (
+                                        <Menu.Item key={`unit-${unit.id}`}>
+                                            {unit.name}
+                                        </Menu.Item>))
+                                    || <Menu.Item disabled>Loading units...</Menu.Item>}
+                            </Menu.SubMenu>
+                        ))}
+                </Menu>
+            </Sider>
+
+
+            <Layout>
+                <Content
+                    style={{
+                        padding: '32px 48px',
+                        background: '#fff',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: 24,
+                        }}
+                    >
+                        <Title level={3} style={{margin: 0}}>
+                            On-Call Shift Calendar
+                        </Title>
+                        <Space>
+                            <Button
+                                type="primary"
+                                danger
+                                icon={<PlusOutlined/>}
+                                onClick={() => setShiftModalOpen(true)}
+                            >
                                 Add Shift
-                                <Plus size={18}/>
-                            </button>
-                            {/*    <button className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Export*/}
-                            {/*    </button>*/}
-                            {/*    <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Clear</button>*/}
-                        </div>
+                            </Button>
+
+                            {shiftModalOpen && (
+                                <CreateShiftModal
+                                    visible={shiftModalOpen}
+                                    onClose={() => setShiftModalOpen(false)}
+                                    onShiftCreated={() => {
+
+                                    }}
+                                />
+                            )}
+
+                        </Space>
                     </div>
 
-                    <div className="flex-1">
-                        <Calendar
-                            localizer={localizer}
-                            events={events}
-                            startAccessor="start"
-                            endAccessor="end"
-                            views={[Views.DAY, Views.WEEK, Views.MONTH]}
-                            view={view}
-                            onView={setView}
-                            date={date}
-                            onNavigate={(newDate) => setDate(newDate)}
-                            onSelectEvent={handleSelectEvent}
-                            selectable
-                            onSelectSlot={handleSelectSlot}
-                            style={{height: 600}}
-                        />
-                    </div>
-                </main>
-            </div>
-        </div>
+                    <Calendar
+                        localizer={localizer}
+                        events={events}
+                        startAccessor="start"
+                        endAccessor="end"
+                        views={[Views.DAY, Views.WEEK, Views.MONTH]}
+                        view={view}
+                        onView={setView}
+                        date={date}
+                        onNavigate={setDate}
+                        selectable
+                        style={{
+                            height: 600,
+                            backgroundColor: '#fff',
+                            padding: 16,
+                            border: '1px solid #f0f0f0',
+                            borderRadius: 8,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        }}
+                    />
+                </Content>
+            </Layout>
+        </Layout>
     );
 };
 

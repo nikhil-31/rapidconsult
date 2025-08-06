@@ -1,21 +1,19 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework import status
 
 from scheduling.api.permissions import check_org_admin_or_raise
-from scheduling.api.serializers import UnitMembershipSerializer
-from scheduling.models import Location, Department, Organization, Role
-from scheduling.models import UnitMembership, Unit
+from scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
-    UserProfileSerializer, UnitWriteSerializer
-from .serializers import RoleSerializer
+    UserProfileSerializer, UnitWriteSerializer, OnCallShiftSerializer, RoleSerializer, UnitMembershipSerializer
 
 User = get_user_model()
 
@@ -267,3 +265,28 @@ class UserProfileViewSet(
 class RoleViewSet(ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+
+
+class OnCallShiftViewSet(ModelViewSet):
+    serializer_class = OnCallShiftSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = OnCallShift.objects.all()
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        unit_id = self.request.query_params.get('unit')
+        department_id = self.request.query_params.get('department')
+        location_id = self.request.query_params.get('location')
+
+        if unit_id:
+            queryset = queryset.filter(unit_id=unit_id)
+
+        if department_id:
+            queryset = queryset.filter(unit__department_id=department_id)
+
+        if location_id:
+            queryset = queryset.filter(unit__department__location_id=location_id)
+
+        return queryset
