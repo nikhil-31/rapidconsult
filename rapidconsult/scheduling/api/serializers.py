@@ -164,6 +164,12 @@ class UnitSerializer(serializers.ModelSerializer):
 
 
 class OnCallShiftSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=UserOrgProfile.objects.all(), write_only=True)
+    unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all(), write_only=True)
+
+    user_details = UserOrgProfileSerializer(source='user', read_only=True)
+    unit_details = UnitSerializer(source='unit', read_only=True)
+
     class Meta:
         model = OnCallShift
-        fields = ['id', 'user', 'unit', 'start_time', 'end_time']
+        fields = ['id', 'user', 'unit', 'start_time', 'end_time', 'user_details', 'unit_details']
