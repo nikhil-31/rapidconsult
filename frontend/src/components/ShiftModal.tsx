@@ -19,27 +19,38 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
     const apiUrl = process.env.REACT_APP_API_URL;
 
     const [form] = Form.useForm();
-    const [users, setUsers] = useState([]);
     const [locations, setLocations] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [units, setUnits] = useState([]);
+    const [members, setMembers] = useState([]);
 
     const [selectedOrgId, setSelectedOrgId] = useState<string>('');
     const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
+    const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (orgs.length > 0) {
+            const storedOrg = localStorage.getItem('org_select');
+            const matchedOrg = storedOrg
+                ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
+                : null;
+
+            const defaultOrgId = matchedOrg
+                ? matchedOrg.organization_id.toString()
+                : orgs[0].organization_id.toString();
+
+            setSelectedOrgId(defaultOrgId);
+        }
+    }, [orgs]);
 
     useEffect(() => {
         if (!selectedOrgId || !user?.token) return;
 
-        axios.get(`${apiUrl}/api/users/all?organization=${selectedOrgId}`, {
-            headers: {Authorization: `Token ${user.token}`},
-        }).then(res => setUsers(res.data))
-            .catch(err => console.error("Failed to fetch users", err));
-
         axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
             headers: {Authorization: `Token ${user.token}`},
         }).then(res => setLocations(res.data))
-            .catch(err => console.error("Failed to fetch locations", err));
+          .catch(err => console.error("Failed to fetch locations", err));
     }, [selectedOrgId, user]);
 
     useEffect(() => {
@@ -61,19 +72,23 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
     }, [selectedDepartment]);
 
     useEffect(() => {
-        if (orgs.length > 0) {
-            const storedOrg = localStorage.getItem('org_select');
-            const matchedOrg = storedOrg
-                ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
-                : null;
+        if (!selectedUnit) return;
 
-            const defaultOrgId = matchedOrg
-                ? matchedOrg.organization_id.toString()
-                : orgs[0].organization_id.toString();
+        axios.get(`${apiUrl}/api/units/${selectedUnit}`, {
+            headers: {Authorization: `Token ${user?.token}`},
+        })
+        .then(res => {
+            const unitData = res.data;
+            const unitMembers = unitData.members || [];
+            const formattedMembers = unitMembers.map((member: any) => ({
+                id: member.user_details.id,
+                name: `${member.user_details.job_title || 'User'} (${member.user_details.role.name})`
+            }));
+            setMembers(formattedMembers);
+        })
+        .catch(err => console.error('Failed to fetch unit members', err));
 
-            setSelectedOrgId(defaultOrgId);
-        }
-    }, [orgs]);
+    }, [selectedUnit]);
 
     const handleSubmit = async () => {
         try {
@@ -111,19 +126,11 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             footer={null}
         >
             <Form layout="vertical" form={form} onFinish={handleSubmit}>
-                <Form.Item label="User" name="user" rules={[{required: true}]}>
-                    <Select placeholder="Select user">
-                        {users.map((u: any) => (
-                            <Option key={u.id} value={u.id}>{u.name || u.username}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
-
                 <Form.Item label="Location" name="location" rules={[{required: true}]}>
                     <Select
                         placeholder="Select location"
                         onChange={(val) => {
-                            form.setFieldsValue({department: undefined, unit: undefined});
+                            form.setFieldsValue({department: undefined, unit: undefined, user: undefined});
                             setSelectedLocation(val);
                         }}
                     >
@@ -137,7 +144,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
                     <Select
                         placeholder="Select department"
                         onChange={(val) => {
-                            form.setFieldsValue({unit: undefined});
+                            form.setFieldsValue({unit: undefined, user: undefined});
                             setSelectedDepartment(val);
                         }}
                         disabled={!selectedLocation}
@@ -149,9 +156,24 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
                 </Form.Item>
 
                 <Form.Item label="Unit" name="unit" rules={[{required: true}]}>
-                    <Select placeholder="Select unit" disabled={!selectedDepartment}>
+                    <Select
+                        placeholder="Select unit"
+                        onChange={(val) => {
+                            form.setFieldsValue({user: undefined});
+                            setSelectedUnit(val);
+                        }}
+                        disabled={!selectedDepartment}
+                    >
                         {units.map((u: any) => (
                             <Option key={u.id} value={u.id}>{u.name}</Option>
+                        ))}
+                    </Select>
+                </Form.Item>
+
+                <Form.Item label="Member" name="user" rules={[{required: true}]}>
+                    <Select placeholder="Select member" disabled={!selectedUnit}>
+                        {members.map((m: any) => (
+                            <Option key={m.id} value={m.id}>{m.name}</Option>
                         ))}
                     </Select>
                 </Form.Item>
