@@ -3,6 +3,7 @@ import {Modal, Form, Select, DatePicker, Button, message} from 'antd';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import dayjs from 'dayjs';
+import {useOrgLocation} from "../contexts/LocationContext";
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
@@ -24,10 +25,16 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
     const [units, setUnits] = useState([]);
     const [members, setMembers] = useState([]);
 
-    const [selectedOrgId, setSelectedOrgId] = useState<string>('');
-    const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+    // const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+    const {selectedLocation, setSelectedLocation} = useOrgLocation();
+    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
     const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
+
+
+    useEffect(() => {
+        setSelectedLocationId(selectedLocation?.location?.id ?? null);
+    }, [selectedLocation]);
 
     useEffect(() => {
         // if (orgs.length > 0) {
@@ -44,24 +51,24 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         // }
     }, [orgs]);
 
+    // useEffect(() => {
+    //     if (!selectedOrgId || !user?.token) return;
+    //
+    //     axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
+    //         headers: {Authorization: `Token ${user.token}`},
+    //     }).then(res => setLocations(res.data))
+    //       .catch(err => console.error("Failed to fetch locations", err));
+    // }, [selectedOrgId, user]);
+
     useEffect(() => {
-        if (!selectedOrgId || !user?.token) return;
+        if (!selectedLocationId) return;
 
-        axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
-            headers: {Authorization: `Token ${user.token}`},
-        }).then(res => setLocations(res.data))
-          .catch(err => console.error("Failed to fetch locations", err));
-    }, [selectedOrgId, user]);
-
-    useEffect(() => {
-        if (!selectedLocation) return;
-
-        axios.get(`${apiUrl}/api/departments/?location_id=${selectedLocation}`, {
+        axios.get(`${apiUrl}/api/departments/?location_id=${selectedLocationId}`, {
             headers: {Authorization: `Token ${user?.token}`},
         }).then(res => {
             setDepartments(res.data);
         });
-    }, [selectedLocation]);
+    }, [selectedLocationId]);
 
     useEffect(() => {
         if (!selectedDepartment) return;
@@ -77,16 +84,16 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         axios.get(`${apiUrl}/api/units/${selectedUnit}`, {
             headers: {Authorization: `Token ${user?.token}`},
         })
-        .then(res => {
-            const unitData = res.data;
-            const unitMembers = unitData.members || [];
-            const formattedMembers = unitMembers.map((member: any) => ({
-                id: member.user_details.id,
-                name: `${member.user_details.job_title || 'User'} (${member.user_details.role.name})`
-            }));
-            setMembers(formattedMembers);
-        })
-        .catch(err => console.error('Failed to fetch unit members', err));
+            .then(res => {
+                const unitData = res.data;
+                const unitMembers = unitData.members || [];
+                const formattedMembers = unitMembers.map((member: any) => ({
+                    id: member.user_details.id,
+                    name: `${member.user_details.job_title || 'User'} (${member.user_details.role.name})`
+                }));
+                setMembers(formattedMembers);
+            })
+            .catch(err => console.error('Failed to fetch unit members', err));
 
     }, [selectedUnit]);
 
@@ -126,19 +133,19 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             footer={null}
         >
             <Form layout="vertical" form={form} onFinish={handleSubmit}>
-                <Form.Item label="Location" name="location" rules={[{required: true}]}>
-                    <Select
-                        placeholder="Select location"
-                        onChange={(val) => {
-                            form.setFieldsValue({department: undefined, unit: undefined, user: undefined});
-                            setSelectedLocation(val);
-                        }}
-                    >
-                        {locations.map((loc: any) => (
-                            <Option key={loc.id} value={loc.id}>{loc.name}</Option>
-                        ))}
-                    </Select>
-                </Form.Item>
+                {/*<Form.Item label="Location" name="location" rules={[{required: true}]}>*/}
+                {/*    <Select*/}
+                {/*        placeholder="Select location"*/}
+                {/*        onChange={(val) => {*/}
+                {/*            form.setFieldsValue({department: undefined, unit: undefined, user: undefined});*/}
+                {/*            setSelectedLocationId(val);*/}
+                {/*        }}*/}
+                {/*    >*/}
+                {/*        {locations.map((loc: any) => (*/}
+                {/*            <Option key={loc.id} value={loc.id}>{loc.name}</Option>*/}
+                {/*        ))}*/}
+                {/*    </Select>*/}
+                {/*</Form.Item>*/}
 
                 <Form.Item label="Department" name="department" rules={[{required: true}]}>
                     <Select
@@ -147,7 +154,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
                             form.setFieldsValue({unit: undefined, user: undefined});
                             setSelectedDepartment(val);
                         }}
-                        disabled={!selectedLocation}
+                        disabled={!selectedLocationId}
                     >
                         {departments.map((d: any) => (
                             <Option key={d.id} value={d.id}>{d.name}</Option>

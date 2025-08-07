@@ -76,7 +76,6 @@ const CalendarView: React.FC = () => {
 
 
     useEffect(() => {
-        console.log(`Selected location id ${selectedLocation?.location?.id}`)
         setSelectedLocationId(selectedLocation?.location?.id ?? null);
     }, [selectedLocation]);
 
