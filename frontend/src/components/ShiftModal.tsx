@@ -2,7 +2,6 @@ import React, {useEffect, useState, useContext} from 'react';
 import {Modal, Form, Select, DatePicker, Button, message} from 'antd';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import dayjs from 'dayjs';
 import {useOrgLocation} from "../contexts/LocationContext";
 
 const {Option} = Select;
@@ -16,16 +15,13 @@ interface Props {
 
 const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) => {
     const {user} = useContext(AuthContext);
-    const orgs = user?.organizations || [];
     const apiUrl = process.env.REACT_APP_API_URL;
 
     const [form] = Form.useForm();
-    const [locations, setLocations] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [units, setUnits] = useState([]);
     const [members, setMembers] = useState([]);
 
-    // const [selectedOrgId, setSelectedOrgId] = useState<string>('');
     const {selectedLocation, setSelectedLocation} = useOrgLocation();
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
@@ -35,30 +31,6 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
     useEffect(() => {
         setSelectedLocationId(selectedLocation?.location?.id ?? null);
     }, [selectedLocation]);
-
-    useEffect(() => {
-        // if (orgs.length > 0) {
-        //     const storedOrg = localStorage.getItem('org_select');
-        //     const matchedOrg = storedOrg
-        //         ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
-        //         : null;
-        //
-        //     const defaultOrgId = matchedOrg
-        //         ? matchedOrg.organization_id.toString()
-        //         : orgs[0].organization_id.toString();
-        //
-        //     setSelectedOrgId(defaultOrgId);
-        // }
-    }, [orgs]);
-
-    // useEffect(() => {
-    //     if (!selectedOrgId || !user?.token) return;
-    //
-    //     axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
-    //         headers: {Authorization: `Token ${user.token}`},
-    //     }).then(res => setLocations(res.data))
-    //       .catch(err => console.error("Failed to fetch locations", err));
-    // }, [selectedOrgId, user]);
 
     useEffect(() => {
         if (!selectedLocationId) return;
@@ -89,7 +61,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
                 const unitMembers = unitData.members || [];
                 const formattedMembers = unitMembers.map((member: any) => ({
                     id: member.user_details.id,
-                    name: `${member.user_details.job_title || 'User'} (${member.user_details.role.name})`
+                    name: `${member.user_details.user.name || 'User'} (${member.user_details.role.name})`
                 }));
                 setMembers(formattedMembers);
             })
@@ -133,20 +105,6 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             footer={null}
         >
             <Form layout="vertical" form={form} onFinish={handleSubmit}>
-                {/*<Form.Item label="Location" name="location" rules={[{required: true}]}>*/}
-                {/*    <Select*/}
-                {/*        placeholder="Select location"*/}
-                {/*        onChange={(val) => {*/}
-                {/*            form.setFieldsValue({department: undefined, unit: undefined, user: undefined});*/}
-                {/*            setSelectedLocationId(val);*/}
-                {/*        }}*/}
-                {/*    >*/}
-                {/*        {locations.map((loc: any) => (*/}
-                {/*            <Option key={loc.id} value={loc.id}>{loc.name}</Option>*/}
-                {/*        ))}*/}
-                {/*    </Select>*/}
-                {/*</Form.Item>*/}
-
                 <Form.Item label="Department" name="department" rules={[{required: true}]}>
                     <Select
                         placeholder="Select department"

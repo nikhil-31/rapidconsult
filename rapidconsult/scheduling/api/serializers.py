@@ -95,15 +95,22 @@ class UserOrgProfileLocationUpdateSerializer(serializers.ModelSerializer):
         return locations
 
 
+class UserSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'name', 'email']
+
+
 class UserOrgProfileSerializer(serializers.ModelSerializer):
     organisation = OrganizationSerializer()
     role = RoleSerializer()
     allowed_locations = LocationSerializer(many=True)
     permissions = serializers.SerializerMethodField()
+    user = UserSummarySerializer()
 
     class Meta:
         model = UserOrgProfile
-        fields = ['id', 'organisation', 'role', 'job_title', 'allowed_locations', 'permissions']
+        fields = ['id', 'organisation', 'role', 'job_title', 'allowed_locations', 'permissions', 'user']
 
     def get_permissions(self, obj):
         if obj.role:

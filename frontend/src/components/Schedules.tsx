@@ -12,6 +12,8 @@ import {PlusOutlined} from '@ant-design/icons';
 import CreateShiftModal from './ShiftModal';
 import {Locale} from 'date-fns';
 import {useOrgLocation} from "../contexts/LocationContext";
+import ShiftDetailModal from "./EventDetailModal";
+import {Shift} from "../models/Shift";
 
 
 const locales: Record<string, Locale> = {
@@ -29,22 +31,6 @@ const localizer = dateFnsLocalizer({
     locales,
 });
 
-type Shift = {
-    id: number;
-    start_time: string;
-    end_time: string;
-    user_details: {
-        id: number;
-        job_title: string;
-        role: { id: number; name: string };
-        organisation: { id: number; name: string };
-    };
-    unit_details: {
-        id: number;
-        name: string;
-    };
-};
-
 type EventData = {
     id: number;
     title: string;
@@ -52,6 +38,8 @@ type EventData = {
     end: Date;
     user: number;
     role: number;
+    username: string;
+    role_name: string;
 };
 
 type Location = { id: number; name: string };
@@ -74,22 +62,9 @@ const CalendarView: React.FC = () => {
     const [units, setUnits] = useState<Record<number, Unit[]>>({});
     const [shiftModalOpen, setShiftModalOpen] = useState<boolean>(false);
 
+    const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
+    const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
 
-    useEffect(() => {
-        setSelectedLocationId(selectedLocation?.location?.id ?? null);
-    }, [selectedLocation]);
-
-    // const fetchLocations = async (): Promise<void> => {
-    //     try {
-    //         const res: AxiosResponse<Location[]> = await axios.get(`${apiUrl}/api/locations`, {
-    //             params: {organization_id: selectedOrgId},
-    //             headers: {Authorization: `Token ${user?.token}`},
-    //         });
-    //         setLocations(res.data);
-    //     } catch (err) {
-    //         console.error('Failed to fetch locations:', err);
-    //     }
-    // };
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
@@ -129,11 +104,13 @@ const CalendarView: React.FC = () => {
 
             const formatted: EventData[] = res.data.map((shift: Shift) => ({
                 id: shift.id,
-                title: `${shift.user_details.job_title} (${shift.user_details.role.name})`,
+                title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
                 start: new Date(shift.start_time),
                 end: new Date(shift.end_time),
                 user: shift.user_details.id,
                 role: shift.user_details.role.id,
+                username: shift.user_details.user.username,
+                role_name: shift.user_details.role.name,
             }));
 
             setEvents(formatted);
@@ -142,32 +119,9 @@ const CalendarView: React.FC = () => {
         }
     };
 
-    // useEffect(() => {
-    //     if (locations.length > 0 && selectedLocationId === null) {
-    //         setSelectedLocationId(locations[0].id);
-    //     }
-    // }, [locations, selectedLocationId]);
-
     useEffect(() => {
-        // if (orgs.length > 0) {
-        //     const storedOrg = localStorage.getItem('org_select');
-        //     const matchedOrg = storedOrg
-        //         ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
-        //         : null;
-        //
-        //     const defaultOrgId = matchedOrg
-        //         ? matchedOrg.organization_id.toString()
-        //         : orgs[0].organization_id.toString();
-        //
-        //     setSelectedOrgId(defaultOrgId);
-        // }
-    }, [orgs]);
-
-    // useEffect(() => {
-    //     if (selectedOrgId) {
-    //         fetchLocations();
-    //     }
-    // }, [selectedOrgId]);
+        setSelectedLocationId(selectedLocation?.location?.id ?? null);
+    }, [selectedLocation]);
 
     useEffect(() => {
         if (selectedLocationId !== null) {
@@ -175,24 +129,14 @@ const CalendarView: React.FC = () => {
         }
     }, [selectedLocationId]);
 
+    const handleEventClick = (event: EventData) => {
+        setSelectedEvent(event);
+        setDetailModalOpen(true);
+    };
+
     return (
         <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
-
-                {/*<div style={{padding: 16}}>*/}
-                {/*    <Title level={5} style={{marginBottom: 16}}>Select Location</Title>*/}
-                {/*    <Select*/}
-                {/*        placeholder="Choose a location"*/}
-                {/*        style={{width: '100%'}}*/}
-                {/*        value={selectedLocationId || undefined}*/}
-                {/*        onChange={(val: number) => setSelectedLocationId(val)}*/}
-                {/*        loading={locations.length === 0}*/}
-                {/*    >*/}
-                {/*        {locations.map(loc => (*/}
-                {/*            <Option key={loc.id} value={loc.id}><Text>{loc.name}</Text></Option>*/}
-                {/*        ))}*/}
-                {/*    </Select>*/}
-                {/*</div>*/}
 
                 <div style={{paddingLeft: 16, paddingRight: 16, paddingTop: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
@@ -262,6 +206,7 @@ const CalendarView: React.FC = () => {
                         onView={setView}
                         date={date}
                         onNavigate={setDate}
+                        onSelectEvent={handleEventClick}
                         selectable
                         style={{
                             height: 600,
@@ -272,6 +217,16 @@ const CalendarView: React.FC = () => {
                             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                         }}
                     />
+
+                    <ShiftDetailModal
+                        visible={detailModalOpen}
+                        event={selectedEvent}
+                        onClose={() => {
+                            setDetailModalOpen(false);
+                            setSelectedEvent(null);
+                        }}
+                    />
+
                 </Content>
             </Layout>
         </Layout>
