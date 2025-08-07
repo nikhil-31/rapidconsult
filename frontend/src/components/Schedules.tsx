@@ -40,6 +40,7 @@ type EventData = {
     username: string;
     role_name: string;
     profile_picture: string;
+    unit_id: number;
 };
 
 type Location = { id: number; name: string };
@@ -65,7 +66,25 @@ const CalendarView: React.FC = () => {
     const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
     const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
 
+    const unitColorMap: Record<number, string> = {};
 
+    const generateColor = (unitId: number): string => {
+        if (!unitColorMap[unitId]) {
+            // Random pastel color
+            const hue = Math.floor(Math.random() * 360);
+            unitColorMap[unitId] = `hsl(${hue}, 70%, 80%)`;
+        }
+        return unitColorMap[unitId];
+    };
+
+    const stringToColor = (str: string): string => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 70%, 80%)`; // pastel-ish
+    };
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
             const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments`, {
@@ -111,7 +130,8 @@ const CalendarView: React.FC = () => {
                 role: shift.user_details.role.id,
                 username: shift.user_details.user.username,
                 role_name: shift.user_details.role.name,
-                profile_picture: shift.user_details.user.profile_picture
+                profile_picture: shift.user_details.user.profile_picture,
+                unit_id: shift.unit_details.id
             }));
 
             setEvents(formatted);
@@ -216,6 +236,18 @@ const CalendarView: React.FC = () => {
                             border: '1px solid #f0f0f0',
                             borderRadius: 8,
                             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        }}
+                        eventPropGetter={(event: EventData) => {
+                            const backgroundColor = generateColor(event.unit_id);
+                            return {
+                                style: {
+                                    backgroundColor,
+                                    borderRadius: '4px',
+                                    color: '#000',
+                                    border: '1px solid #ccc',
+                                    padding: '4px'
+                                }
+                            };
                         }}
                     />
 
