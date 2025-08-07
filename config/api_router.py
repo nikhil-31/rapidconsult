@@ -6,7 +6,7 @@ from rapidconsult.chats.api.views import ConversationViewSet, MessageViewSet, Im
 from rapidconsult.users.api.views import UserViewSet, ContactViewSet
 from rapidconsult.scheduling.api.views import (LocationViewSet, DepartmentViewSet, UnitViewSet, OrganizationViewSet,
                                                UserProfileViewSet, RoleViewSet, UnitMembershipViewSet,
-                                               OnCallShiftViewSet)
+                                               OnCallShiftViewSet, UserOrgProfileViewSet)
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
@@ -22,6 +22,7 @@ router.register(r'contacts', ContactViewSet, basename='contact')
 router.register(r'roles', RoleViewSet, basename='roles')
 router.register(r'unit-memberships', UnitMembershipViewSet, basename='unit-memberships')
 router.register(r'shifts', OnCallShiftViewSet, basename='shifts')
+router.register(r'allowed-location', UserOrgProfileViewSet, basename='allowed-location')
 
 app_name = "api"
 urlpatterns = router.urls

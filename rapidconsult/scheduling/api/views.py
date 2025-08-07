@@ -2,18 +2,19 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-
 from scheduling.api.permissions import check_org_admin_or_raise
-from scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift
+from scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
+    UserOrgProfile
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
-    UserProfileSerializer, UnitWriteSerializer, OnCallShiftSerializer, RoleSerializer, UnitMembershipSerializer
+    UserProfileSerializer, UnitWriteSerializer, OnCallShiftSerializer, RoleSerializer, UnitMembershipSerializer, \
+    UserOrgProfileSerializer, UserOrgProfileLocationUpdateSerializer
 
 User = get_user_model()
 
@@ -237,6 +238,26 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
         org = instance.unit.department.location.organization
         check_org_admin_or_raise(self.request.user, org)
         instance.delete()
+
+
+class UserOrgProfileViewSet(viewsets.ModelViewSet):
+    queryset = UserOrgProfile.objects.all()
+    serializer_class = UserOrgProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['patch'], url_path='update-locations')
+    def update_locations(self, request, pk=None):
+        profile = self.get_object()
+        serializer = UserOrgProfileLocationUpdateSerializer(
+            profile,
+            data=request.data,
+            partial=True,
+            context={'org_profile': profile}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Locations updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileViewSet(

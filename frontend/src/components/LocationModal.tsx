@@ -11,7 +11,6 @@ import {
 } from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
-import {OrganizationProfile} from '../models/OrganizationProfile';
 import {AuthContext} from '../contexts/AuthContext';
 import {Location} from '../models/Location';
 import {OrgProfile} from "../models/OrgProfile";

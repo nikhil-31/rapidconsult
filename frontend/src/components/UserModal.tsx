@@ -3,10 +3,9 @@ import axios from 'axios';
 import {Modal, Form, Input, Select, Upload, Button, Typography, message} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import {Role} from '../models/Role';
-import {OrganizationProfile} from '../models/OrganizationProfile';
 import {AuthContext} from '../contexts/AuthContext';
 import {UserModel} from '../models/UserModel';
-import {OrgProfile} from "../models/OrgProfile";
+import {OrgProfile} from '../models/OrgProfile';
 
 const {Title} = Typography;
 
@@ -27,8 +26,8 @@ export default function UserModal({
                                   }: CreateUserModalProps) {
     const {user} = useContext(AuthContext);
     const [roles, setRoles] = useState<Role[]>([]);
+    const [locations, setLocations] = useState<any[]>([]);
     const [form] = Form.useForm();
-    const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [fileList, setFileList] = useState<any[]>([]);
     const isEditMode = Boolean(editingUser);
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -42,6 +41,16 @@ export default function UserModal({
             .catch((err) => console.error('Failed to fetch roles', err));
     }, []);
 
+    useEffect(() => {
+        if (selectedOrgId) {
+            axios
+                .get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
+                    headers: {Authorization: `Token ${user?.token}`},
+                })
+                .then((res) => setLocations(res.data))
+                .catch((err) => console.error('Failed to fetch locations', err));
+        }
+    }, [selectedOrgId]);
 
     useEffect(() => {
         if (editingUser) {
@@ -56,6 +65,7 @@ export default function UserModal({
                 password: '',
                 role: orgProfile?.role?.id?.toString(),
                 job_title: orgProfile?.job_title,
+                allowed_locations: orgProfile?.allowed_locations?.map((loc) => loc.id) || [],
             });
 
             if (editingUser.profile_picture) {
@@ -82,12 +92,17 @@ export default function UserModal({
         formData.append('org_profile.organisation', selectedOrgId);
         formData.append('org_profile.role', values.role);
         formData.append('org_profile.job_title', values.job_title);
+
         const file = fileList[0]?.originFileObj;
         if (file) {
             formData.append('profile_picture', file);
         }
 
         try {
+            let orgProfileId = editingUser?.organizations.find(
+                (o) => o.organization.id.toString() === selectedOrgId
+            )?.id;
+
             if (isEditMode && editingUser) {
                 await axios.patch(
                     `${apiUrl}/api/users/${editingUser.username}/`,
@@ -100,13 +115,33 @@ export default function UserModal({
                     }
                 );
             } else {
-                await axios.post(`${apiUrl}/api/users/register/`, formData, {
+                const res = await axios.post(`${apiUrl}/api/users/register/`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         Authorization: `Token ${user?.token}`,
                     },
                 });
+
+                // Get org profile ID from response
+                orgProfileId = res.data?.organizations?.find(
+                    (o: any) => o.organization.id.toString() === selectedOrgId
+                )?.org_user_id;
             }
+
+            // PATCH allowed locations
+            if (orgProfileId) {
+                await axios.patch(
+                    `${apiUrl}/api/allowed-location/${orgProfileId}/update-locations/`,
+                    {allowed_locations: values.allowed_locations},
+                    {
+                        headers: {
+                            Authorization: `Token ${user?.token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+            }
+
             message.success(`User ${isEditMode ? 'updated' : 'created'} successfully`);
             onSuccess();
             onClose();
@@ -131,11 +166,7 @@ export default function UserModal({
                 initialValues={{organisation: selectedOrgId}}
             >
                 <Title level={5}>User Details</Title>
-                <Form.Item
-                    name="username"
-                    label="Username"
-                    rules={[{required: true}]}
-                >
+                <Form.Item name="username" label="Username" rules={[{required: true}]}>
                     <Input disabled={isEditMode}/>
                 </Form.Item>
 
@@ -151,11 +182,7 @@ export default function UserModal({
                     <Input/>
                 </Form.Item>
 
-                <Form.Item
-                    name="email"
-                    label="Email"
-                    rules={[{required: true, type: 'email'}]}
-                >
+                <Form.Item name="email" label="Email" rules={[{required: true, type: 'email'}]}>
                     <Input/>
                 </Form.Item>
 
@@ -163,13 +190,12 @@ export default function UserModal({
                     <Upload
                         fileList={fileList}
                         onChange={({fileList: newFileList}) => {
-                            // Optional: Limit to 1 file
                             if (newFileList.length > 1) {
                                 newFileList = [newFileList[newFileList.length - 1]];
                             }
                             setFileList(newFileList);
                         }}
-                        beforeUpload={() => false} // Prevent automatic upload
+                        beforeUpload={() => false}
                         listType="picture"
                         maxCount={1}
                         accept="image/*"
@@ -182,15 +208,15 @@ export default function UserModal({
 
                 <Form.Item label="Organization">
                     <Input
-                        value={orgs.find(org => org.organization.id.toString() === selectedOrgId)?.organization.name || ''}
-                        disabled/>
+                        value={
+                            orgs.find((org) => org.organization.id.toString() === selectedOrgId)
+                                ?.organization.name || ''
+                        }
+                        disabled
+                    />
                 </Form.Item>
 
-                <Form.Item
-                    name="role"
-                    label="Role"
-                    rules={[{required: true}]}
-                >
+                <Form.Item name="role" label="Role" rules={[{required: true}]}>
                     <Select placeholder="Select Role">
                         {roles.map((role) => (
                             <Select.Option key={role.id} value={role.id}>
@@ -204,13 +230,30 @@ export default function UserModal({
                     <Input/>
                 </Form.Item>
 
+                <Form.Item
+                    name="allowed_locations"
+                    label="Allowed Locations"
+                    rules={[{required: true, message: 'Please select at least one location'}]}
+                >
+                    <Select
+                        mode="multiple"
+                        placeholder="Select allowed locations"
+                        showSearch
+                        optionFilterProp="label"
+                        filterOption={(input, option) => {
+                            if (!option || typeof option.label !== 'string') return false;
+                            return option.label.toLowerCase().includes(input.toLowerCase());
+                        }}
+                        options={locations.map((loc) => ({
+                            label: loc.name,
+                            value: loc.id,
+                        }))}
+                    />
+
+                </Form.Item>
+
                 <Form.Item>
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                        block
-                        style={{marginTop: '1rem'}}
-                    >
+                    <Button type="primary" htmlType="submit" block style={{marginTop: '1rem'}}>
                         {isEditMode ? 'Save Changes' : 'Create User'}
                     </Button>
                 </Form.Item>

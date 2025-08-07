@@ -75,6 +75,26 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
+class UserOrgProfileLocationUpdateSerializer(serializers.ModelSerializer):
+    allowed_locations = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Location.objects.all()
+    )
+
+    class Meta:
+        model = UserOrgProfile
+        fields = ['allowed_locations']
+
+    def validate_allowed_locations(self, locations):
+        profile = self.instance or self.context.get("org_profile")
+        for loc in locations:
+            if loc.organization_id != profile.organisation_id:
+                raise serializers.ValidationError(
+                    f"Location '{loc.name}' does not belong to the same organization."
+                )
+        return locations
+
+
 class UserOrgProfileSerializer(serializers.ModelSerializer):
     organisation = OrganizationSerializer()
     role = RoleSerializer()
