@@ -32,9 +32,6 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
             title={null}
             onCancel={onClose}
             footer={[
-                <Button key="cancel" onClick={onClose}>
-                    Close
-                </Button>,
                 <Popconfirm
                     key="delete"
                     title="Are you sure you want to delete this shift?"
