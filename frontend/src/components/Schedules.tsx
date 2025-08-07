@@ -14,7 +14,7 @@ import {Locale} from 'date-fns';
 import {useOrgLocation} from "../contexts/LocationContext";
 import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
-
+import {notification} from 'antd';
 
 const locales: Record<string, Locale> = {
     'en-US': require('date-fns/locale/en-US'),
@@ -70,7 +70,6 @@ const CalendarView: React.FC = () => {
 
     const generateColor = (unitId: number): string => {
         if (!unitColorMap[unitId]) {
-            // Random pastel color
             const hue = Math.floor(Math.random() * 360);
             unitColorMap[unitId] = `hsl(${hue}, 70%, 80%)`;
         }
@@ -83,8 +82,9 @@ const CalendarView: React.FC = () => {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
         }
         const hue = Math.abs(hash) % 360;
-        return `hsl(${hue}, 70%, 80%)`; // pastel-ish
+        return `hsl(${hue}, 70%, 80%)`;
     };
+
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
             const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments`, {
@@ -93,7 +93,6 @@ const CalendarView: React.FC = () => {
             });
             const deps = res.data;
             setDepartments(prev => ({...prev, [locationId]: deps}));
-
             deps.forEach((dep: Department) => {
                 fetchUnits(dep.id);
             });
@@ -155,10 +154,24 @@ const CalendarView: React.FC = () => {
         setDetailModalOpen(true);
     };
 
+    // ✅ NEW: Delete shift handler
+    const handleDeleteShift = async (id: number) => {
+        try {
+            await axios.delete(`${apiUrl}/api/shifts/${id}/`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+
+            setEvents(prev => prev.filter(event => event.id !== id));
+            setDetailModalOpen(false);
+            setSelectedEvent(null);
+        } catch (err) {
+            console.error('Failed to delete shift:', err);
+        }
+    };
+
     return (
         <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
-
                 <div style={{paddingLeft: 16, paddingRight: 16, paddingTop: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
                 </div>
@@ -210,14 +223,14 @@ const CalendarView: React.FC = () => {
                                 <CreateShiftModal
                                     visible={shiftModalOpen}
                                     onClose={() => setShiftModalOpen(false)}
-                                    onShiftCreated={() => {
-                                    }}
+                                    onShiftCreated={() => {}}
                                 />
                             )}
                         </Space>
                     </div>
+
                     <Calendar
-                        key={events.length} // helps force re-render
+                        key={events.length}
                         localizer={localizer}
                         events={events}
                         startAccessor="start"
@@ -258,8 +271,8 @@ const CalendarView: React.FC = () => {
                             setDetailModalOpen(false);
                             setSelectedEvent(null);
                         }}
+                        onDelete={handleDeleteShift} // ✅ Pass delete handler
                     />
-
                 </Content>
             </Layout>
         </Layout>
@@ -267,3 +280,4 @@ const CalendarView: React.FC = () => {
 };
 
 export default CalendarView;
+

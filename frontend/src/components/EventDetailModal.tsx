@@ -1,26 +1,29 @@
 import React from 'react';
-import {Modal, Descriptions, Typography, Space, Avatar} from 'antd';
+import {Modal, Descriptions, Typography, Space, Avatar, Button, Popconfirm} from 'antd';
 import dayjs from 'dayjs';
 
-const {Title, Text} = Typography;
+const {Title} = Typography;
+
+type ShiftEvent = {
+    id: number;
+    title: string;
+    start: Date;
+    end: Date;
+    user: number;
+    role: number;
+    username: string;
+    role_name: string;
+    profile_picture: string;
+};
 
 type ShiftDetailModalProps = {
     visible: boolean;
     onClose: () => void;
-    event: {
-        id: number;
-        title: string;
-        start: Date;
-        end: Date;
-        user: number;
-        role: number;
-        username: string;
-        role_name: string;
-        profile_picture: string;
-    } | null;
+    onDelete: (id: number) => void;
+    event: ShiftEvent | null;
 };
 
-const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, event}) => {
+const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, onDelete, event}) => {
     if (!event) return null;
 
     return (
@@ -28,8 +31,20 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, ev
             open={visible}
             title={null}
             onCancel={onClose}
-            onOk={onClose}
-            footer={null}
+            footer={[
+                <Button key="cancel" onClick={onClose}>
+                    Close
+                </Button>,
+                <Popconfirm
+                    key="delete"
+                    title="Are you sure you want to delete this shift?"
+                    okText="Yes"
+                    cancelText="No"
+                    onConfirm={() => onDelete(event.id)}
+                >
+                    <Button danger>Delete</Button>
+                </Popconfirm>,
+            ]}
         >
             <div style={{marginBottom: 16}}>
                 <Title level={4} style={{margin: 0}}>
@@ -57,15 +72,11 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, ev
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Start Time">
-                    <Space>
-                        <span>{dayjs(event.start).format('dddd, MMM D YYYY — hh:mm A')}</span>
-                    </Space>
+                    {dayjs(event.start).format('dddd, MMM D YYYY — hh:mm A')}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="End Time">
-                    <Space>
-                        <span>{dayjs(event.end).format('dddd, MMM D YYYY — hh:mm A')}</span>
-                    </Space>
+                    {dayjs(event.end).format('dddd, MMM D YYYY — hh:mm A')}
                 </Descriptions.Item>
             </Descriptions>
         </Modal>
