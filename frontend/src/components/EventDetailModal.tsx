@@ -1,7 +1,5 @@
-// ShiftDetailModal.tsx
 import React from 'react';
-import {Modal, Descriptions, Typography, Space, Tag, Avatar} from 'antd';
-import {ClockCircleOutlined, UserOutlined} from '@ant-design/icons';
+import {Modal, Descriptions, Typography, Space, Avatar} from 'antd';
 import dayjs from 'dayjs';
 
 const {Title, Text} = Typography;
@@ -37,7 +35,6 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, ev
                 <Title level={4} style={{margin: 0}}>
                     Shift Details
                 </Title>
-                <Text type="secondary">ID: {event.id}</Text>
             </div>
 
             <Descriptions
