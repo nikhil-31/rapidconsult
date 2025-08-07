@@ -9,6 +9,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.authtoken.models import Token
 
 from rapidconsult.users.models import User, Contact
+from scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
 
 from .serializers import UserSerializer
 from config.roles import get_permissions_for_role
@@ -54,18 +55,32 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
         org_profiles = user.org_profiles.select_related('organisation', 'role')
         orgs_data = []
         for profile in org_profiles:
-            orgs_data.append({
-                "org_user_id": profile.id,
-                "organization_id": profile.organisation.id,
-                "organization_name": profile.organisation.name,
-                "role": {
-                    "name": profile.role.name if profile.role else None,
-                    "id": profile.role.id if profile.role else None,
-                },
+            # orgs_data.append({
+            #     "org_user_id": profile.id,
+            #     "organization_id": profile.organisation.id,
+            #     "organization_name": profile.organisation.name,
+            #     "role": {
+            #         "name": profile.role.name if profile.role else None,
+            #         "id": profile.role.id if profile.role else None,
+            #     },
+            #     "job_title": profile.job_title,
+            #     "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
+            #     "allowed_locations": [
+            #         {
+            #             "id": loc.id,
+            #             "name": loc.name
+            #         } for loc in profile.allowed_locations.all()
+            #     ]
+            # })
+            org_data = {
+                "id": profile.id,
+                "organization": OrganizationSerializer(profile.organisation).data,
+                "role": RoleSerializer(profile.role).data if profile.role else None,
                 "job_title": profile.job_title,
-                # Add any derived permissions if needed:
                 "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
-            })
+                "allowed_locations": LocationSerializer(profile.allowed_locations.all(), many=True).data,
+            }
+            orgs_data.append(org_data)
 
         return Response({
             "token": token.key,

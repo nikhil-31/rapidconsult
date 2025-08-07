@@ -1,4 +1,4 @@
-import {OrganizationProfile} from "./OrganizationProfile"
+import {OrgProfile} from "./OrgProfile";
 
 export interface UserModel {
     id: string
@@ -7,5 +7,5 @@ export interface UserModel {
     profile_picture: string
     name: string
     email: string
-    organizations: OrganizationProfile[]
+    organizations: OrgProfile[]
 }

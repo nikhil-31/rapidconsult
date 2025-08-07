@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from config.roles import get_permissions_for_role
 from scheduling.models import (Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role,
                                OnCallShift)
 from users.api.serializers import ContactSerializer
@@ -77,10 +78,17 @@ class RoleSerializer(serializers.ModelSerializer):
 class UserOrgProfileSerializer(serializers.ModelSerializer):
     organisation = OrganizationSerializer()
     role = RoleSerializer()
+    allowed_locations = LocationSerializer(many=True)
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = UserOrgProfile
-        fields = ['id', 'organisation', 'role', 'job_title']
+        fields = ['id', 'organisation', 'role', 'job_title', 'allowed_locations', 'permissions']
+
+    def get_permissions(self, obj):
+        if obj.role:
+            return get_permissions_for_role(obj.role.name)
+        return []
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

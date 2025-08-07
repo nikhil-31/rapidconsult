@@ -15,50 +15,53 @@ import Admin from "./components/Admin";
 import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
 import OnCall from "./components/OnCall";
+import {LocationProvider} from "./contexts/LocationContext";
 
 
 export default function App() {
     return (
         <BrowserRouter>
-            <OrgProvider>
-                <Routes>
-                    <Route
-                        path="/"
-                        element={
-                            <AuthContextProvider>
+            <AuthContextProvider>
+                <LocationProvider>
+                    <Routes>
+                        <Route
+                            path="/"
+                            element={
+
                                 <NotificationContextProvider>
                                     <Navbar/>
                                 </NotificationContextProvider>
-                            </AuthContextProvider>
-                        }
-                    >
-                        <Route path="login" element={<Login/>}/>
-                        <Route path="" element={<Conversations/>}/>
-                        <Route
-                            path="chats/:conversationName"
-                            element={
-                                <ProtectedRoute>
-                                    <Chat/>
-                                </ProtectedRoute>
+
                             }
-                        />
-                        <Route path="/oncall" element={<OnCall/>}/>
-                        <Route path="/contacts" element={<Contacts/>}/>
-                        <Route path="/schedules" element={<CalendarView/>}/>
-                        <Route path="/admin" element={<Admin/>}/>
-                        <Route path="/profile" element={<Profile/>}/>
-                        <Route path="/profile/edit" Component={EditProfile}/>
-                        <Route
-                            path="conversations/"
-                            element={
-                                <ProtectedRoute>
-                                    <ActiveConversations/>
-                                </ProtectedRoute>
-                            }
-                        />
-                    </Route>
-                </Routes>
-            </OrgProvider>
+                        >
+                            <Route path="login" element={<Login/>}/>
+                            <Route path="" element={<Conversations/>}/>
+                            <Route
+                                path="chats/:conversationName"
+                                element={
+                                    <ProtectedRoute>
+                                        <Chat/>
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route path="/oncall" element={<OnCall/>}/>
+                            <Route path="/contacts" element={<Contacts/>}/>
+                            <Route path="/schedules" element={<CalendarView/>}/>
+                            <Route path="/admin" element={<Admin/>}/>
+                            <Route path="/profile" element={<Profile/>}/>
+                            <Route path="/profile/edit" Component={EditProfile}/>
+                            <Route
+                                path="conversations/"
+                                element={
+                                    <ProtectedRoute>
+                                        <ActiveConversations/>
+                                    </ProtectedRoute>
+                                }
+                            />
+                        </Route>
+                    </Routes>
+                </LocationProvider>
+            </AuthContextProvider>
         </BrowserRouter>
     );
 }

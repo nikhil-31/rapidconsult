@@ -14,7 +14,6 @@ class ContactSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         if data.get('primary'):
-            # Unset any other primary contact
             Contact.objects.filter(user=user, primary=True).update(primary=False)
         return data
 
@@ -39,20 +38,39 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_organizations(self, user):
         org_profiles = user.org_profiles.select_related("organisation", "role")
-        return [
-            {
-                "org_user_id": profile.id,
-                "organization_id": profile.organisation.id,
-                "organization_name": profile.organisation.name,
-                "role": {
-                    "name": profile.role.name if profile.role else None,
-                    "id": profile.role.id if profile.role else None,
-                },
+        # return [
+        #     {
+        #         "org_user_id": profile.id,
+        #         "organization_id": profile.organisation.id,
+        #         "organization_name": profile.organisation.name,
+        #         "role": {
+        #             "name": profile.role.name if profile.role else None,
+        #             "id": profile.role.id if profile.role else None,
+        #         },
+        #         "job_title": profile.job_title,
+        #         "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
+        #         "allowed_locations": [
+        #             {
+        #                 "id": loc.id,
+        #                 "name": loc.name
+        #             } for loc in profile.allowed_locations.all()
+        #         ]
+        #     }
+        #     for profile in org_profiles
+        # ]
+        from scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
+        orgs_data = []
+        for profile in org_profiles:
+            org_data = {
+                "id": profile.id,
+                "organization": OrganizationSerializer(profile.organisation).data,
+                "role": RoleSerializer(profile.role).data if profile.role else None,
                 "job_title": profile.job_title,
                 "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
+                "allowed_locations": LocationSerializer(profile.allowed_locations.all(), many=True).data,
             }
-            for profile in org_profiles
-        ]
+            orgs_data.append(org_data)
+        return orgs_data
 
     def get_queryset(self):
         user = self.request.user
@@ -74,7 +92,6 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        # Handle updates to basic user fields
         password = validated_data.pop("password", None)
         org_profile_data = validated_data.pop("org_profile", None)
 

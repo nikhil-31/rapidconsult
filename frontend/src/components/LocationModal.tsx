@@ -14,13 +14,14 @@ import axios from 'axios';
 import {OrganizationProfile} from '../models/OrganizationProfile';
 import {AuthContext} from '../contexts/AuthContext';
 import {Location} from '../models/Location';
+import {OrgProfile} from "../models/OrgProfile";
 
 const {Title} = Typography;
 const {Option} = Select;
 
 interface CreateLocationModalProps {
     selectedOrgId: string;
-    orgs: OrganizationProfile[];
+    orgs: OrgProfile[];
     onSuccess: () => void;
     onClose: () => void;
     editingLocation?: Location | null;
@@ -134,12 +135,12 @@ export default function LocationModal({
                 initialValues={{organization: selectedOrgId}}
             >
                 <Form.Item label="Organization">
-                    <Input
-                        value={
-                            orgs.find((org) => org.organization_id.toString() === selectedOrgId)?.organization_name || ''
-                        }
-                        disabled
-                    />
+                    {/*<Input*/}
+                    {/*    value={*/}
+                    {/*        orgs.find((org) => org.organization_id.toString() === selectedOrgId)?.organization_name || ''*/}
+                    {/*    }*/}
+                    {/*    disabled*/}
+                    {/*/>*/}
                 </Form.Item>
 
                 <Form.Item

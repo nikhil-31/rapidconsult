@@ -3,6 +3,8 @@ from .models import (
     Role, Address, Organization, Location, Department,
     UserOrgProfile, Unit, UnitMembership, OnCallShift
 )
+from django.core.exceptions import ValidationError
+from django.forms import ModelForm
 
 
 @admin.register(Role)
@@ -37,11 +39,44 @@ class DepartmentAdmin(admin.ModelAdmin):
     list_filter = ('location',)
 
 
+class UserOrgProfileForm(ModelForm):
+    class Meta:
+        model = UserOrgProfile
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # If an instance exists and has an organization set
+        if self.instance and self.instance.organisation:
+            self.fields['allowed_locations'].queryset = Location.objects.filter(
+                organization=self.instance.organisation
+            )
+        else:
+            # Empty queryset if no organization selected
+            self.fields['allowed_locations'].queryset = Location.objects.none()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        organisation = cleaned_data.get("organisation")
+        allowed_locations = cleaned_data.get("allowed_locations")
+
+        if organisation and allowed_locations:
+            for loc in allowed_locations:
+                if loc.organization_id != organisation.id:
+                    raise ValidationError(
+                        f"Location '{loc.name}' does not belong to the selected organization '{organisation.name}'."
+                    )
+        return cleaned_data
+
+
 @admin.register(UserOrgProfile)
 class UserOrgProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'organisation', 'role', 'job_title')
-    search_fields = ('user__username', 'job_title')
-    list_filter = ('organisation', 'role')
+    form = UserOrgProfileForm
+    list_display = ['user', 'organisation', 'role', 'job_title']
+    list_filter = ['organisation', 'role']
+    search_fields = ['user__username', 'job_title']
+    filter_horizontal = ['allowed_locations']  # Enables a better UI for selecting many-to-many fields
 
 
 class UnitMembershipInline(admin.TabularInline):

@@ -6,12 +6,13 @@ import {Role} from '../models/Role';
 import {OrganizationProfile} from '../models/OrganizationProfile';
 import {AuthContext} from '../contexts/AuthContext';
 import {UserModel} from '../models/UserModel';
+import {OrgProfile} from "../models/OrgProfile";
 
 const {Title} = Typography;
 
 interface CreateUserModalProps {
     selectedOrgId: string;
-    orgs: OrganizationProfile[];
+    orgs: OrgProfile[];
     onClose: () => void;
     onSuccess: () => void;
     editingUser?: UserModel | null;
@@ -34,29 +35,29 @@ export default function UserModal({
 
     useEffect(() => {
         if (editingUser) {
-            const orgProfile = editingUser.organizations.find(
-                (o) => o.organization_id.toString() === selectedOrgId
-            );
-
-            form.setFieldsValue({
-                username: editingUser.username,
-                name: editingUser.name,
-                email: editingUser.email,
-                password: '',
-                role: orgProfile?.role?.id?.toString(),
-                job_title: orgProfile?.job_title,
-            });
-
-            if (editingUser.profile_picture) {
-                setFileList([
-                    {
-                        uid: '-1',
-                        name: 'Existing Image',
-                        status: 'done',
-                        url: editingUser.profile_picture,
-                    },
-                ]);
-            }
+            // const orgProfile = editingUser.organizations.find(
+            //     (o) => o.organization_id.toString() === selectedOrgId
+            // );
+            //
+            // form.setFieldsValue({
+            //     username: editingUser.username,
+            //     name: editingUser.name,
+            //     email: editingUser.email,
+            //     password: '',
+            //     role: orgProfile?.role?.id?.toString(),
+            //     job_title: orgProfile?.job_title,
+            // });
+            //
+            // if (editingUser.profile_picture) {
+            //     setFileList([
+            //         {
+            //             uid: '-1',
+            //             name: 'Existing Image',
+            //             status: 'done',
+            //             url: editingUser.profile_picture,
+            //         },
+            //     ]);
+            // }
         }
     }, [editingUser]);
 
@@ -179,9 +180,9 @@ export default function UserModal({
                 <Title level={5}>Organization Details</Title>
 
                 <Form.Item label="Organization">
-                    <Input
-                        value={orgs.find(org => org.organization_id.toString() === selectedOrgId)?.organization_name || ''}
-                        disabled/>
+                    {/*<Input*/}
+                    {/*    value={orgs.find(org => org.organization_id.toString() === selectedOrgId)?.organization_name || ''}*/}
+                    {/*    disabled/>*/}
                 </Form.Item>
 
                 <Form.Item

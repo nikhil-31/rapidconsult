@@ -80,16 +80,17 @@ export default function Admin() {
 
     useEffect(() => {
         if (orgs.length > 0) {
-            const storedOrg = localStorage.getItem('org_select');
-            const matchedOrg = storedOrg
-                ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
-                : null;
 
-            const defaultOrgId = matchedOrg
-                ? matchedOrg.organization_id.toString()
-                : orgs[0].organization_id.toString();
-
-            setSelectedOrgId(defaultOrgId);
+            // const storedOrg = localStorage.getItem('org_select');
+            // const matchedOrg = storedOrg
+            //     ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
+            //     : null;
+            //
+            // const defaultOrgId = matchedOrg
+            //     ? matchedOrg.organization_id.toString()
+            //     : orgs[0].organization_id.toString();
+            //
+            // setSelectedOrgId(defaultOrgId);
         }
     }, [orgs]);
 
@@ -120,11 +121,11 @@ export default function Admin() {
                         size="large"
                         onChange={(val) => setSelectedOrgId(val)}
                     >
-                        {orgs.map(org => (
-                            <Option key={org.organization_id} value={String(org.organization_id)}>
-                                {org.organization_name}
-                            </Option>
-                        ))}
+                        {/*{orgs.map(org => (*/}
+                        {/*    <Option key={org.organization_id} value={String(org.organization_id)}>*/}
+                        {/*        {org.organization_name}*/}
+                        {/*    </Option>*/}
+                        {/*))}*/}
                     </Select>
                 </Col>
             </Row>

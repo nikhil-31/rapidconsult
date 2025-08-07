@@ -30,18 +30,18 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
     const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
 
     useEffect(() => {
-        if (orgs.length > 0) {
-            const storedOrg = localStorage.getItem('org_select');
-            const matchedOrg = storedOrg
-                ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
-                : null;
-
-            const defaultOrgId = matchedOrg
-                ? matchedOrg.organization_id.toString()
-                : orgs[0].organization_id.toString();
-
-            setSelectedOrgId(defaultOrgId);
-        }
+        // if (orgs.length > 0) {
+        //     const storedOrg = localStorage.getItem('org_select');
+        //     const matchedOrg = storedOrg
+        //         ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
+        //         : null;
+        //
+        //     const defaultOrgId = matchedOrg
+        //         ? matchedOrg.organization_id.toString()
+        //         : orgs[0].organization_id.toString();
+        //
+        //     setSelectedOrgId(defaultOrgId);
+        // }
     }, [orgs]);
 
     useEffect(() => {
