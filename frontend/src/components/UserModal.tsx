@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
-import {Modal, Form, Input, Select, Upload, Button, Typography, message} from 'antd';
+import {Modal, Form, Input, Select, Upload, Button, Typography, message, Divider, Flex} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import {Role} from '../models/Role';
 import {AuthContext} from '../contexts/AuthContext';
@@ -204,6 +204,27 @@ export default function UserModal({
                     </Upload>
                 </Form.Item>
 
+                <Form.Item
+                    name="allowed_locations"
+                    label="Allowed Locations"
+                    rules={[{required: true, message: 'Please select at least one location'}]}
+                >
+                    <Select
+                        mode="multiple"
+                        placeholder="Select allowed locations"
+                        showSearch
+                        allowClear
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                            (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={locations.map(loc => ({
+                            label: loc.name,
+                            value: loc.id,
+                        }))}
+                    />
+                </Form.Item>
+
                 <Title level={5}>Organization Details</Title>
 
                 <Form.Item label="Organization">
@@ -230,27 +251,6 @@ export default function UserModal({
                     <Input/>
                 </Form.Item>
 
-                <Form.Item
-                    name="allowed_locations"
-                    label="Allowed Locations"
-                    rules={[{required: true, message: 'Please select at least one location'}]}
-                >
-                    <Select
-                        mode="multiple"
-                        placeholder="Select allowed locations"
-                        showSearch
-                        optionFilterProp="label"
-                        filterOption={(input, option) => {
-                            if (!option || typeof option.label !== 'string') return false;
-                            return option.label.toLowerCase().includes(input.toLowerCase());
-                        }}
-                        options={locations.map((loc) => ({
-                            label: loc.name,
-                            value: loc.id,
-                        }))}
-                    />
-
-                </Form.Item>
 
                 <Form.Item>
                     <Button type="primary" htmlType="submit" block style={{marginTop: '1rem'}}>
