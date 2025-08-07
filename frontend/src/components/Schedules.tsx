@@ -11,6 +11,7 @@ import {Layout, Menu, Button, Typography, Select, Space,} from 'antd';
 import {PlusOutlined} from '@ant-design/icons';
 import CreateShiftModal from './ShiftModal';
 import {Locale} from 'date-fns';
+import {useOrgLocation} from "../contexts/LocationContext";
 
 
 const locales: Record<string, Locale> = {
@@ -65,24 +66,31 @@ const CalendarView: React.FC = () => {
     const [events, setEvents] = useState<EventData[]>([]);
     const [view, setView] = useState<View>(Views.MONTH);
     const [date, setDate] = useState<Date>(new Date());
-    const [locations, setLocations] = useState<Location[]>([]);
+
+    const {selectedLocation, setSelectedLocation} = useOrgLocation();
+    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+
     const [departments, setDepartments] = useState<Record<number, Department[]>>({});
     const [units, setUnits] = useState<Record<number, Unit[]>>({});
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-    const [selectedOrgId, setSelectedOrgId] = useState<string>('');
     const [shiftModalOpen, setShiftModalOpen] = useState<boolean>(false);
 
-    const fetchLocations = async (): Promise<void> => {
-        try {
-            const res: AxiosResponse<Location[]> = await axios.get(`${apiUrl}/api/locations`, {
-                params: {organization_id: selectedOrgId},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            setLocations(res.data);
-        } catch (err) {
-            console.error('Failed to fetch locations:', err);
-        }
-    };
+
+    useEffect(() => {
+        console.log(`Selected location id ${selectedLocation?.location?.id}`)
+        setSelectedLocationId(selectedLocation?.location?.id ?? null);
+    }, [selectedLocation]);
+
+    // const fetchLocations = async (): Promise<void> => {
+    //     try {
+    //         const res: AxiosResponse<Location[]> = await axios.get(`${apiUrl}/api/locations`, {
+    //             params: {organization_id: selectedOrgId},
+    //             headers: {Authorization: `Token ${user?.token}`},
+    //         });
+    //         setLocations(res.data);
+    //     } catch (err) {
+    //         console.error('Failed to fetch locations:', err);
+    //     }
+    // };
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
@@ -135,11 +143,11 @@ const CalendarView: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        if (locations.length > 0 && selectedLocationId === null) {
-            setSelectedLocationId(locations[0].id);
-        }
-    }, [locations, selectedLocationId]);
+    // useEffect(() => {
+    //     if (locations.length > 0 && selectedLocationId === null) {
+    //         setSelectedLocationId(locations[0].id);
+    //     }
+    // }, [locations, selectedLocationId]);
 
     useEffect(() => {
         // if (orgs.length > 0) {
@@ -156,11 +164,11 @@ const CalendarView: React.FC = () => {
         // }
     }, [orgs]);
 
-    useEffect(() => {
-        if (selectedOrgId) {
-            fetchLocations();
-        }
-    }, [selectedOrgId]);
+    // useEffect(() => {
+    //     if (selectedOrgId) {
+    //         fetchLocations();
+    //     }
+    // }, [selectedOrgId]);
 
     useEffect(() => {
         if (selectedLocationId !== null) {
@@ -171,23 +179,26 @@ const CalendarView: React.FC = () => {
     return (
         <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
-                <div style={{padding: 16}}>
-                    <Title level={5} style={{marginBottom: 16}}>Select Location</Title>
-                    <Select
-                        placeholder="Choose a location"
-                        style={{width: '100%'}}
-                        value={selectedLocationId || undefined}
-                        onChange={(val: number) => setSelectedLocationId(val)}
-                        loading={locations.length === 0}
-                    >
-                        {locations.map(loc => (
-                            <Option key={loc.id} value={loc.id}><Text>{loc.name}</Text></Option>
-                        ))}
-                    </Select>
-                </div>
-                <div style={{paddingLeft: 16, paddingRight: 16}}>
+
+                {/*<div style={{padding: 16}}>*/}
+                {/*    <Title level={5} style={{marginBottom: 16}}>Select Location</Title>*/}
+                {/*    <Select*/}
+                {/*        placeholder="Choose a location"*/}
+                {/*        style={{width: '100%'}}*/}
+                {/*        value={selectedLocationId || undefined}*/}
+                {/*        onChange={(val: number) => setSelectedLocationId(val)}*/}
+                {/*        loading={locations.length === 0}*/}
+                {/*    >*/}
+                {/*        {locations.map(loc => (*/}
+                {/*            <Option key={loc.id} value={loc.id}><Text>{loc.name}</Text></Option>*/}
+                {/*        ))}*/}
+                {/*    </Select>*/}
+                {/*</div>*/}
+
+                <div style={{paddingLeft: 16, paddingRight: 16, paddingTop: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
                 </div>
+
                 <Menu
                     mode="inline"
                     style={{borderInlineEnd: 'none'}}
@@ -212,6 +223,7 @@ const CalendarView: React.FC = () => {
                         ))}
                 </Menu>
             </Sider>
+
             <Layout>
                 <Content style={{padding: '32px 48px', background: '#fff'}}>
                     <div style={{
