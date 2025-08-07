@@ -135,12 +135,12 @@ export default function LocationModal({
                 initialValues={{organization: selectedOrgId}}
             >
                 <Form.Item label="Organization">
-                    {/*<Input*/}
-                    {/*    value={*/}
-                    {/*        orgs.find((org) => org.organization_id.toString() === selectedOrgId)?.organization_name || ''*/}
-                    {/*    }*/}
-                    {/*    disabled*/}
-                    {/*/>*/}
+                    <Input
+                        value={
+                            orgs.find((org) => org.organization.id.toString() === selectedOrgId)?.organization.name || ''
+                        }
+                        disabled
+                    />
                 </Form.Item>
 
                 <Form.Item

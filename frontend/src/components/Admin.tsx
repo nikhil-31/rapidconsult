@@ -15,6 +15,7 @@ import UnitModal from './UnitModal';
 import {Unit} from '../models/Unit';
 
 import {Select, Typography, Divider, Layout, message, Row, Col} from 'antd';
+import {Role} from "../models/Role";
 
 const {Option} = Select;
 const {Title, Text} = Typography;
@@ -80,17 +81,7 @@ export default function Admin() {
 
     useEffect(() => {
         if (orgs.length > 0) {
-
-            // const storedOrg = localStorage.getItem('org_select');
-            // const matchedOrg = storedOrg
-            //     ? orgs.find(org => org.organization_id === JSON.parse(storedOrg).organization_id)
-            //     : null;
-            //
-            // const defaultOrgId = matchedOrg
-            //     ? matchedOrg.organization_id.toString()
-            //     : orgs[0].organization_id.toString();
-            //
-            // setSelectedOrgId(defaultOrgId);
+            setSelectedOrgId(orgs[0].organization.id.toString())
         }
     }, [orgs]);
 
@@ -121,11 +112,11 @@ export default function Admin() {
                         size="large"
                         onChange={(val) => setSelectedOrgId(val)}
                     >
-                        {/*{orgs.map(org => (*/}
-                        {/*    <Option key={org.organization_id} value={String(org.organization_id)}>*/}
-                        {/*        {org.organization_name}*/}
-                        {/*    </Option>*/}
-                        {/*))}*/}
+                        {orgs.map(org => (
+                            <Option key={org.organization.id} value={String(org.organization.id)}>
+                                {org.organization.name}
+                            </Option>
+                        ))}
                     </Select>
                 </Col>
             </Row>

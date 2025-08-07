@@ -28,38 +28,10 @@ export default function UserModal({
     const {user} = useContext(AuthContext);
     const [roles, setRoles] = useState<Role[]>([]);
     const [form] = Form.useForm();
-    // const [profilePicture, setProfilePicture] = useState<File | null>(null);
+    const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [fileList, setFileList] = useState<any[]>([]);
     const isEditMode = Boolean(editingUser);
     const apiUrl = process.env.REACT_APP_API_URL;
-
-    useEffect(() => {
-        if (editingUser) {
-            // const orgProfile = editingUser.organizations.find(
-            //     (o) => o.organization_id.toString() === selectedOrgId
-            // );
-            //
-            // form.setFieldsValue({
-            //     username: editingUser.username,
-            //     name: editingUser.name,
-            //     email: editingUser.email,
-            //     password: '',
-            //     role: orgProfile?.role?.id?.toString(),
-            //     job_title: orgProfile?.job_title,
-            // });
-            //
-            // if (editingUser.profile_picture) {
-            //     setFileList([
-            //         {
-            //             uid: '-1',
-            //             name: 'Existing Image',
-            //             status: 'done',
-            //             url: editingUser.profile_picture,
-            //         },
-            //     ]);
-            // }
-        }
-    }, [editingUser]);
 
     useEffect(() => {
         axios
@@ -69,6 +41,35 @@ export default function UserModal({
             .then((res) => setRoles(res.data))
             .catch((err) => console.error('Failed to fetch roles', err));
     }, []);
+
+
+    useEffect(() => {
+        if (editingUser) {
+            const orgProfile = editingUser.organizations.find(
+                (o) => o.organization.id.toString() === selectedOrgId
+            );
+
+            form.setFieldsValue({
+                username: editingUser.username,
+                name: editingUser.name,
+                email: editingUser.email,
+                password: '',
+                role: orgProfile?.role?.id?.toString(),
+                job_title: orgProfile?.job_title,
+            });
+
+            if (editingUser.profile_picture) {
+                setFileList([
+                    {
+                        uid: '-1',
+                        name: 'Existing Image',
+                        status: 'done',
+                        url: editingUser.profile_picture,
+                    },
+                ]);
+            }
+        }
+    }, [editingUser]);
 
     const handleSubmit = async (values: any) => {
         const formData = new FormData();
@@ -180,9 +181,9 @@ export default function UserModal({
                 <Title level={5}>Organization Details</Title>
 
                 <Form.Item label="Organization">
-                    {/*<Input*/}
-                    {/*    value={orgs.find(org => org.organization_id.toString() === selectedOrgId)?.organization_name || ''}*/}
-                    {/*    disabled/>*/}
+                    <Input
+                        value={orgs.find(org => org.organization.id.toString() === selectedOrgId)?.organization.name || ''}
+                        disabled/>
                 </Form.Item>
 
                 <Form.Item

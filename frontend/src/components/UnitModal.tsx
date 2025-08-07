@@ -34,7 +34,7 @@ export default function UnitModal({
 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    // const [displayPicture, setDisplayPicture] = useState<File | null>(null);
+    const [displayPicture, setDisplayPicture] = useState<File | null>(null);
     const [fileList, setFileList] = useState<any[]>([]);
     const [members, setMembers] = useState<{ id: number; user: number; is_admin: boolean }[]>([]);
     const [selectedOrgUserId, setSelectedOrgUserId] = useState<string>('');
@@ -70,15 +70,15 @@ export default function UnitModal({
         }
     }, [unitToEdit, form]);
 
-    // const getEligibleUsersForOrg = () =>
-    //     users.flatMap((user) => {
-    //         const orgProfile = user.organizations.find(
-    //             (org) => String(org.organization_id) === selectedOrgId
-    //         );
-    //         return orgProfile
-    //             ? [{...user, org_user_id: orgProfile.org_user_id, job_title: orgProfile.job_title}]
-    //             : [];
-    //     });
+    const getEligibleUsersForOrg = () =>
+        users.flatMap((user) => {
+            const orgProfile = user.organizations.find(
+                (org) => String(org.organization.id) === selectedOrgId
+            );
+            return orgProfile
+                ? [{...user, org_user_id: orgProfile.id, job_title: orgProfile.job_title}]
+                : [];
+        });
 
     const handleAddMember = async () => {
         const orgUserId = parseInt(selectedOrgUserId);
@@ -242,18 +242,18 @@ export default function UnitModal({
                             optionFilterProp="children"
                             showSearch
                         >
-                            {/*{getEligibleUsersForOrg().map((u) => {*/}
-                            {/*    const isAlreadyMember = members.some((m) => m.user === u.org_user_id);*/}
-                            {/*    return (*/}
-                            {/*        <Select.Option*/}
-                            {/*            key={u.org_user_id}*/}
-                            {/*            value={u.org_user_id}*/}
-                            {/*            disabled={isAlreadyMember}*/}
-                            {/*        >*/}
-                            {/*            {u.name} ({u.job_title}) {isAlreadyMember ? ' - Added' : ''}*/}
-                            {/*        </Select.Option>*/}
-                            {/*    );*/}
-                            {/*})}*/}
+                            {getEligibleUsersForOrg().map((u) => {
+                                const isAlreadyMember = members.some((m) => m.user === u.org_user_id);
+                                return (
+                                    <Select.Option
+                                        key={u.org_user_id}
+                                        value={u.org_user_id}
+                                        disabled={isAlreadyMember}
+                                    >
+                                        {u.name} ({u.job_title}) {isAlreadyMember ? ' - Added' : ''}
+                                    </Select.Option>
+                                );
+                            })}
                         </Select>
                         <Button
                             type="primary"
@@ -266,50 +266,50 @@ export default function UnitModal({
                     </Input.Group>
                 </Form.Item>
 
-                {/*{members.length > 0 && (*/}
-                {/*    <List*/}
-                {/*        header="Members"*/}
-                {/*        bordered*/}
-                {/*        dataSource={members}*/}
-                {/*        renderItem={(member) => {*/}
-                {/*            const userDetails = getEligibleUsersForOrg().find(*/}
-                {/*                (u) => u.org_user_id === member.user*/}
-                {/*            );*/}
-                {/*            return (*/}
-                {/*                <List.Item*/}
-                {/*                    actions={[*/}
-                {/*                        <Tooltip title="Toggle Admin Access" key="admin-toggle">*/}
-                {/*                            <Checkbox*/}
-                {/*                                checked={member.is_admin}*/}
-                {/*                                onChange={() =>*/}
-                {/*                                    toggleAdmin(member.user, member.id, member.is_admin)*/}
-                {/*                                }*/}
-                {/*                            >*/}
-                {/*                                Admin*/}
-                {/*                            </Checkbox>*/}
-                {/*                        </Tooltip>,*/}
+                {members.length > 0 && (
+                    <List
+                        header="Members"
+                        bordered
+                        dataSource={members}
+                        renderItem={(member) => {
+                            const userDetails = getEligibleUsersForOrg().find(
+                                (u) => u.org_user_id === member.user
+                            );
+                            return (
+                                <List.Item
+                                    actions={[
+                                        <Tooltip title="Toggle Admin Access" key="admin-toggle">
+                                            <Checkbox
+                                                checked={member.is_admin}
+                                                onChange={() =>
+                                                    toggleAdmin(member.user, member.id, member.is_admin)
+                                                }
+                                            >
+                                                Admin
+                                            </Checkbox>
+                                        </Tooltip>,
 
-                {/*                        <Tooltip title="Remove Member" key="remove">*/}
-                {/*                            <Button*/}
-                {/*                                danger*/}
-                {/*                                type="text"*/}
-                {/*                                icon={<DeleteOutlined/>}*/}
-                {/*                                onClick={() => handleRemoveMember(member.user, member.id)}*/}
-                {/*                            />*/}
-                {/*                        </Tooltip>*/}
-                {/*                    ]}*/}
-                {/*                >*/}
-                {/*                    <Space direction="vertical" size={0}>*/}
-                {/*                        <Typography.Text strong>{userDetails?.name}</Typography.Text>*/}
-                {/*                        <Typography.Text type="secondary" style={{fontSize: 12}}>*/}
-                {/*                            {userDetails?.job_title || '—'}*/}
-                {/*                        </Typography.Text>*/}
-                {/*                    </Space>*/}
-                {/*                </List.Item>*/}
-                {/*            );*/}
-                {/*        }}*/}
-                {/*    />*/}
-                {/*)}*/}
+                                        <Tooltip title="Remove Member" key="remove">
+                                            <Button
+                                                danger
+                                                type="text"
+                                                icon={<DeleteOutlined/>}
+                                                onClick={() => handleRemoveMember(member.user, member.id)}
+                                            />
+                                        </Tooltip>
+                                    ]}
+                                >
+                                    <Space direction="vertical" size={0}>
+                                        <Typography.Text strong>{userDetails?.name}</Typography.Text>
+                                        <Typography.Text type="secondary" style={{fontSize: 12}}>
+                                            {userDetails?.job_title || '—'}
+                                        </Typography.Text>
+                                    </Space>
+                                </List.Item>
+                            );
+                        }}
+                    />
+                )}
             </Form>
         </Modal>
     );
