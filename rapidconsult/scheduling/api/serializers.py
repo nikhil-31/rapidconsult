@@ -98,7 +98,7 @@ class UserOrgProfileLocationUpdateSerializer(serializers.ModelSerializer):
 class UserSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'name', 'email']
+        fields = ['id', 'username', 'name', 'email', 'profile_picture']
 
 
 class UserOrgProfileSerializer(serializers.ModelSerializer):

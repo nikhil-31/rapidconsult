@@ -20,8 +20,7 @@ const locales: Record<string, Locale> = {
     'en-US': require('date-fns/locale/en-US'),
 };
 const {Sider, Content} = Layout;
-const {Title, Text} = Typography;
-const {Option} = Select;
+const {Title} = Typography;
 
 const localizer = dateFnsLocalizer({
     format,
@@ -40,6 +39,7 @@ type EventData = {
     role: number;
     username: string;
     role_name: string;
+    profile_picture: string;
 };
 
 type Location = { id: number; name: string };
@@ -111,6 +111,7 @@ const CalendarView: React.FC = () => {
                 role: shift.user_details.role.id,
                 username: shift.user_details.user.username,
                 role_name: shift.user_details.role.name,
+                profile_picture: shift.user_details.user.profile_picture
             }));
 
             setEvents(formatted);
