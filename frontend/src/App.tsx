@@ -9,13 +9,12 @@ import {Conversations} from "./components/Conversations";
 import {ActiveConversations} from "./components/ActiveConversations";
 import {NotificationContextProvider} from "./contexts/NotificationContext";
 import CalendarView from "./components/Schedules";
-import {OnCall} from "./components/OnCall";
 import Contacts from "./components/Contacts";
 import {OrgProvider} from "./contexts/OrgContext";
 import Admin from "./components/Admin";
 import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
-// import {Profile} from "./components/Profile";
+import OnCall from "./components/OnCall";
 
 
 export default function App() {
