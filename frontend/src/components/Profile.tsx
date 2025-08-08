@@ -1,7 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import ContactFormModal from '../components/ContactModal';
 import {useNavigate} from 'react-router-dom';
 import {
     Avatar,
@@ -13,15 +12,46 @@ import {
     Row,
     Table,
     Typography,
-    message,
+    message
 } from 'antd';
+import {Address} from "../models/Address";
+import {Contact} from "../models/Contact";
+import {Organization} from "../models/Organization";
+import {Role} from "../models/Role";
+import {Location} from "../models/Location";
+import {User} from "../models/User";
 
 const {Title, Text} = Typography;
 
+interface AllowedLocation {
+    name: string;
+    organization_name: string;
+    address: Address;
+}
+
+export interface ProfileData {
+    id?: number;
+    name: string;
+    username: string;
+    email: string;
+    profile_picture?: string;
+    contacts: Contact[];
+    organizations: OrgProfile[];
+}
+
+export interface OrgProfile {
+    id: number;
+    organisation: Organization;
+    role: Role;
+    job_title: string;
+    permissions: string[];
+    allowed_locations: Location[];
+    user: User;
+}
+
+
 const Profile = () => {
-    const [profile, setProfile] = useState<any>(null);
-    const [showForm, setShowForm] = useState(false);
-    const [editingContact, setEditingContact] = useState<any | null>(null);
+    const [profile, setProfile] = useState<ProfileData | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
     const {user} = useContext(AuthContext);
     const navigate = useNavigate();
@@ -41,40 +71,6 @@ const Profile = () => {
     useEffect(() => {
         fetchProfile();
     }, []);
-
-    const handleSubmitContact = async (contact: any) => {
-        try {
-            if (editingContact?.id) {
-                await axios.put(`${apiUrl}/api/contacts/${editingContact.id}/`, contact, {
-                    headers: {Authorization: `Token ${user?.token}`},
-                });
-            } else {
-                await axios.post(`${apiUrl}/api/contacts/`, contact, {
-                    headers: {Authorization: `Token ${user?.token}`},
-                });
-            }
-            message.success('Contact saved successfully');
-            setShowForm(false);
-            setEditingContact(null);
-            fetchProfile();
-        } catch (err) {
-            console.error('Failed to save contact', err);
-            message.error('Failed to save contact');
-        }
-    };
-
-    const handleDelete = async (id: number) => {
-        try {
-            await axios.delete(`${apiUrl}/api/contacts/${id}/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            message.success('Contact deleted');
-            fetchProfile();
-        } catch (err) {
-            console.error('Delete failed', err);
-            message.error('Failed to delete contact');
-        }
-    };
 
     if (!profile) return <div>Loading...</div>;
 
@@ -101,6 +97,14 @@ const Profile = () => {
             render: (val: boolean) => (val ? 'Yes' : 'No'),
         },
     ];
+
+    const allowedLocations: AllowedLocation[] = profile.organizations.flatMap(org =>
+        org.allowed_locations.map(loc => ({
+            name: loc.name,
+            organization_name: org.organisation.name,
+            address: loc.address
+        }))
+    );
 
     return (
         <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
@@ -135,17 +139,6 @@ const Profile = () => {
             {/* Contacts */}
             <Card
                 title="Contact Info"
-                // extra={
-                    // <Button
-                    //     type="primary"
-                    //     onClick={() => {
-                    //         setEditingContact(null);
-                    //         setShowForm(true);
-                    //     }}
-                    // >
-                    //     + Add Contact
-                    // </Button>
-                //{
             >
                 <Table
                     rowKey="id"
@@ -155,47 +148,71 @@ const Profile = () => {
                 />
             </Card>
 
-            {/* Contact Modal */}
-            <ContactFormModal
-                open={showForm}
-                onClose={() => {
-                    setShowForm(false);
-                    setEditingContact(null);
-                }}
-                onSubmit={handleSubmitContact}
-                initialData={editingContact}
-            />
-
             <Divider/>
 
-            {/* Organizations */}
-            <Card title="Organizations">
+            {/*<Card title="Allowed Locations" style={{marginTop: 20}}>*/}
+            {/*    <List*/}
+            {/*        itemLayout="vertical"*/}
+            {/*        dataSource={allowedLocations}*/}
+            {/*        renderItem={item => (*/}
+            {/*            <List.Item>*/}
+            {/*                <List.Item.Meta*/}
+            {/*                    title={<Title level={5}>{item.name}</Title>}*/}
+            {/*                    description={<Text type="secondary">{item.organization_name}</Text>}*/}
+            {/*                />*/}
+            {/*                <div>*/}
+            {/*                    <Text>{item.address.address_1}, {item.address.address_2}</Text><br/>*/}
+            {/*                    <Text>{item.address.city}, {item.address.state} {item.address.zip_code}</Text><br/>*/}
+            {/*                    <Text type="secondary">Label: {item.address.label}</Text>*/}
+            {/*                </div>*/}
+            {/*            </List.Item>*/}
+            {/*        )}*/}
+            {/*    />*/}
+            {/*</Card>*/}
+            <Card title="Locations" style={{marginTop: 20}}>
                 <List
                     itemLayout="vertical"
-                    dataSource={profile.organizations}
-                    renderItem={(org: any) => (
-                        <List.Item key={org.id}>
+                    dataSource={allowedLocations}
+                    renderItem={item => (
+                        <List.Item
+                            style={{
+                                borderRadius: 8,
+                                padding: 5,
+                                marginBottom: 12,
+                            }}
+                        >
                             <List.Item.Meta
-                                title={<Text strong>{org.organisation.name}</Text>}
-                                description={
+                                title={
                                     <>
-                                        <Text type="secondary">
-                                            {org.job_title} ({org.role.name})
-                                        </Text>
-                                        <br/>
-                                        <Text type="secondary" style={{fontSize: 12}}>
-                                            {org.organisation.address?.address_1},{' '}
-                                            {org.organisation.address?.city},{' '}
-                                            {org.organisation.address?.state} -{' '}
-                                            {org.organisation.address?.zip_code}
+                                        <Title level={5} style={{marginBottom: 0}}>
+                                            {item.name}
+                                        </Title>
+                                        <Text type="secondary" style={{fontSize: 14}}>
+                                            {item.organization_name}
                                         </Text>
                                     </>
+                                }
+                                description={
+                                    <div style={{marginTop: 8}}>
+                                        <Text>
+                                            {item.address.address_1}
+                                            {item.address.address_2 && `, ${item.address.address_2}`}
+                                        </Text>
+                                        <br/>
+                                        <Text type="secondary">
+                                            {item.address.city}, {item.address.state} {item.address.zip_code}
+                                        </Text>
+                                        <br/>
+                                        <Text type="secondary">Label: {item.address.label}</Text>
+                                    </div>
                                 }
                             />
                         </List.Item>
                     )}
                 />
             </Card>
+
+
         </div>
     );
 };

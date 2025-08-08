@@ -1,11 +1,8 @@
-// src/pages/Dashboard.tsx
 import React, {useContext, useEffect, useState} from 'react';
 import {
     Layout,
     Avatar,
     Typography,
-    Space,
-    Tag,
     Spin,
     List
 } from 'antd';
@@ -17,13 +14,6 @@ import {UserModel} from "../models/UserModel";
 
 const {Header, Sider, Content} = Layout;
 const {Title, Text} = Typography;
-
-// interface UserData {
-//     id: number;
-//     username: string;
-//     profile_picture?: string;
-//     organizations?: { role?: { name?: string } }[];
-// }
 
 const COLORS = [
     '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
@@ -62,12 +52,13 @@ const Dashboard: React.FC = () => {
     };
 
     useEffect(() => {
-        if (!selectedLocation?.location?.id) {
-            // Wait until the location is loaded before making the request
-            return;
-        }
+        if (!selectedLocation?.location?.id) return;
         fetchUserData();
     }, [selectedLocation]);
+
+    const handleUserClick = (user: UserModel) => {
+        console.log(`selected user - ${JSON.stringify(user)}`)
+    };
 
     return (
         <Layout style={{minHeight: '100vh'}}>
@@ -89,7 +80,10 @@ const Dashboard: React.FC = () => {
                         itemLayout="horizontal"
                         dataSource={users}
                         renderItem={(item) => (
-                            <List.Item>
+                            <List.Item
+                                style={{cursor: 'pointer'}}
+                                onClick={() => handleUserClick(item)}
+                            >
                                 <List.Item.Meta
                                     avatar={
                                         <Avatar
@@ -114,7 +108,7 @@ const Dashboard: React.FC = () => {
                                     description={
                                         (() => {
                                             const orgWithLocation = item.organizations?.find(org =>
-                                                org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id) // match by location id from context
+                                                org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id)
                                             );
 
                                             if (orgWithLocation?.job_title && orgWithLocation?.role) {
@@ -129,7 +123,6 @@ const Dashboard: React.FC = () => {
                                     }
                                 />
                             </List.Item>
-
                         )}
                     />
                 )}
