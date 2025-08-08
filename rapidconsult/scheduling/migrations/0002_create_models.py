@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('job_title', models.CharField(blank=True, max_length=255, null=True)),
-                ('organisation', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                ('organization', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                                    to='scheduling.organization')),
                 ('role', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                            related_name='on_call_shifts', to='scheduling.role')),

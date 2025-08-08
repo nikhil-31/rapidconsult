@@ -11,6 +11,7 @@ import axios from 'axios';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
 import {UserModel} from "../models/UserModel";
+import {ProfileData} from "../models/ProfileData";
 
 const {Header, Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -20,6 +21,7 @@ const COLORS = [
     '#FF8F33', '#8D33FF', '#33FFF5', '#A133FF',
     '#33FF8F', '#FFA133'
 ];
+
 
 const getColorForUser = (userId: string) => {
     let hash = 0;
@@ -36,6 +38,7 @@ const Dashboard: React.FC = () => {
     const {selectedLocation} = useOrgLocation();
     const [users, setUsers] = useState<UserModel[]>([]);
     const apiUrl = process.env.REACT_APP_API_URL as string;
+    const [profile, setProfile] = useState<ProfileData | null>(null);
 
     const fetchUserData = async () => {
         try {
@@ -150,12 +153,13 @@ const Dashboard: React.FC = () => {
 
             {/* Main Layout */}
             <Layout>
-                <Header style={{background: '#fff', padding: '0 24px'}}>
-                    <Title level={3} style={{margin: 0}}>Dashboard</Title>
-                </Header>
-                <Content style={{margin: '24px', background: '#fff', padding: '24px'}}>
-                    Content goes here
-                </Content>
+                {/*<ProfileDetails*/}
+                {/*    name={profile.name}*/}
+                {/*    email={profile.email}*/}
+                {/*    profilePicture={profile.profile_picture}*/}
+                {/*    contacts={profile.contacts}*/}
+                {/*    locations={allowedLocations}*/}
+                {/*/>*/}
             </Layout>
         </Layout>
     );

@@ -88,7 +88,7 @@ class UserOrgProfileLocationUpdateSerializer(serializers.ModelSerializer):
     def validate_allowed_locations(self, locations):
         profile = self.instance or self.context.get("org_profile")
         for loc in locations:
-            if loc.organization_id != profile.organisation_id:
+            if loc.organization_id != profile.organization_id:
                 raise serializers.ValidationError(
                     f"Location '{loc.name}' does not belong to the same organization."
                 )
@@ -102,7 +102,7 @@ class UserSummarySerializer(serializers.ModelSerializer):
 
 
 class UserOrgProfileSerializer(serializers.ModelSerializer):
-    organisation = OrganizationSerializer()
+    organization = OrganizationSerializer()
     role = RoleSerializer()
     allowed_locations = LocationSerializer(many=True)
     permissions = serializers.SerializerMethodField()
@@ -110,7 +110,7 @@ class UserOrgProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserOrgProfile
-        fields = ['id', 'organisation', 'role', 'job_title', 'allowed_locations', 'permissions', 'user']
+        fields = ['id', 'organization', 'role', 'job_title', 'allowed_locations', 'permissions', 'user']
 
     def get_permissions(self, obj):
         if obj.role:

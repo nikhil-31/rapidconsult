@@ -58,7 +58,7 @@ class Department(models.Model):
 class UserOrgProfile(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True,
                              related_name='org_profiles')
-    organisation = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="org_roles", null=True, blank=True)
     job_title = models.CharField(max_length=255, blank=True, null=True)
     allowed_locations = models.ManyToManyField(Location, related_name='permitted_users', blank=True)
@@ -68,7 +68,7 @@ class UserOrgProfile(models.Model):
 
     def clean(self):
         for location in self.allowed_locations.all():
-            if location.organization_id != self.organisation_id:
+            if location.organization_id != self.organization_id:
                 raise ValidationError(
                     f"Location '{location.name}' does not belong to the same organization as the user."
                 )

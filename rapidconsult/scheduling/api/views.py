@@ -35,7 +35,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         qs = Location.objects.all()
 
         if org_id:
-            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+            if not self.request.user.org_profiles.filter(organization_id=org_id).exists():
                 raise PermissionDenied("You do not belong to this organization.")
             qs = qs.filter(organization_id=org_id)
 
@@ -69,7 +69,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         if org_id:
             # Filter departments through organization relationship via location
             queryset = queryset.filter(location__organization__id=org_id)
-            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+            if not self.request.user.org_profiles.filter(organization_id=org_id).exists():
                 raise PermissionDenied("You do not belong to this organization.")
 
         if location_id:
@@ -105,7 +105,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
         if not org_id:
             return Response({"detail": "Missing organization_id"}, status=400)
 
-        if not request.user.org_profiles.filter(organisation_id=org_id).exists():
+        if not request.user.org_profiles.filter(organization_id=org_id).exists():
             raise PermissionDenied("You do not belong to this organization.")
 
         queryset = Department.objects.filter(location__organization__id=org_id)
@@ -127,7 +127,7 @@ class UnitViewSet(viewsets.ModelViewSet):
         )
 
         if org_id:
-            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+            if not self.request.user.org_profiles.filter(organization_id=org_id).exists():
                 raise PermissionDenied("You do not belong to this organization.")
             queryset = queryset.filter(department__location__organization_id=org_id)
 
@@ -179,11 +179,11 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
 
         queryset = UnitMembership.objects.select_related(
             'unit', 'unit__department', 'unit__department__location__organization',
-            'user', 'user__organisation', 'user__role'
+            'user', 'user__organization', 'user__role'
         )
 
         if org_id:
-            if not self.request.user.org_profiles.filter(organisation_id=org_id).exists():
+            if not self.request.user.org_profiles.filter(organization_id=org_id).exists():
                 raise PermissionDenied("You do not belong to this organization.")
             queryset = queryset.filter(
                 unit__department__location__organization_id=org_id
@@ -196,7 +196,7 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
 
     def validate_org_membership(self, unit, user_profile):
         unit_org = unit.department.location.organization
-        if user_profile.organisation != unit_org:
+        if user_profile.organization != unit_org:
             raise PermissionDenied("User must belong to the same organization as the unit.")
 
     def perform_create(self, serializer):

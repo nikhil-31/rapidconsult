@@ -48,9 +48,9 @@ class UserOrgProfileForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         # If an instance exists and has an organization set
-        if self.instance and self.instance.organisation:
+        if self.instance and self.instance.organization:
             self.fields['allowed_locations'].queryset = Location.objects.filter(
-                organization=self.instance.organisation
+                organization=self.instance.organization
             )
         else:
             # Empty queryset if no organization selected
@@ -58,14 +58,14 @@ class UserOrgProfileForm(ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        organisation = cleaned_data.get("organisation")
+        organization = cleaned_data.get("organization")
         allowed_locations = cleaned_data.get("allowed_locations")
 
-        if organisation and allowed_locations:
+        if organization and allowed_locations:
             for loc in allowed_locations:
-                if loc.organization_id != organisation.id:
+                if loc.organization_id != organization.id:
                     raise ValidationError(
-                        f"Location '{loc.name}' does not belong to the selected organization '{organisation.name}'."
+                        f"Location '{loc.name}' does not belong to the selected organization '{organization.name}'."
                     )
         return cleaned_data
 
@@ -73,8 +73,8 @@ class UserOrgProfileForm(ModelForm):
 @admin.register(UserOrgProfile)
 class UserOrgProfileAdmin(admin.ModelAdmin):
     form = UserOrgProfileForm
-    list_display = ['user', 'organisation', 'role', 'job_title']
-    list_filter = ['organisation', 'role']
+    list_display = ['user', 'organization', 'role', 'job_title']
+    list_filter = ['organization', 'role']
     search_fields = ['user__username', 'job_title']
     filter_horizontal = ['allowed_locations']  # Enables a better UI for selecting many-to-many fields
 

@@ -89,7 +89,7 @@ export default function UserModal({
         }
         formData.append('name', values.name);
         formData.append('email', values.email);
-        formData.append('org_profile.organisation', selectedOrgId);
+        formData.append('org_profile.organization', selectedOrgId);
         formData.append('org_profile.role', values.role);
         formData.append('org_profile.job_title', values.job_title);
 
@@ -163,7 +163,7 @@ export default function UserModal({
                 layout="vertical"
                 form={form}
                 onFinish={handleSubmit}
-                initialValues={{organisation: selectedOrgId}}
+                initialValues={{organization: selectedOrgId}}
             >
                 <Title level={5}>User Details</Title>
                 <Form.Item name="username" label="Username" rules={[{required: true}]}>

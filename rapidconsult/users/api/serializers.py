@@ -21,7 +21,7 @@ class ContactSerializer(serializers.ModelSerializer):
 class UserOrgProfileCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserOrgProfile
-        fields = ['organisation', 'role', 'job_title']
+        fields = ['organization', 'role', 'job_title']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,13 +37,13 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_organizations(self, user):
-        org_profiles = user.org_profiles.select_related("organisation", "role")
+        org_profiles = user.org_profiles.select_related("organization", "role")
         from scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
         orgs_data = []
         for profile in org_profiles:
             org_data = {
                 "id": profile.id,
-                "organization": OrganizationSerializer(profile.organisation).data,
+                "organization": OrganizationSerializer(profile.organization).data,
                 "role": RoleSerializer(profile.role).data if profile.role else None,
                 "job_title": profile.job_title,
                 "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
@@ -58,8 +58,8 @@ class UserSerializer(serializers.ModelSerializer):
         if not org_profiles.exists():
             return User.objects.none()
 
-        org_ids = [org_profile.organisation_id for org_profile in org_profiles]
-        return User.objects.filter(org_profiles__organisation_id__in=org_ids).distinct()
+        org_ids = [org_profile.organization_id for org_profile in org_profiles]
+        return User.objects.filter(org_profiles__organization_id__in=org_ids).distinct()
 
     def create(self, validated_data):
         org_profile_data = validated_data.pop("org_profile")
@@ -86,7 +86,7 @@ class UserSerializer(serializers.ModelSerializer):
         # Update org profile if included
         if org_profile_data:
             user_org_profile = instance.org_profiles.filter(
-                organisation_id=org_profile_data["organisation"]
+                organization_id=org_profile_data["organization"]
             ).first()
 
             if user_org_profile:

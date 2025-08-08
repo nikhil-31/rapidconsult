@@ -10,13 +10,13 @@ class IsOrgAdminForObject(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.user.org_profiles.filter(
-            organisation=obj.organization, role__name__iexact="admin"
+            organization=obj.organization, role__name__iexact="admin"
         ).exists()
 
 
 def check_org_admin_or_raise(user, org):
     if not user.org_profiles.filter(
-        organisation=org, role__name__iexact="admin"
+        organization=org, role__name__iexact="admin"
     ).exists():
         raise PermissionDenied("Only organization admins can perform this action.")
 

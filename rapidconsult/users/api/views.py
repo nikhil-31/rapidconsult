@@ -37,7 +37,7 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
 
         if org_id:
             queryset = queryset.filter(
-                org_profiles__organisation_id=org_id
+                org_profiles__organization_id=org_id
             ).distinct()
 
         if location_id:
@@ -58,12 +58,12 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
         user = serializer.validated_data["user"]
         token, created = Token.objects.get_or_create(user=user)
 
-        org_profiles = user.org_profiles.select_related('organisation', 'role')
+        org_profiles = user.org_profiles.select_related('organization', 'role')
         orgs_data = []
         for profile in org_profiles:
             org_data = {
                 "id": profile.id,
-                "organization": OrganizationSerializer(profile.organisation).data,
+                "organization": OrganizationSerializer(profile.organization).data,
                 "role": RoleSerializer(profile.role).data if profile.role else None,
                 "job_title": profile.job_title,
                 "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
