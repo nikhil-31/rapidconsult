@@ -13,16 +13,17 @@ import {UserOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
+import {UserModel} from "../models/UserModel";
 
 const {Header, Sider, Content} = Layout;
 const {Title, Text} = Typography;
 
-interface UserData {
-    id: number;
-    username: string;
-    profile_picture?: string;
-    organizations?: { role?: { name?: string } }[];
-}
+// interface UserData {
+//     id: number;
+//     username: string;
+//     profile_picture?: string;
+//     organizations?: { role?: { name?: string } }[];
+// }
 
 const COLORS = [
     '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
@@ -43,7 +44,7 @@ const Dashboard: React.FC = () => {
     const {user} = useContext(AuthContext);
     const [loading, setLoading] = useState(true);
     const {selectedLocation} = useOrgLocation();
-    const [users, setUsers] = useState<UserData[]>([]);
+    const [users, setUsers] = useState<UserModel[]>([]);
     const apiUrl = process.env.REACT_APP_API_URL as string;
 
     const fetchUserData = async () => {
@@ -92,30 +93,43 @@ const Dashboard: React.FC = () => {
                                 <List.Item.Meta
                                     avatar={
                                         <Avatar
+                                            size={40}
                                             src={item.profile_picture}
                                             icon={!item.profile_picture && <UserOutlined/>}
                                             style={{
                                                 backgroundColor: !item.profile_picture
-                                                    ? getColorForUser(item.username)
-                                                    : undefined
+                                                    ? getColorForUser(item.name)
+                                                    : undefined,
+                                                fontSize: '16px'
                                             }}
                                         >
-                                            {!item.profile_picture && item.username?.[0]?.toUpperCase()}
+                                            {!item.profile_picture && item.name?.[0]?.toUpperCase()}
                                         </Avatar>
                                     }
-                                    title={<Text strong>{item.username}</Text>}
+                                    title={
+                                        <Text strong style={{fontSize: '14px', display: 'block'}}>
+                                            {item.name}
+                                        </Text>
+                                    }
                                     description={
-                                        item.organizations && item.organizations[0]?.role?.name && (
-                                            <Tag
-                                                color={getColorForUser(item.username)}
-                                                style={{color: '#fff'}}
-                                            >
-                                                {item.organizations[0].role.name}
-                                            </Tag>
-                                        )
+                                        (() => {
+                                            const orgWithLocation = item.organizations?.find(org =>
+                                                org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id) // match by location id from context
+                                            );
+
+                                            if (orgWithLocation?.job_title && orgWithLocation?.role) {
+                                                return (
+                                                    <Text type="secondary" style={{fontSize: '13px'}}>
+                                                        {orgWithLocation.job_title} - {orgWithLocation.role.name}
+                                                    </Text>
+                                                );
+                                            }
+                                            return null;
+                                        })()
                                     }
                                 />
                             </List.Item>
+
                         )}
                     />
                 )}
