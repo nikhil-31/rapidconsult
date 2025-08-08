@@ -164,21 +164,17 @@ const Dashboard: React.FC = () => {
             {/* Main Layout */}
             <Layout>
                 {profile ? (
-                    <ProfileDetails
-                        name={profile.name}
-                        email={profile.email}
-                        profilePicture={profile.profile_picture}
-                        contacts={profile.contacts}
-                        showEditProfile={false}
-                        // locations={profile.organizations?.flatMap(org =>
-                        //     org.allowed_locations.map(loc => ({
-                        //         name: loc.name,
-                        //         organization_name: org.organization?.name,
-                        //         address: loc.address
-                        //     }))
-                        // ) || []}
-                        locations={null}
-                    />
+                    <div style={{padding: 24}}>
+                        <ProfileDetails
+                            name={profile.name}
+                            email={profile.email}
+                            profilePicture={profile.profile_picture}
+                            contacts={profile.contacts}
+                            showEditProfile={false}
+                            locations={null}
+                            profile={profile}
+                        />
+                    </div>
                 ) : (
                     <div style={{padding: 24}}>
                         <Text type="secondary">Select a user to view their profile</Text>

@@ -3,6 +3,9 @@ import {Avatar, Button, Card, Col, Divider, List, Row, Table, Typography} from '
 import {useNavigate} from 'react-router-dom';
 import {Contact} from '../models/Contact';
 import {Address} from '../models/Address';
+import {UserModel} from "../models/UserModel";
+import {ProfileData} from "../models/ProfileData";
+import {useOrgLocation} from "../contexts/LocationContext";
 
 const {Title, Text} = Typography;
 
@@ -19,6 +22,7 @@ interface ProfileDetailsProps {
     contacts: Contact[];
     locations: AllowedLocation[] | null;
     showEditProfile: boolean;
+    profile: ProfileData;
 }
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({
@@ -27,10 +31,11 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                                            profilePicture,
                                                            contacts,
                                                            locations,
-                                                           showEditProfile
+                                                           showEditProfile,
+                                                           profile
                                                        }) => {
     const navigate = useNavigate();
-
+    const {selectedLocation} = useOrgLocation();
     const contactColumns = [
         {title: 'Label', dataIndex: 'label', key: 'label'},
         {title: 'Type', dataIndex: 'type', key: 'type'},
@@ -42,6 +47,17 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
             render: (val: boolean) => (val ? 'Yes' : 'No'),
         },
     ];
+
+    function getUserJobTitle(profile: ProfileData): string | null {
+        const orgWithLocation = profile.organizations?.find(org =>
+            org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id)
+        );
+
+        if (orgWithLocation?.job_title && orgWithLocation?.role) {
+            return (`${orgWithLocation.job_title} - ${orgWithLocation.role.name}`);
+        }
+        return null;
+    }
 
     return (
         <div>
@@ -60,7 +76,10 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                 <Title level={3} style={{marginBottom: 0}}>
                                     {name}
                                 </Title>
-                                <Text type="secondary">{email}</Text>
+                                <Text type="secondary">{getUserJobTitle(profile)}</Text>
+                                <div>
+                                    <Text type="secondary">{email}</Text>
+                                </div>
                             </Col>
                         </Row>
                     </Col>

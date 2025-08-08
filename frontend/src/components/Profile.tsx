@@ -5,6 +5,7 @@ import {message} from 'antd';
 import {Address} from "../models/Address";
 import ProfileDetails from './ProfileDetails';
 import {ProfileData} from "../models/ProfileData";
+import {useOrgLocation} from "../contexts/LocationContext";
 
 
 interface AllowedLocation {
@@ -44,6 +45,8 @@ const Profile = () => {
         }))
     );
 
+
+
     return (
         <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
             <ProfileDetails
@@ -53,6 +56,7 @@ const Profile = () => {
                 contacts={profile.contacts}
                 locations={allowedLocations}
                 showEditProfile={true}
+                profile={profile}
             />
         </div>
     );
