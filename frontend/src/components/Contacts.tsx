@@ -12,6 +12,7 @@ import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
 import {UserModel} from "../models/UserModel";
 import {ProfileData} from "../models/ProfileData";
+import ProfileDetails from "./ProfileDetails";
 
 const {Header, Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -59,8 +60,17 @@ const Dashboard: React.FC = () => {
         fetchUserData();
     }, [selectedLocation]);
 
-    const handleUserClick = (user: UserModel) => {
-        console.log(`selected user - ${JSON.stringify(user)}`)
+    const handleUserClick = async (clickedUser: UserModel) => {
+        try {
+            const res = await axios.get(`${apiUrl}/api/profile/${clickedUser.id}/`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+            setProfile(res.data);
+        } catch (error) {
+            console.error("Error fetching profile details:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -153,13 +163,27 @@ const Dashboard: React.FC = () => {
 
             {/* Main Layout */}
             <Layout>
-                {/*<ProfileDetails*/}
-                {/*    name={profile.name}*/}
-                {/*    email={profile.email}*/}
-                {/*    profilePicture={profile.profile_picture}*/}
-                {/*    contacts={profile.contacts}*/}
-                {/*    locations={allowedLocations}*/}
-                {/*/>*/}
+                {profile ? (
+                    <ProfileDetails
+                        name={profile.name}
+                        email={profile.email}
+                        profilePicture={profile.profile_picture}
+                        contacts={profile.contacts}
+                        showEditProfile={false}
+                        // locations={profile.organizations?.flatMap(org =>
+                        //     org.allowed_locations.map(loc => ({
+                        //         name: loc.name,
+                        //         organization_name: org.organization?.name,
+                        //         address: loc.address
+                        //     }))
+                        // ) || []}
+                        locations={null}
+                    />
+                ) : (
+                    <div style={{padding: 24}}>
+                        <Text type="secondary">Select a user to view their profile</Text>
+                    </div>
+                )}
             </Layout>
         </Layout>
     );

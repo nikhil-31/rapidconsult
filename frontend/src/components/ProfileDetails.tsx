@@ -18,6 +18,7 @@ interface ProfileDetailsProps {
     profilePicture?: string;
     contacts: Contact[];
     locations: AllowedLocation[] | null;
+    showEditProfile: boolean;
 }
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({
@@ -25,7 +26,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                                            email,
                                                            profilePicture,
                                                            contacts,
-                                                           locations
+                                                           locations,
+                                                           showEditProfile
                                                        }) => {
     const navigate = useNavigate();
 
@@ -62,11 +64,14 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                             </Col>
                         </Row>
                     </Col>
-                    <Col>
-                        <Button type="primary" danger onClick={() => navigate('/profile/edit')}>
-                            Edit Profile
-                        </Button>
-                    </Col>
+                    {showEditProfile &&
+                        <Col>
+                            <Button type="primary" danger onClick={() => navigate('/profile/edit')}>
+                                Edit Profile
+                            </Button>
+                        </Col>
+                    }
+
                 </Row>
             </Card>
 
@@ -101,9 +106,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                 <List.Item.Meta
                                     title={
                                         <>
-                                            <Title level={5} style={{marginBottom: 0}}>
-                                                {item.name}
-                                            </Title>
+                                            <List.Item.Meta
+                                                title={<Typography.Text strong>{item.name}</Typography.Text>}
+                                            />
                                             <Text type="secondary" style={{fontSize: 14}}>
                                                 {item.organization_name}
                                             </Text>

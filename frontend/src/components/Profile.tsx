@@ -52,6 +52,7 @@ const Profile = () => {
                 profilePicture={profile.profile_picture}
                 contacts={profile.contacts}
                 locations={allowedLocations}
+                showEditProfile={true}
             />
         </div>
     );
