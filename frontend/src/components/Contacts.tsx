@@ -81,8 +81,27 @@ const Dashboard: React.FC = () => {
                         dataSource={users}
                         renderItem={(item) => (
                             <List.Item
-                                style={{cursor: 'pointer'}}
+                                style={{
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.2s ease, transform 0.1s ease',
+                                    borderRadius: 8,
+                                    padding: '8px 12px'
+                                }}
                                 onClick={() => handleUserClick(item)}
+                                onMouseDown={(e) => {
+                                    e.currentTarget.style.transform = 'scale(0.98)';
+                                }}
+                                onMouseUp={(e) => {
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#f5f5f5';
+                                    e.currentTarget.style.transform = 'scale(1.02)'
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.transform = 'scale(1)'
+                                }}
                             >
                                 <List.Item.Meta
                                     avatar={
@@ -125,6 +144,7 @@ const Dashboard: React.FC = () => {
                             </List.Item>
                         )}
                     />
+
                 )}
             </Sider>
 

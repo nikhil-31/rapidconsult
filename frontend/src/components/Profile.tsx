@@ -150,25 +150,6 @@ const Profile = () => {
 
             <Divider/>
 
-            {/*<Card title="Allowed Locations" style={{marginTop: 20}}>*/}
-            {/*    <List*/}
-            {/*        itemLayout="vertical"*/}
-            {/*        dataSource={allowedLocations}*/}
-            {/*        renderItem={item => (*/}
-            {/*            <List.Item>*/}
-            {/*                <List.Item.Meta*/}
-            {/*                    title={<Title level={5}>{item.name}</Title>}*/}
-            {/*                    description={<Text type="secondary">{item.organization_name}</Text>}*/}
-            {/*                />*/}
-            {/*                <div>*/}
-            {/*                    <Text>{item.address.address_1}, {item.address.address_2}</Text><br/>*/}
-            {/*                    <Text>{item.address.city}, {item.address.state} {item.address.zip_code}</Text><br/>*/}
-            {/*                    <Text type="secondary">Label: {item.address.label}</Text>*/}
-            {/*                </div>*/}
-            {/*            </List.Item>*/}
-            {/*        )}*/}
-            {/*    />*/}
-            {/*</Card>*/}
             <Card title="Locations" style={{marginTop: 20}}>
                 <List
                     itemLayout="vertical"
@@ -211,8 +192,6 @@ const Profile = () => {
                     )}
                 />
             </Card>
-
-
         </div>
     );
 };

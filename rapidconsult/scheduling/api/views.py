@@ -15,6 +15,7 @@ from scheduling.models import Location, Department, Organization, Role, UnitMemb
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer, UnitWriteSerializer, OnCallShiftSerializer, RoleSerializer, UnitMembershipSerializer, \
     UserOrgProfileSerializer, UserOrgProfileLocationUpdateSerializer
+from django.shortcuts import get_object_or_404
 
 User = get_user_model()
 
@@ -268,8 +269,11 @@ class UserProfileViewSet(
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return User.objects.all()
+
     def get_object(self):
-        return self.request.user
+        return get_object_or_404(self.get_queryset(), pk=self.kwargs.get("pk"))
 
     @action(detail=False, methods=["get", "put", "patch"])
     def me(self, request):
