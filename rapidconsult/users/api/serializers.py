@@ -38,26 +38,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_organizations(self, user):
         org_profiles = user.org_profiles.select_related("organisation", "role")
-        # return [
-        #     {
-        #         "org_user_id": profile.id,
-        #         "organization_id": profile.organisation.id,
-        #         "organization_name": profile.organisation.name,
-        #         "role": {
-        #             "name": profile.role.name if profile.role else None,
-        #             "id": profile.role.id if profile.role else None,
-        #         },
-        #         "job_title": profile.job_title,
-        #         "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
-        #         "allowed_locations": [
-        #             {
-        #                 "id": loc.id,
-        #                 "name": loc.name
-        #             } for loc in profile.allowed_locations.all()
-        #         ]
-        #     }
-        #     for profile in org_profiles
-        # ]
         from scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
         orgs_data = []
         for profile in org_profiles:

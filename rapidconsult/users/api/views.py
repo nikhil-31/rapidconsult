@@ -32,11 +32,17 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
     @action(detail=False, methods=["get"])
     def all(self, request):
         org_id = request.query_params.get("organization")
+        location_id = request.query_params.get("location_id")
         queryset = self.queryset
 
         if org_id:
             queryset = queryset.filter(
                 org_profiles__organisation_id=org_id
+            ).distinct()
+
+        if location_id:
+            queryset = queryset.filter(
+                org_profiles__allowed_locations__id=location_id
             ).distinct()
 
         serializer = UserSerializer(
@@ -55,23 +61,6 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
         org_profiles = user.org_profiles.select_related('organisation', 'role')
         orgs_data = []
         for profile in org_profiles:
-            # orgs_data.append({
-            #     "org_user_id": profile.id,
-            #     "organization_id": profile.organisation.id,
-            #     "organization_name": profile.organisation.name,
-            #     "role": {
-            #         "name": profile.role.name if profile.role else None,
-            #         "id": profile.role.id if profile.role else None,
-            #     },
-            #     "job_title": profile.job_title,
-            #     "permissions": get_permissions_for_role(profile.role.name) if profile.role else [],
-            #     "allowed_locations": [
-            #         {
-            #             "id": loc.id,
-            #             "name": loc.name
-            #         } for loc in profile.allowed_locations.all()
-            #     ]
-            # })
             org_data = {
                 "id": profile.id,
                 "organization": OrganizationSerializer(profile.organisation).data,
