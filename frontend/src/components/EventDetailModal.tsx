@@ -1,8 +1,9 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import dayjs, {Dayjs} from 'dayjs';
-import {Modal, Descriptions, Typography, Space, Avatar, Button, Popconfirm, DatePicker, message} from 'antd';
+import {Modal, Descriptions, Typography, Space, Avatar, Button, Popconfirm, DatePicker} from 'antd';
 import axios from 'axios';
 import {EventData} from "../models/EventData";
+import {AuthContext} from "../contexts/AuthContext";
 
 const {Title} = Typography;
 
@@ -11,10 +12,13 @@ type ShiftDetailModalProps = {
     onClose: () => void;
     onDelete: (id: number) => void;
     event: EventData | null;
-    onUpdated: () => void; // optional callback to refresh parent data
+    onUpdated: () => void;
 };
 
 const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, onDelete, event, onUpdated}) => {
+    const {user} = useContext(AuthContext);
+    const apiUrl = process.env.REACT_APP_API_URL as string;
+
     const [isEditing, setIsEditing] = useState(false);
     const [startTime, setStartTime] = useState<Dayjs | null>(null);
     const [endTime, setEndTime] = useState<Dayjs | null>(null);
@@ -24,6 +28,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
         if (event) {
             setStartTime(dayjs(event.start));
             setEndTime(dayjs(event.end));
+            setIsEditing(false);
         }
     }, [event]);
 
@@ -31,32 +36,29 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
 
     const handleSave = async () => {
         if (!startTime || !endTime) {
-            message.error("Please select both start and end time.");
             return;
         }
 
         try {
             setLoading(true);
             await axios.patch(
-                `http://localhost:8000/api/shifts/${event.id}/`,
+                `${apiUrl}/api/shifts/${event.id}/`,
                 {
                     start_time: startTime.toISOString(),
                     end_time: endTime.toISOString()
                 },
                 {
                     headers: {
-                        "Authorization": "Token 5a37bafdd69adc025b73165c3450949a9bcfa01b",
+                        "Authorization": `Token ${user?.token}`,
                         "Content-Type": "application/json"
                     }
                 }
             );
-            message.success("Shift updated successfully!");
             setIsEditing(false);
             onClose();
-            if (onUpdated) onUpdated(); // refresh parent data
+            if (onUpdated) onUpdated();
         } catch (error) {
             console.error(error);
-            message.error("Failed to update shift.");
         } finally {
             setLoading(false);
         }
