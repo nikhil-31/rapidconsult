@@ -140,7 +140,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                             >
                                 <List.Item.Meta
                                     title={
-                                        <div style={{marginBottom: 2}}> {/* Reduce spacing here */}
+                                        <div style={{marginBottom: 2}}>
                                             <Typography.Text strong>{item.name}</Typography.Text>
                                             <div>
                                                 <Text type="secondary" style={{fontSize: 14}}>
@@ -150,8 +150,10 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                         </div>
                                     }
                                     description={
-                                        <div style={{marginTop: 4}}> {/* Reduced from 8 to 4 */}
-                                            <Text>
+                                        <div style={{marginTop: 4}}>
+                                            <Text>Label: {item.address.label}</Text>
+                                            <br/>
+                                            <Text type="secondary">
                                                 {item.address.address_1}
                                                 {item.address.address_2 && `, ${item.address.address_2}`}
                                             </Text>
@@ -160,7 +162,6 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                                 {item.address.city}, {item.address.state} {item.address.zip_code}
                                             </Text>
                                             <br/>
-                                            <Text type="secondary">Label: {item.address.label}</Text>
                                         </div>
                                     }
                                 />
