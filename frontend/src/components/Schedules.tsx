@@ -35,7 +35,6 @@ type Unit = { id: number; name: string };
 
 const CalendarView: React.FC = () => {
     const {user} = useContext(AuthContext);
-    const orgs = user?.organizations || [];
     const apiUrl = process.env.REACT_APP_API_URL as string;
 
     const [events, setEvents] = useState<EventData[]>([]);
@@ -51,16 +50,6 @@ const CalendarView: React.FC = () => {
 
     const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
     const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
-
-    const unitColorMap: Record<number, string> = {};
-
-    const generateColor = (unitId: number): string => {
-        if (!unitColorMap[unitId]) {
-            const hue = Math.floor(Math.random() * 360);
-            unitColorMap[unitId] = `hsl(${hue}, 70%, 80%)`;
-        }
-        return unitColorMap[unitId];
-    };
 
     const stringToColor = (str: string): string => {
         let hash = 0;
@@ -150,7 +139,6 @@ const CalendarView: React.FC = () => {
         setDetailModalOpen(true);
     };
 
-    // ✅ NEW: Delete shift handler
     const handleDeleteShift = async (id: number) => {
         try {
             await axios.delete(`${apiUrl}/api/shifts/${id}/`, {
@@ -163,6 +151,10 @@ const CalendarView: React.FC = () => {
         } catch (err) {
             console.error('Failed to delete shift:', err);
         }
+    };
+
+    const handleShiftUpdate = () => {
+
     };
 
     return (
@@ -271,7 +263,8 @@ const CalendarView: React.FC = () => {
                             setDetailModalOpen(false);
                             setSelectedEvent(null);
                         }}
-                        onDelete={handleDeleteShift} // ✅ Pass delete handler
+                        onUpdated={handleShiftUpdate}
+                        onDelete={handleDeleteShift}
                     />
                 </Content>
             </Layout>

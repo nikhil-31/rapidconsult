@@ -11,7 +11,7 @@ type ShiftDetailModalProps = {
     onClose: () => void;
     onDelete: (id: number) => void;
     event: EventData | null;
-    onUpdated?: () => void; // optional callback to refresh parent data
+    onUpdated: () => void; // optional callback to refresh parent data
 };
 
 const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, onDelete, event, onUpdated}) => {
