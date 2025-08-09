@@ -14,7 +14,7 @@ import {Locale} from 'date-fns';
 import {useOrgLocation} from "../contexts/LocationContext";
 import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
-import {notification} from 'antd';
+import dayjs from 'dayjs';
 
 const locales: Record<string, Locale> = {
     'en-US': require('date-fns/locale/en-US'),
@@ -36,6 +36,7 @@ type EventData = {
     start: Date;
     end: Date;
     user: number;
+    job_title: string;
     role: number;
     username: string;
     role_name: string;
@@ -43,7 +44,6 @@ type EventData = {
     unit_id: number;
 };
 
-type Location = { id: number; name: string };
 type Department = { id: number; name: string };
 type Unit = { id: number; name: string };
 
@@ -126,6 +126,7 @@ const CalendarView: React.FC = () => {
                 start: new Date(shift.start_time),
                 end: new Date(shift.end_time),
                 user: shift.user_details.id,
+                job_title: shift.user_details.job_title,
                 role: shift.user_details.role.id,
                 username: shift.user_details.user.username,
                 role_name: shift.user_details.role.name,
@@ -138,6 +139,15 @@ const CalendarView: React.FC = () => {
             console.error('Failed to fetch shifts for unit:', err);
         }
     };
+
+    const EventItem: React.FC<{ event: EventData }> = ({event}) => (
+        <div>
+            <strong>{event.username} - ({event.job_title})</strong>
+            <div style={{fontSize: '0.8em', color: '#555'}}>
+                {dayjs(event.start).format('h:mm A')} - {dayjs(event.end).format('h:mm A')}
+            </div>
+        </div>
+    );
 
     useEffect(() => {
         setSelectedLocationId(selectedLocation?.location?.id ?? null);
@@ -223,7 +233,8 @@ const CalendarView: React.FC = () => {
                                 <CreateShiftModal
                                     visible={shiftModalOpen}
                                     onClose={() => setShiftModalOpen(false)}
-                                    onShiftCreated={() => {}}
+                                    onShiftCreated={() => {
+                                    }}
                                 />
                             )}
                         </Space>
@@ -251,7 +262,7 @@ const CalendarView: React.FC = () => {
                             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                         }}
                         eventPropGetter={(event: EventData) => {
-                            const backgroundColor = generateColor(event.unit_id);
+                            const backgroundColor = stringToColor(event.username);
                             return {
                                 style: {
                                     backgroundColor,
@@ -261,6 +272,9 @@ const CalendarView: React.FC = () => {
                                     padding: '4px'
                                 }
                             };
+                        }}
+                        components={{
+                            event: EventItem
                         }}
                     />
 
