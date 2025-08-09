@@ -140,17 +140,17 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                             >
                                 <List.Item.Meta
                                     title={
-                                        <>
-                                            <List.Item.Meta
-                                                title={<Typography.Text strong>{item.name}</Typography.Text>}
-                                            />
-                                            <Text type="secondary" style={{fontSize: 14}}>
-                                                {item.organization_name}
-                                            </Text>
-                                        </>
+                                        <div style={{marginBottom: 2}}> {/* Reduce spacing here */}
+                                            <Typography.Text strong>{item.name}</Typography.Text>
+                                            <div>
+                                                <Text type="secondary" style={{fontSize: 14}}>
+                                                    {item.organization_name}
+                                                </Text>
+                                            </div>
+                                        </div>
                                     }
                                     description={
-                                        <div style={{marginTop: 8}}>
+                                        <div style={{marginTop: 4}}> {/* Reduced from 8 to 4 */}
                                             <Text>
                                                 {item.address.address_1}
                                                 {item.address.address_2 && `, ${item.address.address_2}`}
