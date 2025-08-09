@@ -1,22 +1,9 @@
 import React from 'react';
-import {Modal, Descriptions, Typography, Space, Avatar, Button, Popconfirm} from 'antd';
 import dayjs from 'dayjs';
+import {Modal, Descriptions, Typography, Space, Avatar, Button, Popconfirm} from 'antd';
+import {EventData} from "../models/EventData";
 
 const {Title} = Typography;
-
-type EventData = {
-    id: number;
-    title: string;
-    start: Date;
-    end: Date;
-    user: number;
-    job_title: string;
-    role: number;
-    username: string;
-    role_name: string;
-    profile_picture: string;
-    unit_id: number;
-};
 
 
 type ShiftDetailModalProps = {

@@ -14,7 +14,7 @@ import {Locale} from 'date-fns';
 import {useOrgLocation} from "../contexts/LocationContext";
 import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
-import dayjs from 'dayjs';
+import {EventData} from "../models/EventData";
 
 const locales: Record<string, Locale> = {
     'en-US': require('date-fns/locale/en-US'),
@@ -29,20 +29,6 @@ const localizer = dateFnsLocalizer({
     getDay,
     locales,
 });
-
-type EventData = {
-    id: number;
-    title: string;
-    start: Date;
-    end: Date;
-    user: number;
-    job_title: string;
-    role: number;
-    username: string;
-    role_name: string;
-    profile_picture: string;
-    unit_id: number;
-};
 
 type Department = { id: number; name: string };
 type Unit = { id: number; name: string };
