@@ -11,11 +11,11 @@ interface UserResponse {
 
 export function Conversations() {
     const {user} = useContext(AuthContext);
-    const [users, setUsers] = useState<UserResponse[]>([]);
-    const {logout} = useContext(AuthContext);
     const apiUrl = process.env.REACT_APP_API_URL;
+    const {logout} = useContext(AuthContext);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const [users, setUsers] = useState<UserResponse[]>([]);
+
     useEffect(() => {
         async function fetchUsers() {
             const res = await fetch(`${apiUrl}/api/users/`, {
@@ -26,7 +26,6 @@ export function Conversations() {
 
             if (res.status === 403) {
                 logout();
-                // throw new Error("Forbidden");
                 return
             }
 

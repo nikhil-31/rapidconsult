@@ -86,7 +86,9 @@ const Dashboard: React.FC = () => {
                     overflowY: 'auto'
                 }}
             >
-                <Title level={4}>Users</Title>
+                <Title level={4}>
+                    Users - {users.length}
+                </Title>
                 {loading ? (
                     <Spin/>
                 ) : (
