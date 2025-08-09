@@ -143,9 +143,9 @@ const CalendarView: React.FC = () => {
     const EventItem: React.FC<{ event: EventData }> = ({event}) => (
         <div>
             <strong>{event.username} - ({event.job_title})</strong>
-            <div style={{fontSize: '0.8em', color: '#555'}}>
-                {dayjs(event.start).format('h:mm A')} - {dayjs(event.end).format('h:mm A')}
-            </div>
+            {/*<div style={{fontSize: '0.8em', color: '#555'}}>*/}
+            {/*    {dayjs(event.start).format('h:mm A')} - {dayjs(event.end).format('h:mm A')}*/}
+            {/*</div>*/}
         </div>
     );
 

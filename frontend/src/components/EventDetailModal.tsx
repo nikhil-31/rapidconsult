@@ -4,23 +4,26 @@ import dayjs from 'dayjs';
 
 const {Title} = Typography;
 
-type ShiftEvent = {
+type EventData = {
     id: number;
     title: string;
     start: Date;
     end: Date;
     user: number;
+    job_title: string;
     role: number;
     username: string;
     role_name: string;
     profile_picture: string;
+    unit_id: number;
 };
+
 
 type ShiftDetailModalProps = {
     visible: boolean;
     onClose: () => void;
     onDelete: (id: number) => void;
-    event: ShiftEvent | null;
+    event: EventData | null;
 };
 
 const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, onDelete, event}) => {
@@ -66,6 +69,10 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
 
                 <Descriptions.Item label="Role">
                     {event.role_name}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Job Title">
+                    {event.job_title}
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Start Time">
