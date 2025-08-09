@@ -1,9 +1,8 @@
 import React from 'react';
-import {Avatar, Button, Card, Col, Divider, List, Row, Table, Typography} from 'antd';
+import {Avatar, Button, Card, Col, Descriptions, Divider, List, Row, Table, Typography} from 'antd';
 import {useNavigate} from 'react-router-dom';
 import {Contact} from '../models/Contact';
 import {Address} from '../models/Address';
-import {UserModel} from "../models/UserModel";
 import {ProfileData} from "../models/ProfileData";
 import {useOrgLocation} from "../contexts/LocationContext";
 
@@ -48,6 +47,11 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         },
     ];
 
+
+    const organization = profile.organizations?.find(org =>
+        org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id)
+    );
+
     function getUserJobTitle(profile: ProfileData): string | null {
         const orgWithLocation = profile.organizations?.find(org =>
             org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id)
@@ -76,10 +80,6 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                 <Title level={3} style={{marginBottom: 0}}>
                                     {name}
                                 </Title>
-                                <Text type="secondary">{getUserJobTitle(profile)}</Text>
-                                <div>
-                                    <Text type="secondary">{email}</Text>
-                                </div>
                             </Col>
                         </Row>
                     </Col>
@@ -90,8 +90,24 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                             </Button>
                         </Col>
                     }
-
                 </Row>
+            </Card>
+
+            <Divider/>
+
+            {/* Bio Section */}
+            <Card title="Bio" style={{marginBottom: 20}}>
+                <Descriptions column={1} bordered size="small" labelStyle={{fontWeight: 'bold'}}>
+                    <Descriptions.Item label="Email">
+                        <Text>{email}</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Role">
+                        <Text>{organization?.role?.name || 'N/A'}</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Job Title">
+                        <Text>{organization?.job_title || 'N/A'}</Text>
+                    </Descriptions.Item>
+                </Descriptions>
             </Card>
 
             <Divider/>
