@@ -72,6 +72,7 @@ class CustomObtainAuthTokenView(ObtainAuthToken):
             orgs_data.append(org_data)
 
         return Response({
+            "id": user.id,
             "token": token.key,
             "username": user.username,
             "profile_picture": request.build_absolute_uri(user.profile_picture.url)

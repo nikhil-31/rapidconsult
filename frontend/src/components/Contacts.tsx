@@ -23,7 +23,6 @@ const COLORS = [
     '#33FF8F', '#FFA133'
 ];
 
-
 const getColorForUser = (userId: string) => {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
@@ -35,10 +34,11 @@ const getColorForUser = (userId: string) => {
 
 const Dashboard: React.FC = () => {
     const {user} = useContext(AuthContext);
-    const [loading, setLoading] = useState(true);
-    const {selectedLocation} = useOrgLocation();
-    const [users, setUsers] = useState<UserModel[]>([]);
     const apiUrl = process.env.REACT_APP_API_URL as string;
+    const {selectedLocation} = useOrgLocation();
+
+    const [loading, setLoading] = useState(true);
+    const [users, setUsers] = useState<UserModel[]>([]);
     const [profile, setProfile] = useState<ProfileData | null>(null);
 
     const fetchUserData = async () => {
@@ -47,7 +47,8 @@ const Dashboard: React.FC = () => {
                 params: {location_id: selectedLocation?.location.id},
                 headers: {Authorization: `Token ${user?.token}`},
             });
-            setUsers(res.data);
+            const filteredUsers = res.data.filter((u: UserModel) => u.id !== user?.id);
+            setUsers(filteredUsers);
         } catch (error) {
             console.error('Error fetching user data:', error);
         } finally {
