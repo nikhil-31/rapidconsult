@@ -171,8 +171,12 @@ const CalendarView: React.FC = () => {
     };
 
     const handleShiftUpdate = () => {
-        // TODO - should refresh the list on update
-
+        if (selectedKey === 'my-shifts') {
+            handleMyShiftsClick();
+        } else if (selectedKey.startsWith('unit-')) {
+            const unitId = parseInt(selectedKey.replace('unit-', ''), 10);
+            handleUnitClick(unitId);
+        }
     };
 
     function getOrgProfileId(userModel: UserModel | null): string | null {
@@ -308,6 +312,8 @@ const CalendarView: React.FC = () => {
                                     visible={shiftModalOpen}
                                     onClose={() => setShiftModalOpen(false)}
                                     onShiftCreated={() => {
+                                        setShiftModalOpen(false)
+                                        handleShiftUpdate()
                                     }}
                                 />
                             )}
