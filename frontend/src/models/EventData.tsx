@@ -10,4 +10,6 @@ export type EventData = {
     role_name: string;
     profile_picture: string;
     unit_id: number;
+    unit_name: string;
+    dept_name: string;
 };

@@ -109,7 +109,15 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
 
                 <Descriptions.Item label="Role">{event.role_name}</Descriptions.Item>
                 <Descriptions.Item label="Job Title">{event.job_title}</Descriptions.Item>
+                {/* New Department Field */}
+                <Descriptions.Item label="Department">
+                    {event.dept_name || "N/A"}
+                </Descriptions.Item>
 
+                {/* New Unit Field */}
+                <Descriptions.Item label="Unit">
+                    {event.unit_name || "N/A"}
+                </Descriptions.Item>
                 <Descriptions.Item label="Start Time">
                     {isEditing ? (
                         <DatePicker
@@ -136,6 +144,8 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
                     )}
                 </Descriptions.Item>
             </Descriptions>
+
+
         </Modal>
     );
 };

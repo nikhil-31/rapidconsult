@@ -114,7 +114,9 @@ const CalendarView: React.FC = () => {
                 username: shift.user_details.user.username,
                 role_name: shift.user_details.role.name,
                 profile_picture: shift.user_details.user.profile_picture,
-                unit_id: shift.unit_details.id
+                unit_id: shift.unit_details.id,
+                unit_name: shift.unit_details.name,
+                dept_name: shift.unit_details.department.name,
             }));
             setSelectedKey(`unit-${unitId}`);
             setMenuSelectedKeys([`unit-${unitId}`]);
@@ -127,9 +129,9 @@ const CalendarView: React.FC = () => {
     const EventItem: React.FC<{ event: EventData }> = ({event}) => (
         <div>
             <strong>{event.username} - ({event.job_title})</strong>
-            {/*<div style={{fontSize: '0.8em', color: '#555'}}>*/}
-            {/*    {dayjs(event.start).format('h:mm A')} - {dayjs(event.end).format('h:mm A')}*/}
-            {/*</div>*/}
+            <div style={{fontSize: '0.8em', color: '#555'}}>
+                {dayjs(event.start).format('h:mm A')} - {dayjs(event.end).format('h:mm A')}
+            </div>
         </div>
     );
 
@@ -211,7 +213,9 @@ const CalendarView: React.FC = () => {
                 username: shift.user_details.user.username,
                 role_name: shift.user_details.role.name,
                 profile_picture: shift.user_details.user.profile_picture,
-                unit_id: shift.unit_details.id
+                unit_id: shift.unit_details.id,
+                unit_name: shift.unit_details.name,
+                dept_name: shift.unit_details.department.name,
             }));
             setSelectedKey('my-shifts');
             setMenuSelectedKeys([]);
