@@ -57,6 +57,7 @@ const CalendarView: React.FC = () => {
 
     const [myShifts, setMyShifts] = useState<EventData[]>([]);
     const [selectedKey, setSelectedKey] = useState('my-shifts');
+    const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([]);
 
     const stringToColor = (str: string): string => {
         let hash = 0;
@@ -116,6 +117,7 @@ const CalendarView: React.FC = () => {
                 unit_id: shift.unit_details.id
             }));
             setSelectedKey(`unit-${unitId}`);
+            setMenuSelectedKeys([`unit-${unitId}`]);
             setEvents(formatted);
         } catch (err) {
             console.error('Failed to fetch shifts for unit:', err);
@@ -143,8 +145,9 @@ const CalendarView: React.FC = () => {
 
     useEffect(() => {
         // Trigger click behavior when page loads
-        if (selectedLocationId !== null && user !== null){
+        if (selectedLocationId !== null && user !== null) {
             handleMyShiftsClick();
+
         }
     }, [selectedLocationId, user]);
 
@@ -206,7 +209,8 @@ const CalendarView: React.FC = () => {
                 profile_picture: shift.user_details.user.profile_picture,
                 unit_id: shift.unit_details.id
             }));
-
+            setSelectedKey('my-shifts');
+            setMenuSelectedKeys([]);
             setEvents(formatted);
         } catch (err) {
             console.error('Failed to fetch my shifts:', err);
@@ -220,12 +224,11 @@ const CalendarView: React.FC = () => {
 
                 <div
                     key="my-shifts"
-                    onClick={() => {
-                        setSelectedKey('my-shifts');
-                        handleMyShiftsClick();
-                    }}
+                    onClick={handleMyShiftsClick}
                     style={{
                         padding: '8px 16px',
+                        paddingTop: '8px',
+                        marginTop: '16px',
                         cursor: 'pointer',
                         borderRadius: 6,
                         transition: 'all 0.2s',
@@ -247,13 +250,16 @@ const CalendarView: React.FC = () => {
                     📅 My Shifts
                 </div>
 
+                {/* Departments Title */}
                 <div style={{paddingLeft: 16, paddingRight: 16, paddingTop: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
                 </div>
 
+                {/* Departments Menu */}
                 <Menu
                     mode="inline"
                     style={{borderInlineEnd: 'none'}}
+                    selectedKeys={menuSelectedKeys}
                     defaultOpenKeys={
                         selectedLocationId && departments[selectedLocationId]
                             ? departments[selectedLocationId].map(dep => `dep-${dep.id}`)
@@ -267,7 +273,10 @@ const CalendarView: React.FC = () => {
                                 title={<span style={{fontWeight: 500}}>{department.name}</span>}
                             >
                                 {units[department.id]?.map(unit => (
-                                    <Menu.Item key={`unit-${unit.id}`} onClick={() => handleUnitClick(unit.id)}>
+                                    <Menu.Item
+                                        key={`unit-${unit.id}`}
+                                        onClick={() => handleUnitClick(unit.id)}
+                                    >
                                         {unit.name}
                                     </Menu.Item>
                                 )) || <Menu.Item disabled>Loading units...</Menu.Item>}
