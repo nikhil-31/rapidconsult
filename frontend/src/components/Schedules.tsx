@@ -1,20 +1,24 @@
 import axios, {AxiosResponse} from 'axios';
-import React, {useContext, useEffect, useState} from 'react';
+import dayjs from 'dayjs';
+import {Layout, Menu, Button, Typography, Space,} from 'antd';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {Calendar, dateFnsLocalizer, View, Views,} from 'react-big-calendar';
+import {Locale} from 'date-fns';
+import React, {useContext, useEffect, useState} from 'react';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {AuthContext} from '../contexts/AuthContext';
-import {Layout, Menu, Button, Typography, Select, Space,} from 'antd';
 import {PlusOutlined} from '@ant-design/icons';
 import CreateShiftModal from './ShiftModal';
-import {Locale} from 'date-fns';
 import {useOrgLocation} from "../contexts/LocationContext";
 import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
 import {EventData} from "../models/EventData";
+import {ProfileData} from "../models/ProfileData";
+import {UserModel} from "../models/UserModel";
+import {CalendarOutlined} from '@ant-design/icons';
 
 const locales: Record<string, Locale> = {
     'en-US': require('date-fns/locale/en-US'),
@@ -50,6 +54,9 @@ const CalendarView: React.FC = () => {
 
     const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
     const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
+
+    const [myShifts, setMyShifts] = useState<EventData[]>([]);
+    const [selectedKey, setSelectedKey] = useState('my-shifts');
 
     const stringToColor = (str: string): string => {
         let hash = 0;
@@ -134,6 +141,11 @@ const CalendarView: React.FC = () => {
         }
     }, [selectedLocationId]);
 
+    useEffect(() => {
+        // Trigger click behavior when page loads
+        handleMyShiftsClick();
+    }, []);
+
     const handleEventClick = (event: EventData) => {
         setSelectedEvent(event);
         setDetailModalOpen(true);
@@ -157,9 +169,81 @@ const CalendarView: React.FC = () => {
 
     };
 
+    function getOrgProfileId(userModel: UserModel | null): string | null {
+        const orgWithLocation = userModel?.organizations?.find(org =>
+            org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id)
+        );
+
+        if (orgWithLocation?.id) {
+            return (`${orgWithLocation.id}`)
+        }
+        return null;
+    }
+
+    const handleMyShiftsClick = async () => {
+        try {
+            const res: AxiosResponse<Shift[]> = await axios.get(`${apiUrl}/api/shifts`, {
+                params: {
+                    user: getOrgProfileId(user),
+                    location: selectedLocationId
+                },
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+
+            const formatted: EventData[] = res.data.map((shift: Shift) => ({
+                id: shift.id,
+                title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
+                start: new Date(shift.start_time),
+                end: new Date(shift.end_time),
+                user: shift.user_details.id,
+                job_title: shift.user_details.job_title,
+                role: shift.user_details.role.id,
+                username: shift.user_details.user.username,
+                role_name: shift.user_details.role.name,
+                profile_picture: shift.user_details.user.profile_picture,
+                unit_id: shift.unit_details.id
+            }));
+
+            setEvents(formatted);
+        } catch (err) {
+            console.error('Failed to fetch my shifts:', err);
+        }
+    };
+
     return (
         <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
+
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
+
+                <div
+                    key="my-shifts"
+                    onClick={() => {
+                        setSelectedKey('my-shifts');
+                        handleMyShiftsClick();
+                    }}
+                    style={{
+                        padding: '8px 16px',
+                        cursor: 'pointer',
+                        borderRadius: 6,
+                        transition: 'all 0.2s',
+                        fontWeight: 500,
+                        backgroundColor: selectedKey === 'my-shifts' ? '#e6f7ff' : 'transparent',
+                        color: selectedKey === 'my-shifts' ? '#1890ff' : 'inherit',
+                    }}
+                    onMouseEnter={(e) => {
+                        if (selectedKey !== 'my-shifts') {
+                            e.currentTarget.style.backgroundColor = '#f5f5f5';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (selectedKey !== 'my-shifts') {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                    }}
+                >
+                    📅 My Shifts
+                </div>
+
                 <div style={{paddingLeft: 16, paddingRight: 16, paddingTop: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
                 </div>

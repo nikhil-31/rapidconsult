@@ -304,12 +304,19 @@ class OnCallShiftViewSet(ModelViewSet):
         unit_id = self.request.query_params.get('unit')
         department_id = self.request.query_params.get('department')
         location_id = self.request.query_params.get('location')
+        user_id = self.request.query_params.get('user')
 
         if unit_id:
             queryset = queryset.filter(unit_id=unit_id)
 
         if department_id:
             queryset = queryset.filter(unit__department_id=department_id)
+
+        if user_id and location_id:
+            queryset = queryset.filter(
+                user_id=user_id,
+                unit__department__location_id=location_id
+            )
 
         if location_id:
             queryset = queryset.filter(unit__department__location_id=location_id)
