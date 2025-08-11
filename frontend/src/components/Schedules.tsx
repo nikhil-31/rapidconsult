@@ -115,7 +115,7 @@ const CalendarView: React.FC = () => {
                 profile_picture: shift.user_details.user.profile_picture,
                 unit_id: shift.unit_details.id
             }));
-
+            setSelectedKey(`unit-${unitId}`);
             setEvents(formatted);
         } catch (err) {
             console.error('Failed to fetch shifts for unit:', err);
@@ -143,8 +143,10 @@ const CalendarView: React.FC = () => {
 
     useEffect(() => {
         // Trigger click behavior when page loads
-        handleMyShiftsClick();
-    }, []);
+        if (selectedLocationId !== null && user !== null){
+            handleMyShiftsClick();
+        }
+    }, [selectedLocationId, user]);
 
     const handleEventClick = (event: EventData) => {
         setSelectedEvent(event);
@@ -166,6 +168,7 @@ const CalendarView: React.FC = () => {
     };
 
     const handleShiftUpdate = () => {
+        // TODO - should refresh the list on update
 
     };
 
