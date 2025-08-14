@@ -1,5 +1,9 @@
-from mongoengine import Document, StringField, DateTimeField, BooleanField, ListField, DictField, EmbeddedDocument, \
-    EmbeddedDocumentField, IntField
+import datetime
+
+from mongoengine import (
+    Document, StringField, BooleanField, IntField, DateTimeField,
+    EmbeddedDocument, EmbeddedDocumentField, ListField, URLField
+)
 
 
 # ---------------------------
@@ -121,35 +125,7 @@ class Message(Document):
 # ---------------------------
 # UserConversations
 # ---------------------------
-# class UserConversation(Document):
-#     userId = StringField(required=True)
-#     conversationId = StringField(required=True)
-#     conversationType = StringField()
-#     otherParticipantId = StringField()
-#     otherParticipantName = StringField()
-#     otherParticipantAvatar = StringField()
-#     conversationName = StringField()
-#     lastMessage = DictField()
-#     unreadCount = IntField(default=0)
-#     lastReadAt = DateTimeField()
-#     isPinned = BooleanField(default=False)
-#     isMuted = BooleanField(default=False)
-#     isArchived = BooleanField(default=False)
-#     updatedAt = DateTimeField()
-#
-#     meta = {
-#         "collection": "userConversations",
-#         "indexes": [
-#             {"fields": ["userId", "isArchived", "-updatedAt"]},
-#             {"fields": ["userId", "conversationId"], "unique": True}
-#         ]
-#     }
 
-from mongoengine import (
-    Document, StringField, BooleanField, IntField, DateTimeField,
-    EmbeddedDocument, EmbeddedDocumentField, ListField, URLField
-)
-import datetime
 
 
 class DirectMessageInfo(EmbeddedDocument):
