@@ -5,8 +5,8 @@ from django.db import models
 
 User = get_user_model()
 
-# Create your models here.
 
+# Create your models here.
 class Conversation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=128)
@@ -46,4 +46,3 @@ class Message(models.Model):
 
     def __str__(self):
         return f"From {self.from_user.username} to {self.to_user.username}: {self.content} [{self.timestamp}]"
-

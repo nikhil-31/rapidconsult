@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
-# app/serializers.py
 from rest_framework import serializers
 
 from rapidconsult.chats.models import Message, Conversation
 from rapidconsult.users.api.serializers import UserSerializer
-from rapidconsult.chats.mongo.models import UserConversation as MongoUserConversation
 
 User = get_user_model()
 
@@ -71,19 +69,69 @@ class ConversationSerializer(serializers.ModelSerializer):
         return None
 
 
+class DirectMessageInfoSerializer(serializers.Serializer):
+    otherParticipantId = serializers.CharField()
+    otherParticipantName = serializers.CharField()
+    otherParticipantAvatar = serializers.URLField()
+    otherParticipantStatus = serializers.CharField()
+
+
+class GroupChatInfoSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    description = serializers.CharField()
+    avatar = serializers.URLField()
+    memberCount = serializers.IntegerField()
+    adminIds = serializers.ListField(child=serializers.CharField())
+    myRole = serializers.CharField()
+
+
+class LastMessageInfoSerializer(serializers.Serializer):
+    messageId = serializers.CharField()
+    content = serializers.CharField()
+    senderId = serializers.CharField()
+    senderName = serializers.CharField()
+    timestamp = serializers.DateTimeField()
+    type = serializers.CharField()
+
+
+class CustomNotificationSettingsSerializer(serializers.Serializer):
+    sound = serializers.CharField()
+    vibrate = serializers.BooleanField()
+    priority = serializers.CharField()
+
+
+class DraftInfoSerializer(serializers.Serializer):
+    content = serializers.CharField()
+    timestamp = serializers.DateTimeField()
+
+
 class UserConversationSerializer(serializers.Serializer):
     _id = serializers.CharField()
     userId = serializers.CharField()
     conversationId = serializers.CharField()
     conversationType = serializers.CharField()
-    directMessage = serializers.DictField(required=False)
-    groupChat = serializers.DictField(required=False)
-    lastMessage = serializers.DictField(required=False)
+    directMessage = DirectMessageInfoSerializer(required=False)
+    groupChat = GroupChatInfoSerializer(required=False)
+    lastMessage = LastMessageInfoSerializer(required=False)
     unreadCount = serializers.IntegerField()
     lastReadAt = serializers.DateTimeField(required=False)
     isPinned = serializers.BooleanField()
     isMuted = serializers.BooleanField()
     isArchived = serializers.BooleanField()
-    customNotifications = serializers.DictField(required=False)
-    draft = serializers.DictField(required=False)
+    customNotifications = CustomNotificationSettingsSerializer(required=False)
+    draft = DraftInfoSerializer(required=False)
     updatedAt = serializers.DateTimeField()
+
+
+class DirectMessageSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=["direct"])
+    user1_id = serializers.CharField()
+    user2_id = serializers.CharField()
+
+
+class GroupChatSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=["group"])
+    created_by_id = serializers.CharField()
+    name = serializers.CharField()
+    description = serializers.CharField(required=False, allow_blank=True)
+    member_ids = serializers.ListField(child=serializers.CharField(), min_length=2)

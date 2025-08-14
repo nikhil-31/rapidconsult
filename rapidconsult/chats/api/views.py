@@ -8,9 +8,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.mongo.models import UserConversation
+from .mongo import create_direct_message, create_group_chat
 from .paginaters import MessagePagination
 from .pagination import UserConversationPagination
-from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer
+from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer, DirectMessageSerializer, \
+    GroupChatSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -96,6 +98,30 @@ class UserConversationViewSet(viewsets.ViewSet):
         GET /api/active-conversations/?userId=user_12345
     """
     pagination_class = UserConversationPagination
+
+    def create(self, request):
+        conv_type = request.data.get("type")
+
+        if conv_type == "direct":
+            serializer = DirectMessageSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            conv = create_direct_message(data["user1_id"], data["user2_id"])
+            return Response({"conversation_id": str(conv.id)}, status=status.HTTP_201_CREATED)
+
+        elif conv_type == "group":
+            serializer = GroupChatSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            conv = create_group_chat(
+                data["created_by_id"],
+                data["name"],
+                data.get("description", ""),
+                data["member_ids"]
+            )
+            return Response({"conversation_id": str(conv.id)}, status=status.HTTP_201_CREATED)
+
+        return Response({"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
         user_id = request.query_params.get("userId")

@@ -193,7 +193,6 @@ class UserConversation(Document):
     userId = StringField(required=True)
     conversationId = StringField(required=True)
     conversationType = StringField(choices=["direct", "group"])
-
     directMessage = EmbeddedDocumentField(DirectMessageInfo)
     groupChat = EmbeddedDocumentField(GroupChatInfo)
     lastMessage = EmbeddedDocumentField(LastMessageInfo)
