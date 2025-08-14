@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
+# app/serializers.py
 from rest_framework import serializers
 
 from rapidconsult.chats.models import Message, Conversation
 from rapidconsult.users.api.serializers import UserSerializer
+from rapidconsult.chats.mongo.models import UserConversation as MongoUserConversation
 
 User = get_user_model()
 
@@ -67,3 +69,21 @@ class ConversationSerializer(serializers.ModelSerializer):
                 other_user = User.objects.get(username=username)
                 return UserSerializer(other_user, context=context).data
         return None
+
+
+class UserConversationSerializer(serializers.Serializer):
+    _id = serializers.CharField()
+    userId = serializers.CharField()
+    conversationId = serializers.CharField()
+    conversationType = serializers.CharField()
+    directMessage = serializers.DictField(required=False)
+    groupChat = serializers.DictField(required=False)
+    lastMessage = serializers.DictField(required=False)
+    unreadCount = serializers.IntegerField()
+    lastReadAt = serializers.DateTimeField(required=False)
+    isPinned = serializers.BooleanField()
+    isMuted = serializers.BooleanField()
+    isArchived = serializers.BooleanField()
+    customNotifications = serializers.DictField(required=False)
+    draft = serializers.DictField(required=False)
+    updatedAt = serializers.DateTimeField()

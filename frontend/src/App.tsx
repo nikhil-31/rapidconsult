@@ -16,6 +16,7 @@ import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
 import OnCall from "./components/OnCall";
 import {LocationProvider} from "./contexts/LocationContext";
+import Vox from "./components/Vox";
 
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
                                     </ProtectedRoute>
                                 }
                             />
+                            <Route path="/vox" element={<Vox/>}/>
                             <Route path="/oncall" element={<OnCall/>}/>
                             <Route path="/contacts" element={<Contacts/>}/>
                             <Route path="/schedules" element={<CalendarView/>}/>

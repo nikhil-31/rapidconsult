@@ -121,26 +121,96 @@ class Message(Document):
 # ---------------------------
 # UserConversations
 # ---------------------------
-class UserConversation(Document):
-    userId = StringField(required=True)
-    conversationId = StringField(required=True)
-    conversationType = StringField()
+# class UserConversation(Document):
+#     userId = StringField(required=True)
+#     conversationId = StringField(required=True)
+#     conversationType = StringField()
+#     otherParticipantId = StringField()
+#     otherParticipantName = StringField()
+#     otherParticipantAvatar = StringField()
+#     conversationName = StringField()
+#     lastMessage = DictField()
+#     unreadCount = IntField(default=0)
+#     lastReadAt = DateTimeField()
+#     isPinned = BooleanField(default=False)
+#     isMuted = BooleanField(default=False)
+#     isArchived = BooleanField(default=False)
+#     updatedAt = DateTimeField()
+#
+#     meta = {
+#         "collection": "userConversations",
+#         "indexes": [
+#             {"fields": ["userId", "isArchived", "-updatedAt"]},
+#             {"fields": ["userId", "conversationId"], "unique": True}
+#         ]
+#     }
+
+from mongoengine import (
+    Document, StringField, BooleanField, IntField, DateTimeField,
+    EmbeddedDocument, EmbeddedDocumentField, ListField, URLField
+)
+import datetime
+
+
+class DirectMessageInfo(EmbeddedDocument):
     otherParticipantId = StringField()
     otherParticipantName = StringField()
-    otherParticipantAvatar = StringField()
-    conversationName = StringField()
-    lastMessage = DictField()
+    otherParticipantAvatar = URLField()
+    otherParticipantStatus = StringField()
+
+
+class GroupChatInfo(EmbeddedDocument):
+    name = StringField()
+    description = StringField()
+    avatar = URLField()
+    memberCount = IntField()
+    adminIds = ListField(StringField())
+    myRole = StringField()
+
+
+class LastMessageInfo(EmbeddedDocument):
+    messageId = StringField()
+    content = StringField()
+    senderId = StringField()
+    senderName = StringField()
+    timestamp = DateTimeField()
+    type = StringField()
+
+
+class CustomNotificationSettings(EmbeddedDocument):
+    sound = StringField()
+    vibrate = BooleanField()
+    priority = StringField()
+
+
+class DraftInfo(EmbeddedDocument):
+    content = StringField()
+    timestamp = DateTimeField()
+
+
+class UserConversation(Document):
+    _id = StringField(primary_key=True)
+    userId = StringField(required=True)
+    conversationId = StringField(required=True)
+    conversationType = StringField(choices=["direct", "group"])
+
+    directMessage = EmbeddedDocumentField(DirectMessageInfo)
+    groupChat = EmbeddedDocumentField(GroupChatInfo)
+    lastMessage = EmbeddedDocumentField(LastMessageInfo)
     unreadCount = IntField(default=0)
     lastReadAt = DateTimeField()
     isPinned = BooleanField(default=False)
     isMuted = BooleanField(default=False)
     isArchived = BooleanField(default=False)
-    updatedAt = DateTimeField()
+    customNotifications = EmbeddedDocumentField(CustomNotificationSettings)
+    draft = EmbeddedDocumentField(DraftInfo)
+    updatedAt = DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
-        "collection": "userConversations",
+        "collection": "user_conversations",
         "indexes": [
-            {"fields": ["userId", "isArchived", "-updatedAt"]},
-            {"fields": ["userId", "conversationId"], "unique": True}
+            "userId",
+            "conversationId",
+            "-updatedAt"
         ]
     }

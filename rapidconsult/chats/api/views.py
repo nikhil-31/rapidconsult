@@ -2,12 +2,15 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework import status
 from rapidconsult.chats.models import Conversation, Message, User
+from rapidconsult.chats.mongo.models import UserConversation
 from .paginaters import MessagePagination
-from .serializers import ConversationSerializer, MessageSerializer
+from .pagination import UserConversationPagination
+from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -84,3 +87,34 @@ class ImageMessageUploadView(APIView):
             }
         )
         return Response(MessageSerializer(msg).data)
+
+
+class UserConversationViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for listing user conversations filtered by userId.
+    Example:
+        GET /api/active-conversations/?userId=user_12345
+    """
+    pagination_class = UserConversationPagination
+
+    def list(self, request):
+        user_id = request.query_params.get("userId")
+        if not user_id:
+            return Response(
+                {"error": "userId query parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if user exists in the collection
+        if not UserConversation.objects(userId=user_id).first():
+            return Response(
+                {"error": f"No conversations found for userId '{user_id}'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        queryset = UserConversation.objects(userId=user_id).order_by("-updatedAt")
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+
+        serializer = UserConversationSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
