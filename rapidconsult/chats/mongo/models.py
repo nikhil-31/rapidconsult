@@ -6,10 +6,11 @@ from mongoengine import Document, StringField, DateTimeField, BooleanField, List
 # Users
 # ---------------------------
 class User(Document):
+    sql_user_id = StringField(required=True, unique=True)
     username = StringField(required=True, unique=True)
     email = StringField(required=True, unique=True)
     displayName = StringField()
-    avatar = StringField()
+    profile_picture = StringField()
     status = StringField(choices=["online", "offline", "away", "busy"])
     lastSeen = DateTimeField()
     createdAt = DateTimeField()

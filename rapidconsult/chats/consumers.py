@@ -6,6 +6,7 @@ from asgiref.sync import async_to_sync
 
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
+from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, User as MongoUser
 
 
 class UUIDEncoder(json.JSONEncoder):
