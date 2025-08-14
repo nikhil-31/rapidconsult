@@ -3,6 +3,7 @@
 
 import ssl
 from pathlib import Path
+from mongoengine import connect
 
 import environ
 
@@ -384,7 +385,7 @@ SPECTACULAR_SETTINGS = {
     "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     "SCHEMA_PATH_PREFIX": "/api/",
 }
-# Your stuff...
+# Redis
 # ------------------------------------------------------------------------------
 CHANNEL_LAYERS = {
     "default": {
@@ -396,3 +397,14 @@ CHANNEL_LAYERS = {
 }
 
 CORS_ALLOWED_ORIGINS = env.list("DJANGO_CORS_ALLOWED_ORIGINS", default=["*"])
+
+# Mongo Settings
+# ------------------------------------------------------------------------------
+connect(
+    db=env("MONGO_DB_NAME"),
+    username=env("MONGO_DB_USERNAME"),
+    password=env("MONGO_DB_PASSWORD"),
+    host=env("MONGO_DB_HOST"),
+    port=int(env("MONGO_DB_PORT", default=27017)),
+    authentication_source=env("MONGO_DB_AUTH_SOURCE"),
+)

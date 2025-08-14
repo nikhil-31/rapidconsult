@@ -32,3 +32,5 @@ drf-spectacular==0.28.0  # https://github.com/tfranzel/drf-spectacular
 daphne==4.1.2 # https://github.com/django/daphne
 channels_redis==4.2.1
 django-filter==25.1
+mongoengine==0.29.1
+pymongo==3.11.4
