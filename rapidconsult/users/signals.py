@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from django.utils import timezone
 from chats.mongo.models import User as MongoUser
 from mongoengine import DoesNotExist
+
+from scheduling.models import UserOrgProfile
 from .models import User
 
 
@@ -21,6 +23,13 @@ def sync_user_to_mongo(sender, instance, created, **kwargs):
     mongo_user.lastSeen = instance.last_login
     mongo_user.createdAt = getattr(instance, "date_joined", None)
     mongo_user.updatedAt = timezone.now()
+
+    # Saving allowed locations into mongo
+    allowed_location_ids = (
+        UserOrgProfile.objects.filter(user=instance).values_list("allowed_locations__id", flat=True)
+    )
+    mongo_user.allowed_locations = [str(loc_id) for loc_id in allowed_location_ids if loc_id]
+
     mongo_user.save()
 
 

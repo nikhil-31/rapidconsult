@@ -19,13 +19,15 @@ class User(Document):
     lastSeen = DateTimeField()
     createdAt = DateTimeField()
     updatedAt = DateTimeField()
+    allowed_locations = ListField(StringField())
 
     meta = {
         "collection": "users",
         "indexes": [
             {"fields": ["username"], "unique": True},
             {"fields": ["email"], "unique": True},
-            "status"
+            "status",
+            "allowed_locations",
         ]
     }
 
