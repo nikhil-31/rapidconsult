@@ -66,6 +66,8 @@ class Conversation(Document):
     updatedAt = DateTimeField()
     directMessageParticipants = ListField(StringField())
     groupSettings = EmbeddedDocumentField(GroupSettings)
+    locationId = StringField()
+    organizationId = StringField()
 
     meta = {
         "collection": "conversations",
@@ -111,6 +113,8 @@ class Message(Document):
     deletedAt = DateTimeField()
     replyTo = StringField()
     readBy = ListField(EmbeddedDocumentField(ReadReceipt))
+    locationId = StringField()
+    organizationId = StringField()
 
     meta = {
         "collection": "messages",
@@ -125,9 +129,6 @@ class Message(Document):
 # ---------------------------
 # UserConversations
 # ---------------------------
-
-
-
 class DirectMessageInfo(EmbeddedDocument):
     otherParticipantId = StringField()
     otherParticipantName = StringField()
@@ -180,12 +181,14 @@ class UserConversation(Document):
     customNotifications = EmbeddedDocumentField(CustomNotificationSettings)
     draft = EmbeddedDocumentField(DraftInfo)
     updatedAt = DateTimeField(default=datetime.datetime.utcnow)
+    locationId = StringField()
+    organizationId = StringField()
 
     meta = {
         "collection": "user_conversations",
         "indexes": [
-            "userId",
-            "conversationId",
-            "-updatedAt"
+            {"fields": ["userId", "-updatedAt"]},  # base case: all user convos sorted by activity
+            {"fields": ["userId", "organizationId", "-updatedAt"]},  # org scoped
+            {"fields": ["userId", "organizationId", "locationId", "-updatedAt"]}
         ]
     }

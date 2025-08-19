@@ -1,20 +1,22 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
+
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.mongo.models import UserConversation
 from .mongo import create_direct_message, create_group_chat
 from .paginaters import MessagePagination
 from .pagination import UserConversationPagination
+from .permissions import HasOrgLocationAccess
 from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer, DirectMessageSerializer, \
     GroupChatSerializer
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 
 
 class ConversationViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -95,18 +97,23 @@ class UserConversationViewSet(viewsets.ViewSet):
     """
     A ViewSet for listing user conversations filtered by userId.
     Example:
-        GET /api/active-conversations/?userId=user_12345
+        GET /api/active-conversations/?user_id=user_12345&organization_id=1&location_id=1
     """
     pagination_class = UserConversationPagination
+    permission_classes = [HasOrgLocationAccess]
 
     def create(self, request):
         conv_type = request.data.get("type")
+        organization_id = request.data.get("organization_id")
+        location_id = request.data.get("location_id")
+        user_id = str(request.user.id)
 
         if conv_type == "direct":
             serializer = DirectMessageSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
-            conv = create_direct_message(data["user1_id"], data["user2_id"])
+            conv = create_direct_message(data["user1_id"], data["user2_id"], organization_id=organization_id,
+                                         location_id=location_id, )
             return Response({"conversation_id": str(conv.id)}, status=status.HTTP_201_CREATED)
 
         elif conv_type == "group":
@@ -114,31 +121,31 @@ class UserConversationViewSet(viewsets.ViewSet):
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
             conv = create_group_chat(
-                data["created_by_id"],
+                user_id,
                 data["name"],
                 data.get("description", ""),
-                data["member_ids"]
+                data["member_ids"],
+                organization_id=organization_id,
+                location_id=location_id,
             )
             return Response({"conversation_id": str(conv.id)}, status=status.HTTP_201_CREATED)
 
         return Response({"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
-        user_id = request.query_params.get("userId")
-        if not user_id:
-            return Response(
-                {"error": "userId query parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        user_id = str(request.user.id)
+        organization_id = request.query_params.get("organization_id")
+        location_id = request.query_params.get("location_id")
 
         # Check if user exists in the collection
         if not UserConversation.objects(userId=user_id).first():
             return Response(
-                {"error": f"No conversations found for userId '{user_id}'"},
+                {"error": f"No conversations found for user_id '{user_id}'"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        queryset = UserConversation.objects(userId=user_id).order_by("-updatedAt")
+        queryset = UserConversation.objects(userId=user_id, organizationId=organization_id,
+                                            locationId=location_id).order_by("-updatedAt")
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
 

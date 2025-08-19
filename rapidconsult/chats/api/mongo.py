@@ -8,7 +8,7 @@ from rapidconsult.chats.mongo.models import (
 )
 
 
-def create_direct_message(user1_id, user2_id):
+def create_direct_message(user1_id, user2_id, organization_id, location_id):
     existing_users = User.objects(sql_user_id__in=[user1_id, user2_id]).only("sql_user_id")
     if existing_users.count() != 2:
         raise ValidationError({"detail": "One or more users do not exist."})
@@ -29,7 +29,9 @@ def create_direct_message(user1_id, user2_id):
         directMessageParticipants=[user1_id, user2_id],
         createdBy=user1_id,
         createdAt=datetime.datetime.utcnow(),
-        updatedAt=datetime.datetime.utcnow()
+        updatedAt=datetime.datetime.utcnow(),
+        organizationId=organization_id,
+        locationId=location_id,
     ).save()
 
     for uid, other_id in [(user1_id, user2_id), (user2_id, user1_id)]:
@@ -49,22 +51,23 @@ def create_direct_message(user1_id, user2_id):
                 otherParticipantAvatar=other_user.profile_picture,
                 otherParticipantStatus=other_user.status
             ),
-            updatedAt=datetime.datetime.utcnow()
+            updatedAt=datetime.datetime.utcnow(),
+            locationId=location_id,
+            organizationId=organization_id,
         ).save()
 
     return conv
 
 
-def create_group_chat(created_by_id, name, description, member_ids):
-    # ✅ Ensure creator is in members
+def create_group_chat(created_by_id, name, description, member_ids, location_id, organization_id):
+    # Ensure creator is in members
     if created_by_id not in member_ids:
         member_ids.append(created_by_id)
 
-    # ✅ Verify all members exist in Mongo
+    # Verify all members exist in Mongo
     existing_users = User.objects(sql_user_id__in=member_ids).only("sql_user_id")
     if existing_users.count() != len(set(member_ids)):
         raise ValidationError({"detail": "One or more members do not exist."})
-
 
     conv = Conversation(
         type="group",
@@ -78,7 +81,9 @@ def create_group_chat(created_by_id, name, description, member_ids):
         groupSettings=GroupSettings(isPublic=False, allowMemberInvite=True, maxMembers=200),
         createdBy=created_by_id,
         createdAt=datetime.datetime.utcnow(),
-        updatedAt=datetime.datetime.utcnow()
+        updatedAt=datetime.datetime.utcnow(),
+        organizationId=organization_id,
+        locationId=location_id
     ).save()
 
     for uid in member_ids:
@@ -95,7 +100,9 @@ def create_group_chat(created_by_id, name, description, member_ids):
                 adminIds=[created_by_id],
                 myRole=role
             ),
-            updatedAt=datetime.datetime.utcnow()
+            updatedAt=datetime.datetime.utcnow(),
+            locationId=location_id,
+            organizationId=organization_id,
         ).save()
 
     return conv

@@ -131,7 +131,6 @@ class DirectMessageSerializer(serializers.Serializer):
 
 class GroupChatSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=["group"])
-    created_by_id = serializers.CharField()
     name = serializers.CharField()
     description = serializers.CharField(required=False, allow_blank=True)
     member_ids = serializers.ListField(child=serializers.CharField(), min_length=2)
