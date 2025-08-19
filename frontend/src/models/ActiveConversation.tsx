@@ -1,5 +1,6 @@
 export interface Conversation {
     _id: string;
+    conversationId: string;
     conversationType: 'direct' | 'group';
     directMessage: {
         otherParticipantId: string;

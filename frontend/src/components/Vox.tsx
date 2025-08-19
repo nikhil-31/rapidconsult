@@ -9,38 +9,38 @@ import ChatView from "./ChatView";
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
 
-
 const Vox: React.FC = () => {
     const {user} = useContext(AuthContext);
     const orgs = user?.organizations || [];
     const apiUrl = process.env.REACT_APP_API_URL as string;
 
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-    const {selectedLocation, setSelectedLocation} = useOrgLocation();
+    const {selectedLocation} = useOrgLocation();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
-
+    const [activeConversation, setActiveConversation] = useState<Conversation | null>(null); // NEW
 
     useEffect(() => {
         if (!user) return;
 
-        const fetchConversations = async () => {
-            try {
-                const response = await axios.get(`${apiUrl}/api/active-conversations/`, {
-                    params: {
-                        user_id: user.id,
-                        organization_id: selectedLocation?.organization.id,
-                        location_id: selectedLocation?.location.id
-                    },
-                    headers: {Authorization: `Token ${user.token}`},
-                });
-                setConversations(response.data.results);
-            } catch (err) {
-                console.error('Error fetching conversations:', err);
-            }
-        };
-
-        fetchConversations();
+        if (selectedLocation) {
+            const fetchConversations = async () => {
+                try {
+                    const response = await axios.get(`${apiUrl}/api/active-conversations/`, {
+                        params: {
+                            user_id: user.id,
+                            organization_id: selectedLocation?.organization.id,
+                            location_id: selectedLocation?.location.id
+                        },
+                        headers: {Authorization: `Token ${user.token}`},
+                    });
+                    setConversations(response.data.results);
+                } catch (err) {
+                    console.error('Error fetching conversations:', err);
+                }
+            };
+            fetchConversations();
+        }
     }, [user, selectedLocation]);
 
     return (
@@ -61,7 +61,14 @@ const Vox: React.FC = () => {
                                 : conv.groupChat?.avatar;
                             const lastMessage = conv.lastMessage?.content || 'No messages yet';
                             return (
-                                <List.Item style={{padding: '8px 16px', cursor: 'pointer'}}>
+                                <List.Item
+                                    style={{
+                                        padding: '8px 16px',
+                                        cursor: 'pointer',
+                                        background: activeConversation?.conversationId === conv.conversationId ? '#f0f5ff' : 'transparent'
+                                    }}
+                                    onClick={() => setActiveConversation(conv)} // 👈 set selected
+                                >
                                     <List.Item.Meta
                                         avatar={<Avatar src={avatarUrl || undefined}>{!avatarUrl && name?.[0]}</Avatar>}
                                         title={<Text strong>{name}</Text>}
@@ -76,9 +83,13 @@ const Vox: React.FC = () => {
 
             <Layout>
                 <Content style={{background: '#fff'}}>
-                    <ChatView/>
-
-
+                    {activeConversation ? (
+                        <ChatView conversation={activeConversation}/> // 👈 pass down
+                    ) : (
+                        <div style={{padding: 24}}>
+                            <Text type="secondary">Select a conversation to start chatting</Text>
+                        </div>
+                    )}
                 </Content>
             </Layout>
         </Layout>

@@ -4,24 +4,27 @@ import {
     useRef,
     useState
 } from "react";
-import useWebSocket, { ReadyState } from "react-use-websocket";
-import { AuthContext } from "../contexts/AuthContext";
-import { useParams } from "react-router-dom";
-import { MessageModel } from "../models/MessageModel";
-import { Message } from "./Message";
-import { ChatLoader } from "./ChatLoader";
+import useWebSocket, {ReadyState} from "react-use-websocket";
+import {AuthContext} from "../contexts/AuthContext";
+import {useParams} from "react-router-dom";
+import {MessageModel} from "../models/MessageModel";
+import {Message} from "./Message";
+import {ChatLoader} from "./ChatLoader";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useHotkeys } from "react-hotkeys-hook";
-import { ConversationModel } from "../models/Conversation";
-import { UploadCloud } from "lucide-react";
+import {useHotkeys} from "react-hotkeys-hook";
+import {ConversationModel} from "../models/Conversation";
+import {UploadCloud} from "lucide-react";
 
 export function Chat() {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const wsUrl = process.env.REACT_APP_WS_URL;
+
     const [welcomeMessage, setWelcomeMessage] = useState("");
     const [messageHistory, setMessageHistory] = useState<MessageModel[]>([]);
-    const { user } = useContext(AuthContext);
+    const {user} = useContext(AuthContext);
     const [message, setMessage] = useState("");
     const [name, setName] = useState("");
-    const { conversationName } = useParams();
+    const {conversationName} = useParams();
     const [page, setPage] = useState(2);
     const [hasMoreMessages, setHasMoreMessages] = useState(false);
     const [meTyping, setMeTyping] = useState(false);
@@ -33,8 +36,6 @@ export function Chat() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [fileToUpload, setFileToUpload] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const wsUrl = process.env.REACT_APP_WS_URL;
 
     const inputReference: any = useHotkeys("enter", () => handleSubmit(), {
         enableOnTags: ["INPUT"],
@@ -44,7 +45,7 @@ export function Chat() {
         (inputReference.current as HTMLElement).focus();
     }, [inputReference]);
 
-    const { readyState, sendJsonMessage } = useWebSocket(
+    const {readyState, sendJsonMessage} = useWebSocket(
         user ? `${wsUrl}/chats/${conversationName}/` : null,
         {
             share: true,
@@ -52,9 +53,9 @@ export function Chat() {
             reconnectAttempts: 20,
             reconnectInterval: 5000,
             shouldReconnect: (closeEvent) => closeEvent.code !== 1000,
-            queryParams: { token: user?.token ?? "" },
+            queryParams: {token: user?.token ?? ""},
             onOpen: () => {
-                pingRef.current = setInterval(() => sendJsonMessage({ type: "ping" }), 30000);
+                pingRef.current = setInterval(() => sendJsonMessage({type: "ping"}), 30000);
             },
             onClose: () => {
                 if (pingRef.current) clearInterval(pingRef.current);
@@ -68,7 +69,7 @@ export function Chat() {
                         break;
                     case "chat_message_echo":
                         setMessageHistory((prev) => [data.message, ...prev]);
-                        sendJsonMessage({ type: "read_messages" });
+                        sendJsonMessage({type: "read_messages"});
                         break;
                     case "last_50_messages":
                         setMessageHistory(data.messages);
@@ -93,7 +94,7 @@ export function Chat() {
                     case "message_read":
                         setMessageHistory((prev) =>
                             prev.map((msg) =>
-                                msg.id === data.message_id ? { ...msg, read: true } : msg
+                                msg.id === data.message_id ? {...msg, read: true} : msg
                             )
                         );
                         break;
@@ -164,13 +165,13 @@ export function Chat() {
 
     function timeoutFunction() {
         setMeTyping(false);
-        sendJsonMessage({ type: "typing", typing: false });
+        sendJsonMessage({type: "typing", typing: false});
     }
 
     function onType() {
         if (!meTyping) {
             setMeTyping(true);
-            sendJsonMessage({ type: "typing", typing: true });
+            sendJsonMessage({type: "typing", typing: true});
         }
         if (timeout.current) clearTimeout(timeout.current);
         timeout.current = setTimeout(timeoutFunction, 5000);
@@ -250,7 +251,8 @@ export function Chat() {
                 {conversation && (
                     <div className="mt-2 text-sm">
                         <strong>{conversation.other_user.username}</strong> is{" "}
-                        <span className={participants.includes(conversation.other_user.username) ? "text-green-600" : "text-red-500"}>
+                        <span
+                            className={participants.includes(conversation.other_user.username) ? "text-green-600" : "text-red-500"}>
                             {participants.includes(conversation.other_user.username) ? "online" : "offline"}
                         </span>
                         {typing && <p className="italic text-gray-500">typing...</p>}
@@ -265,11 +267,11 @@ export function Chat() {
                     className="flex flex-col-reverse"
                     inverse={true}
                     hasMore={hasMoreMessages}
-                    loader={<ChatLoader />}
+                    loader={<ChatLoader/>}
                     scrollableTarget="scrollableDiv"
                 >
                     {messageHistory.map((message) => (
-                        <Message key={message.id} message={message} />
+                        <Message key={message.id} message={message}/>
                     ))}
                 </InfiniteScroll>
             </div>
@@ -290,7 +292,7 @@ export function Chat() {
                         &times;
                     </button>
                     <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
-                    <img src={previewImage} alt="Preview" className="max-w-xs rounded" />
+                    <img src={previewImage} alt="Preview" className="max-w-xs rounded"/>
                 </div>
             )}
 
@@ -327,7 +329,7 @@ export function Chat() {
                     className="p-2 rounded-full hover:bg-gray-200 transition"
                     title="Upload image"
                 >
-                    <UploadCloud className="w-5 h-5 text-gray-600" />
+                    <UploadCloud className="w-5 h-5 text-gray-600"/>
                 </button>
             </div>
         </div>

@@ -29,13 +29,13 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                 token: user ? user.token : "",
             },
             onOpen: () => {
-                console.log("Connected to Notifications!");
+                // console.log("Connected to Notifications!");
             },
             onClose: () => {
-                console.log("Disconnected from Notifications!");
+                // console.log("Disconnected from Notifications!");
             },
             onMessage: (e) => {
-                console.log("Received message", e);
+                // console.log("Received message", e);
                 const data = JSON.parse(e.data);
                 switch (data.type) {
                     case "unread_count":
