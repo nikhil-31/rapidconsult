@@ -172,12 +172,10 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                 <Text strong>{connectionStatus}</Text>
             </div>
 
-            {/* Chat Window */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse">
                 <List
                     dataSource={messages}
                     renderItem={(msg) => (
-
                         <List.Item
                             key={msg.id}
                             className={`flex flex-col ${
@@ -218,6 +216,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                     )}
                 />
             </div>
+
 
             {/* Reply Context */}
             {replyTo && (

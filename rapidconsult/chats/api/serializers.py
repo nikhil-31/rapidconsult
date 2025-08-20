@@ -105,6 +105,7 @@ class DraftInfoSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField()
 
 
+# User conversation serialization
 class UserConversationSerializer(serializers.Serializer):
     _id = serializers.CharField()
     userId = serializers.CharField()
@@ -134,3 +135,39 @@ class GroupChatSerializer(serializers.Serializer):
     name = serializers.CharField()
     description = serializers.CharField(required=False, allow_blank=True)
     member_ids = serializers.ListField(child=serializers.CharField(), min_length=2)
+
+
+# Message serialization
+class MediaSerializer(serializers.Serializer):
+    url = serializers.CharField(required=False, allow_blank=True)
+    filename = serializers.CharField(required=False, allow_blank=True)
+    size = serializers.IntegerField(required=False)
+    mimeType = serializers.CharField(required=False, allow_blank=True)
+
+
+class SystemMessageSerializer(serializers.Serializer):
+    action = serializers.CharField(required=False, allow_blank=True)
+    targetUserId = serializers.CharField(required=False, allow_blank=True)
+
+
+class ReadReceiptSerializer(serializers.Serializer):
+    userId = serializers.CharField()
+    readAt = serializers.DateTimeField()
+
+
+class MongoMessageSerializer(serializers.Serializer):
+    conversationId = serializers.CharField()
+    senderId = serializers.CharField()
+    content = serializers.CharField(required=False, allow_blank=True)
+    type = serializers.CharField()
+    timestamp = serializers.DateTimeField()
+    media = MediaSerializer(required=False)
+    systemMessage = SystemMessageSerializer(required=False)
+    isEdited = serializers.BooleanField(default=False)
+    editedAt = serializers.DateTimeField(required=False)
+    isDeleted = serializers.BooleanField(default=False)
+    deletedAt = serializers.DateTimeField(required=False)
+    replyTo = serializers.CharField(required=False, allow_blank=True)
+    readBy = ReadReceiptSerializer(many=True, required=False)
+    locationId = serializers.CharField(required=False, allow_blank=True)
+    organizationId = serializers.CharField(required=False, allow_blank=True)

@@ -10,13 +10,13 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from rapidconsult.chats.models import Conversation, Message, User
-from rapidconsult.chats.mongo.models import UserConversation
+from rapidconsult.chats.mongo.models import UserConversation, Message as MongoMessage
 from .mongo import create_direct_message, create_group_chat
 from .paginaters import MessagePagination
 from .pagination import UserConversationPagination
 from .permissions import HasOrgLocationAccess
 from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer, DirectMessageSerializer, \
-    GroupChatSerializer
+    GroupChatSerializer, MongoMessageSerializer
 
 
 class ConversationViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -80,7 +80,6 @@ class ImageMessageUploadView(APIView):
             content=content  # optional
         )
 
-        # ✅ Send the message to WebSocket group
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             conversation_name,
@@ -150,4 +149,30 @@ class UserConversationViewSet(viewsets.ViewSet):
         page = paginator.paginate_queryset(queryset, request)
 
         serializer = UserConversationSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+
+class MongoMessageViewSet(viewsets.ViewSet):
+    """
+    Returns paginated messages for a given conversation.
+    Example:
+        GET /api/messages/?conversation_id=abc123&page=1&page_size=50
+    """
+    pagination_class = MessagePagination
+    permission_classes = [HasOrgLocationAccess]
+
+    def list(self, request):
+        conversation_id = request.query_params.get("conversation_id")
+
+        if not conversation_id:
+            return Response({"error": "conversation_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        filters = {"conversationId": conversation_id}
+
+        queryset = MongoMessage.objects(**filters).order_by("-timestamp")
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = MongoMessageSerializer(page, many=True)
+
         return paginator.get_paginated_response(serializer.data)
