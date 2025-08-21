@@ -140,8 +140,13 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                 <div className={`w-full flex ${mine ? "justify-end" : "justify-start"} my-1`}>
                                     <div className="flex flex-col max-w-[75%] sm:max-w-[65%] md:max-w-[55%]">
                                         {msg.replyTo && (
-                                            <div className="text-xs bg-gray-200 p-1 px-2 rounded mb-1">
-                                                Replying to: <b>{msg.replyTo.senderName}</b> – {msg.replyTo.content}
+                                            <div
+                                                className="text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500 pl-2 pr-3 py-1 rounded mb-1 max-w-xs">
+                                                <div className="italic text-gray-500">Replying to:</div>
+                                                <div>
+                                                    <div className="font-semibold">{msg.replyTo.senderName}</div>
+                                                    <div className="text-gray-700">{msg.replyTo.content}</div>
+                                                </div>
                                             </div>
                                         )}
 
@@ -203,13 +208,22 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
             {/* Reply Context */}
             {replyTo && (
-                <div className="bg-gray-100 px-2 py-1 text-sm flex items-center justify-between">
-                    Replying to: <b>{replyTo.senderName}</b> – {replyTo.content}
+                <div
+                    className="w-full text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500 pl-2 pr-3 py-3 rounded mb-1 flex justify-between items-start"
+                >
+                    <div>
+                        <div className="italic text-gray-500">Replying to:</div>
+                        <div>
+                            <div className="font-semibold">{replyTo.senderName}</div>
+                            <div className="text-gray-700 truncate">{replyTo.content}</div>
+                        </div>
+                    </div>
                     <Button
                         size="small"
                         type="text"
                         icon={<CloseOutlined/>}
                         onClick={() => setReplyTo(null)}
+                        className="ml-2"
                     />
                 </div>
             )}
@@ -247,7 +261,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                     }}
                 />
 
-                <Button type="primary" icon={<SendOutlined/>} onClick={handleSend}/>
+                <Button type="primary" danger icon={<SendOutlined/>} onClick={handleSend}/>
             </div>
 
             {/* Emoji Picker */}
