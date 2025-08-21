@@ -60,7 +60,16 @@ const Vox: React.FC = () => {
                             const avatarUrl = isDirect
                                 ? conv.directMessage?.otherParticipantAvatar
                                 : conv.groupChat?.avatar;
-                            const lastMessage = conv.lastMessage?.content || 'No messages yet';
+                            let lastMessage = 'No messages yet';
+                            if (conv.lastMessage) {
+                                if (conv.lastMessage.senderId === user?.id) {
+                                    lastMessage = conv.lastMessage.content;
+                                } else if (!isDirect) {
+                                    lastMessage = `${conv.lastMessage.senderName}: ${conv.lastMessage.content}`;
+                                } else {
+                                    lastMessage = conv.lastMessage.content;
+                                }
+                            }
                             return (
                                 <List.Item
                                     style={{
@@ -85,7 +94,29 @@ const Vox: React.FC = () => {
             <Layout>
                 <Content style={{background: '#fff'}}>
                     {activeConversation ? (
-                        <ChatView conversation={activeConversation}/> // 👈 pass down
+                        <ChatView
+                            conversation={activeConversation}
+                            onNewMessage={(convId, message) => {
+                                setConversations((prev) =>
+                                    prev.map((c) =>
+                                        c.conversationId === convId
+                                            ? {
+                                                ...c,
+                                                lastMessage: {
+                                                    messageId: message.id,        // map to correct field
+                                                    content: message.content,
+                                                    senderId: message.senderId,
+                                                    senderName: message.senderName,
+                                                    timestamp: message.timestamp,
+                                                    type: message.messageType,
+                                                },
+                                                updatedAt: message.timestamp,   // keep list sorting fresh
+                                            }
+                                            : c
+                                    )
+                                );
+
+                            }}/>
                     ) : (
                         <div style={{padding: 24}}>
                             <Text type="secondary">Select a conversation to start chatting</Text>

@@ -1,5 +1,6 @@
 export interface Conversation {
     _id: string;
+    user_id: string;
     conversationId: string;
     conversationType: 'direct' | 'group';
     directMessage: {
@@ -17,6 +18,19 @@ export interface Conversation {
         myRole: string;
     } | null;
     lastMessage: {
+        messageId: string;
         content: string;
+        senderId: string;
+        senderName: string;
+        timestamp: string;
+        type: string;
     } | null;
+    unreadCount: string;
+    lastReadAt: string;
+    isPinned: boolean;
+    isMuted: boolean;
+    isArchived: boolean;
+    customNotifications: boolean;
+    draft: string;
+    updatedAt: string;
 }

@@ -16,9 +16,10 @@ const {Text} = Typography;
 
 interface ChatViewProps {
     conversation: Conversation;
+    onNewMessage: (conversationId: string, message: Message) => void;
 }
 
-const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
+const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const apiUrl = process.env.REACT_APP_API_URL;
     const wsUrl = process.env.REACT_APP_WS_URL;
 
@@ -61,7 +62,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
         setReplyTo(null);
     };
 
-
     const {readyState, sendJsonMessage} = useWebSocket(
         user ? `${wsUrl}/voxchats/${conversationId}/` : null,
         {
@@ -80,6 +80,10 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                     case "chat_message_echo":
                         const newMessage: Message = deserializeMessage(data.message);
                         setMessages((prev) => [...prev, newMessage]);
+
+                        if (onNewMessage) {
+                            onNewMessage(conversationId, newMessage);
+                        }
                         break;
                     case "last_50_messages":
                         const history = data.messages.map((msg: any) => (deserializeMessage(msg)));

@@ -7,7 +7,7 @@ from asgiref.sync import async_to_sync
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
 from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, \
-    User as MongoUser
+    User as MongoUser, LastMessageInfo, UserConversation
 
 
 class UUIDEncoder(json.JSONEncoder):
@@ -343,6 +343,22 @@ class VoxChatConsumer(JsonWebsocketConsumer):
                 organizationId=str(content.get("organizationId")),
             )
             msg.save()
+
+            # Update last message in UserConversation
+            last_message_info = LastMessageInfo(
+                messageId=str(msg.id),
+                content=msg.content,
+                senderId=msg.senderId,
+                senderName=msg.senderName,
+                timestamp=msg.timestamp,
+                type=msg.type,
+            )
+
+            # Update all UserConversations tied to this conversation
+            UserConversation.objects(conversationId=msg.conversationId).update(
+                set__lastMessage=last_message_info,
+                set__updatedAt=timezone.now()
+            )
 
             # Broadcast to group
             async_to_sync(self.channel_layer.group_send)(
