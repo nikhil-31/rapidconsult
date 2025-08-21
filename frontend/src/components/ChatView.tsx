@@ -9,16 +9,10 @@ import {Conversation} from "../models/ActiveConversation";
 import useWebSocket, {ReadyState} from "react-use-websocket";
 import {AuthContext} from "../contexts/AuthContext";
 import {useOrgLocation} from "../contexts/LocationContext";
+import {deserializeMessage, Message} from "../models/Message";
 
 const {Text} = Typography;
 
-interface Message {
-    id: string;
-    sender: string;
-    text?: string;
-    fileUrl?: string;
-    replyTo?: Message;
-}
 
 interface ChatViewProps {
     conversation: Conversation;
@@ -40,35 +34,28 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
     const [showEmoji, setShowEmoji] = useState(false);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
 
-
     // Reset messages when conversation changes
     useEffect(() => {
         if (conversation) {
-            setConversationId(conversation.conversationId)
-            // setMessages([]); // could also fetch from API here
+            setConversationId(conversation.conversationId);
             setInput("");
             setFiles([]);
-            // setReplyTo(null);
         }
     }, [conversation]);
 
-    // TODO - Handle message send, this has to be removed
     const handleSend = () => {
         if (!input) return;
         const payload = {
             type: "chat_message",
             conversationId: conversationId,
             content: input,
-            messageType: files.length > 0 ? "image" : "text", // simple switch
+            messageType: files.length > 0 ? "image" : "text",
             replyTo: replyTo ? replyTo.id : null,
             locationId: selectedLocation?.location.id,
             organizationId: selectedLocation?.organization.id,
         };
 
-        // Send message to server
         sendJsonMessage(payload);
-
-        // Reset UI state
         setInput("");
         setFiles([]);
         setReplyTo(null);
@@ -84,13 +71,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
             reconnectInterval: 5000,
             shouldReconnect: (closeEvent) => closeEvent.code !== 1000,
             queryParams: {token: user?.token ?? ""},
-            onOpen: () => {
-                // pingRef.current = setInterval(() => sendJsonMessage({type: "ping"}), 30000);
-            },
-            onClose: () => {
-                // if (pingRef.current) clearInterval(pingRef.current);
-            },
-            onError: (e) => console.error("WebSocket Error:", e),
             onMessage: (e) => {
                 const data = JSON.parse(e.data);
                 switch (data.type) {
@@ -98,37 +78,12 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                         setWelcomeMessage(data.message);
                         break;
                     case "chat_message_echo":
-                        const newMsg: Message = {
-                            id: data.id,
-                            sender: data.senderId === user?.id ? "Me" : data.senderId,
-                            text: data.content,
-                            replyTo: data.replyTo,
-                        };
-                        setMessages((prev) => [...prev, newMsg]);
+                        const newMessage: Message = deserializeMessage(data.message);
+                        setMessages((prev) => [...prev, newMessage]);
                         break;
                     case "last_50_messages":
-                        const history = data.messages.map((msg: any) => ({
-                            id: msg.id,
-                            sender: msg.senderId === user?.id ? "Me" : msg.senderId,
-                            text: msg.content,
-                            replyTo: msg.replyTo,
-                        }));
+                        const history = data.messages.map((msg: any) => (deserializeMessage(msg)));
                         setMessages(history);
-                        break;
-                    case "typing":
-
-                        break;
-                    case "user_join":
-
-                        break;
-                    case "user_leave":
-
-                        break;
-                    case "online_user_list":
-
-                        break;
-                    case "message_read":
-
                         break;
                     default:
                         break;
@@ -144,12 +99,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
         [ReadyState.CLOSED]: "Closed",
         [ReadyState.UNINSTANTIATED]: "Uninstantiated",
     }[readyState];
-
-    useEffect(() => {
-        if (connectionStatus === "Open") {
-            console.log(`Connection status ${connectionStatus}`)
-        }
-    }, [connectionStatus]);
 
     const handleEmojiClick = (emojiObject: any) => {
         setInput((prev) => prev + emojiObject.emoji);
@@ -172,56 +121,78 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                 <Text strong>{connectionStatus}</Text>
             </div>
 
+            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse">
                 <List
                     dataSource={messages}
                     renderItem={(msg) => (
                         <List.Item
                             key={msg.id}
-                            className={`flex flex-col ${
-                                msg.sender === "Me" ? "items-end" : "items-start"
+                            className={`flex ${
+                                msg.senderId === user?.id ? "justify-end" : "justify-start"
                             }`}
                         >
-                            {msg.replyTo && (
-                                <div className="text-xs bg-gray-200 p-1 px-2 rounded mb-1">
-                                    Replying to: <b>{msg.replyTo.sender}</b> – {msg.replyTo.text}
-                                </div>
-                            )}
-                            <div className="bg-white p-2 rounded shadow max-w-xs">
-                                <div className="font-semibold">{msg.sender}</div>
-                                {msg.text && <div>{msg.text}</div>}
-                                {msg.fileUrl && (
-                                    <a
-                                        href={msg.fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <img
-                                            src={msg.fileUrl}
-                                            alt="file"
-                                            className="max-w-[200px] mt-1 rounded"
-                                        />
-                                    </a>
+                            <div className="flex flex-col max-w-xs">
+                                {msg.replyTo && (
+                                    <div className="text-xs bg-gray-200 p-1 px-2 rounded mb-1">
+                                        Replying to: <b>{msg.replyTo.senderName}</b> – {msg.replyTo.content}
+                                    </div>
                                 )}
+                                <div
+                                    className={`p-2 rounded-lg shadow ${
+                                        msg.senderId === user?.id
+                                            ? "bg-blue-500 text-white rounded-br-none"
+                                            : "bg-white text-black rounded-bl-none"
+                                    }`}
+                                >
+                                    <div className="font-semibold text-xs mb-1">
+                                        {msg.senderName}
+                                    </div>
+                                    {msg.content && <div>{msg.content}</div>}
+                                    {msg.fileUrl && (
+                                        <a
+                                            href={msg.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <img
+                                                src={msg.fileUrl}
+                                                alt="file"
+                                                className="max-w-[200px] mt-1 rounded"
+                                            />
+                                        </a>
+                                    )}
+                                    {/* Timestamp */}
+                                    {msg.timestamp && (
+                                        <div className="text-[10px] text-gray-400 mt-1 text-right">
+                                            {new Date(msg.timestamp).toLocaleString([], {
+                                                // year: "numeric",
+                                                month: "short",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                                <Tooltip title="Reply">
+                                    <Button
+                                        size="small"
+                                        type="text"
+                                        icon={<RollbackOutlined/>}
+                                        onClick={() => setReplyTo(msg)}
+                                    />
+                                </Tooltip>
                             </div>
-                            <Tooltip title="Reply">
-                                <Button
-                                    size="small"
-                                    type="text"
-                                    icon={<RollbackOutlined/>}
-                                    onClick={() => setReplyTo(msg)}
-                                />
-                            </Tooltip>
                         </List.Item>
                     )}
                 />
             </div>
 
-
             {/* Reply Context */}
             {replyTo && (
                 <div className="bg-gray-100 px-2 py-1 text-sm flex items-center justify-between">
-                    Replying to: <b>{replyTo.sender}</b> – {replyTo.text}
+                    Replying to: <b>{replyTo.senderName}</b> – {replyTo.content}
                     <Button
                         size="small"
                         type="text"
@@ -236,7 +207,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                 <Upload
                     beforeUpload={(file) => {
                         setFiles([file]);
-                        return false; // prevent auto upload
+                        return false;
                     }}
                     fileList={files}
                     onRemove={(file) => {
@@ -258,7 +229,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                     autoSize={{minRows: 1, maxRows: 4}}
                 />
 
-                <Button type="primary" icon={<SendOutlined/>} onClick={handleSend}/>
+                <Button type="primary" danger icon={<SendOutlined/>} onClick={handleSend}/>
             </div>
 
             {/* Emoji Picker */}

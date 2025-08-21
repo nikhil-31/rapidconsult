@@ -229,6 +229,41 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         self.conversation_id = None
         self.conversation = None
 
+    @staticmethod
+    def serialize_message(msg):
+        message = {
+            "id": str(msg.id),
+            "conversationId": msg.conversationId,
+            "senderId": msg.senderId,
+            "senderName": msg.senderName,
+            "content": msg.content,
+            "messageType": msg.type,
+            "timestamp": msg.timestamp.isoformat() if msg.timestamp else None,
+            "replyTo": {
+                "id": str(msg.replyTo.id),
+                "conversationId": msg.replyTo.conversationId,
+                "senderId": msg.replyTo.senderId,
+                "senderName": msg.replyTo.senderName,
+                "content": msg.replyTo.content,
+                "messageType": msg.replyTo.type,
+                "timestamp": msg.replyTo.timestamp.isoformat() if msg.replyTo.timestamp else None,
+            } if msg.replyTo else None,
+        }
+        return message
+
+    def send_last_50_messages(self):
+        last_msgs = MongoMessage.objects(conversationId=self.conversation_id).order_by("-timestamp")[:50]
+        total_count = MongoMessage.objects(conversationId=self.conversation_id).count()
+        has_more = total_count > 50
+        serialized = [self.serialize_message(msg) for msg in reversed(last_msgs)]
+
+        self.send_json({
+            "type": "last_50_messages",
+            "messages": serialized,
+            "message_count": len(serialized),
+            "has_more": has_more,
+        })
+
     def connect(self):
         self.user = self.scope["user"]
         if not self.user.is_authenticated:
@@ -245,44 +280,8 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             self.channel_name,
         )
 
-        # TODO - Remove this later - Sending welcome message
-        self.send_json({
-            "type": "welcome_message",
-            "message": "Hi connected",
-        })
-
-        # TODO - Send last 50 messages
-        # messages = self.conversation.messages.all().order_by("-timestamp")[:50]
-        # message_count = self.conversation.messages.count()
-
-        # self.send_json({
-        #     "type": "last_50_messages",
-        #     "messages": MessageSerializer(messages, many=True).data,
-        #     "message_count": message_count,
-        #     "has_more": message_count > 50,
-        # })
-        last_msgs = MongoMessage.objects(conversationId=self.conversation_id).order_by("-timestamp")[:50]
-        total_count = MongoMessage.objects(conversationId=self.conversation_id).count()
-
-        serialized = [
-            {
-                "id": str(msg.id),
-                "conversationId": msg.conversationId,
-                "senderId": msg.senderId,
-                "content": msg.content,
-                "messageType": msg.type,
-                "timestamp": msg.timestamp.isoformat() if msg.timestamp else None,
-                "replyTo": msg.replyTo,
-            }
-            for msg in reversed(last_msgs)  # chronological order
-        ]
-        has_more = total_count > 50
-        self.send_json({
-            "type": "last_50_messages",
-            "messages": serialized,
-            "message_count": len(serialized),
-            "has_more": has_more,
-        })
+        # Sending last 50 messages
+        self.send_last_50_messages()
 
         # TODO - Send a list of all online users
         # self.send_json({
@@ -326,13 +325,20 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         message_type = content["type"]
 
         if message_type == "chat_message":
+            if content.get("replyTo") is not None:
+                replied_to_message = MongoMessage.objects.get(conversationId=self.conversation_id,
+                                                              id=content["replyTo"])
+            else:
+                replied_to_message = None
+
             msg = MongoMessage(
                 conversationId=content["conversationId"],
                 senderId=str(self.user.id),
+                senderName=str(self.user.name),
                 content=content.get("content"),
                 type=content.get("messageType", "text"),
                 timestamp=timezone.now(),
-                replyTo=content.get("replyTo"),
+                replyTo=replied_to_message,
                 locationId=str(content.get("locationId")),
                 organizationId=str(content.get("organizationId")),
             )
@@ -343,31 +349,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
                 self.conversation_id,
                 {
                     "type": "chat_message_echo",
-                    "id": str(msg.id),
-                    "conversationId": msg.conversationId,
-                    "senderId": msg.senderId,
-                    "content": msg.content,
-                    "messageType": msg.type,
-                    "timestamp": msg.timestamp.isoformat(),
-                    "replyTo": msg.replyTo,
+                    "message": self.serialize_message(msg),
                 }
             )
-
-            # message = Message.objects.create(
-            #     from_user=self.user,
-            #     to_user=self.get_message_receiver(),
-            #     content=content.get("message", ""),
-            #     conversation=self.conversation
-            # )
-
-            # async_to_sync(self.channel_layer.group_send)(
-            #     self.id,
-            #     {
-            #         "type": "chat_message_echo",
-            #         "name": content.get("name", ""),
-            #         "message": MessageSerializer(message).data,
-            #     },
-            # )
 
         # TODO - User is typing echo to the rest of the group
         elif message_type == "typing":
@@ -417,15 +401,6 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             )
 
         return super().receive_json(content, **kwargs)
-
-    def get_message_receiver(self):
-        pass
-        # usernames = self.conversation_id.split("__")
-        # for username in usernames:
-        #     if username != self.user.username:
-        #         # This is the receiver
-        #         return User.objects.get(username=username)
-        # return User.objects.get_or_create(username="test")
 
     def chat_message_echo(self, event):
         self.send_json(event)

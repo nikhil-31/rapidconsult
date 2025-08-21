@@ -2,7 +2,7 @@ import datetime
 
 from mongoengine import (
     Document, StringField, BooleanField, IntField, DateTimeField,
-    EmbeddedDocument, EmbeddedDocumentField, ListField, URLField
+    EmbeddedDocument, EmbeddedDocumentField, ListField, URLField, ReferenceField
 )
 
 
@@ -104,6 +104,7 @@ class ReadReceipt(EmbeddedDocument):
 class Message(Document):
     conversationId = StringField(required=True)
     senderId = StringField(required=True)
+    senderName = StringField()
     content = StringField()
     type = StringField(choices=["text", "image", "file", "system", "deleted"])
     timestamp = DateTimeField()
@@ -113,7 +114,7 @@ class Message(Document):
     editedAt = DateTimeField()
     isDeleted = BooleanField(default=False)
     deletedAt = DateTimeField()
-    replyTo = StringField()
+    replyTo = ReferenceField('self', null=True)
     readBy = ListField(EmbeddedDocumentField(ReadReceipt))
     locationId = StringField()
     organizationId = StringField()

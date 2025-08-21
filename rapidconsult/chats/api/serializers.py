@@ -167,7 +167,26 @@ class MongoMessageSerializer(serializers.Serializer):
     editedAt = serializers.DateTimeField(required=False)
     isDeleted = serializers.BooleanField(default=False)
     deletedAt = serializers.DateTimeField(required=False)
-    replyTo = serializers.CharField(required=False, allow_blank=True)
     readBy = ReadReceiptSerializer(many=True, required=False)
     locationId = serializers.CharField(required=False, allow_blank=True)
     organizationId = serializers.CharField(required=False, allow_blank=True)
+
+    # 👇 nested reply instead of just ID
+    replyTo = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_replyTo(obj):
+        """Return a nested serialized message or just None/ID."""
+        if obj.replyTo:
+            try:
+                return {
+                    "id": str(obj.replyTo.id),
+                    "conversationId": obj.replyTo.conversationId,
+                    "senderName": obj.replyTo.senderName,
+                    "content": obj.replyTo.content,
+                    "messageType": obj.replyTo.type,
+                    "timestamp": obj.replyTo.timestamp.isoformat() if obj.replyTo.timestamp else None,
+                }
+            except Exception:
+                return str(obj.replyTo)  # fallback to ID if not a full object
+        return None

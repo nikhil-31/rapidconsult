@@ -45,6 +45,7 @@ const Vox: React.FC = () => {
 
     return (
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
+
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
                 <div style={{padding: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Conversations</Title>
@@ -67,7 +68,7 @@ const Vox: React.FC = () => {
                                         cursor: 'pointer',
                                         background: activeConversation?.conversationId === conv.conversationId ? '#f0f5ff' : 'transparent'
                                     }}
-                                    onClick={() => setActiveConversation(conv)} // 👈 set selected
+                                    onClick={() => setActiveConversation(conv)}
                                 >
                                     <List.Item.Meta
                                         avatar={<Avatar src={avatarUrl || undefined}>{!avatarUrl && name?.[0]}</Avatar>}
