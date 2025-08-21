@@ -117,75 +117,83 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                 <Text strong>{title}</Text>
             </div>
 
-            <div>
+            <div className="px-3 py-1">
                 <Text strong>{connectionStatus}</Text>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col-reverse">
+            <div className="flex-1 overflow-y-auto p-3 bg-gray-50 flex flex-col-reverse">
                 <List
                     dataSource={messages}
-                    renderItem={(msg) => (
-                        <List.Item
-                            key={msg.id}
-                            className={`flex ${
-                                msg.senderId === user?.id ? "justify-end" : "justify-start"
-                            }`}
-                        >
-                            <div className="flex flex-col max-w-xs">
-                                {msg.replyTo && (
-                                    <div className="text-xs bg-gray-200 p-1 px-2 rounded mb-1">
-                                        Replying to: <b>{msg.replyTo.senderName}</b> – {msg.replyTo.content}
-                                    </div>
-                                )}
-                                <div
-                                    className={`p-2 rounded-lg shadow ${
-                                        msg.senderId === user?.id
-                                            ? "bg-blue-500 text-white rounded-br-none"
-                                            : "bg-white text-black rounded-bl-none"
-                                    }`}
-                                >
-                                    <div className="font-semibold text-xs mb-1">
-                                        {msg.senderName}
-                                    </div>
-                                    {msg.content && <div>{msg.content}</div>}
-                                    {msg.fileUrl && (
-                                        <a
-                                            href={msg.fileUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                    renderItem={(msg) => {
+                        const mine = Number(msg.senderId) === Number(user?.id);
+                        return (
+                            <List.Item
+                                key={msg.id}
+                                style={{padding: 0, border: "none", background: "transparent"}}
+                            >
+                                {/* Full-width row that controls left/right placement */}
+                                <div className={`w-full flex ${mine ? "justify-end" : "justify-start"} my-1`}>
+                                    <div className="flex flex-col max-w-[75%] sm:max-w-[65%] md:max-w-[55%]">
+                                        {msg.replyTo && (
+                                            <div className="text-xs bg-gray-200 p-1 px-2 rounded mb-1">
+                                                Replying to: <b>{msg.replyTo.senderName}</b> – {msg.replyTo.content}
+                                            </div>
+                                        )}
+
+                                        {/* The bubble */}
+                                        <div
+                                            className={`p-2 rounded-2xl shadow max-w-xs break-words ${
+                                                mine
+                                                    ? "bg-white text-gray-900 rounded-br-sm text-right"
+                                                    : "bg-white text-gray-900 rounded-bl-sm text-left"
+                                            }`}
                                         >
-                                            <img
-                                                src={msg.fileUrl}
-                                                alt="file"
-                                                className="max-w-[200px] mt-1 rounded"
-                                            />
-                                        </a>
-                                    )}
-                                    {/* Timestamp */}
-                                    {msg.timestamp && (
-                                        <div className="text-[10px] text-gray-400 mt-1 text-right">
-                                            {new Date(msg.timestamp).toLocaleString([], {
-                                                // year: "numeric",
-                                                month: "short",
-                                                day: "numeric",
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
+                                            <div className="font-semibold text-[11px] opacity-80 mb-1">
+                                                {msg.senderName}
+                                            </div>
+
+                                            {msg.content &&
+                                                <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
+
+                                            {msg.fileUrl && (
+                                                <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                                                    <img
+                                                        src={msg.fileUrl}
+                                                        alt="file"
+                                                        className="max-w-full mt-2 rounded-lg"
+                                                    />
+                                                </a>
+                                            )}
+                                            {/* Timestamp */}
+                                            {msg.timestamp && (
+                                                <div className="text-[10px] text-gray-400 mt-1 text-right">
+                                                    {new Date(msg.timestamp).toLocaleString([], {
+                                                        // year: "numeric",
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        hour: "2-digit",
+                                                        minute: "2-digit",
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+
+                                        <div className={`mt-1 ${mine ? "self-end" : "self-start"}`}>
+                                            <Tooltip title="Reply">
+                                                <Button
+                                                    size="small"
+                                                    type="text"
+                                                    icon={<RollbackOutlined/>}
+                                                    onClick={() => setReplyTo(msg)}
+                                                />
+                                            </Tooltip>
+                                        </div>
+                                    </div>
                                 </div>
-                                <Tooltip title="Reply">
-                                    <Button
-                                        size="small"
-                                        type="text"
-                                        icon={<RollbackOutlined/>}
-                                        onClick={() => setReplyTo(msg)}
-                                    />
-                                </Tooltip>
-                            </div>
-                        </List.Item>
-                    )}
+                            </List.Item>
+                        );
+                    }}
                 />
             </div>
 
@@ -203,15 +211,15 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
             )}
 
             {/* Input Area */}
-            <div className="p-2 border-t flex items-center gap-2">
+            <div className="p-2 border-t bg-white flex items-center gap-2">
                 <Upload
                     beforeUpload={(file) => {
                         setFiles([file]);
-                        return false;
+                        return false; // prevent auto upload
                     }}
                     fileList={files}
                     onRemove={(file) => {
-                        setFiles(files.filter((f) => f.uid !== file.uid));
+                        setFiles((prev) => prev.filter((f) => f.uid !== file.uid));
                     }}
                 >
                     <Button icon={<UploadOutlined/>}/>
@@ -219,7 +227,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
 
                 <Button
                     icon={<SmileOutlined/>}
-                    onClick={() => setShowEmoji(!showEmoji)}
+                    onClick={() => setShowEmoji((v) => !v)}
                 />
 
                 <Input.TextArea
@@ -227,9 +235,15 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Type a message..."
                     autoSize={{minRows: 1, maxRows: 4}}
+                    onPressEnter={(e) => {
+                        if (!e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();
+                        }
+                    }}
                 />
 
-                <Button type="primary" danger icon={<SendOutlined/>} onClick={handleSend}/>
+                <Button type="primary" icon={<SendOutlined/>} onClick={handleSend}/>
             </div>
 
             {/* Emoji Picker */}
@@ -241,6 +255,8 @@ const ChatView: React.FC<ChatViewProps> = ({conversation}) => {
                 </div>
             )}
         </div>
+
+
     );
 };
 
