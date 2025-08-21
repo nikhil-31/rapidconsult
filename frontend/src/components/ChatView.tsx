@@ -27,7 +27,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const {selectedLocation} = useOrgLocation();
     const [conversationId, setConversationId] = useState("");
-    const [welcomeMessage, setWelcomeMessage] = useState("");
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
@@ -74,9 +73,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             onMessage: (e) => {
                 const data = JSON.parse(e.data);
                 switch (data.type) {
-                    case "welcome_message":
-                        setWelcomeMessage(data.message);
-                        break;
                     case "chat_message_echo":
                         const newMessage: Message = deserializeMessage(data.message);
                         setMessages((prev) => [...prev, newMessage]);
@@ -134,6 +130,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                         return (
                             <List.Item
                                 key={msg.id}
+                                id={`message-${msg.id}`}
                                 style={{padding: 0, border: "none", background: "transparent"}}
                             >
                                 {/* Full-width row that controls left/right placement */}
@@ -141,7 +138,19 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                     <div className="flex flex-col max-w-[75%] sm:max-w-[65%] md:max-w-[55%]">
                                         {msg.replyTo && (
                                             <div
-                                                className="text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500 pl-2 pr-3 py-1 rounded mb-1 max-w-xs">
+                                                className="text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500 pl-2 pr-3 py-1 rounded mb-1 max-w-xs cursor-pointer hover:bg-gray-200 transition"
+                                                onClick={() => {
+                                                    const el = document.getElementById(`message-${msg.replyTo?.id}`);
+                                                    if (el) {
+                                                        el.scrollIntoView({behavior: "smooth", block: "center"});
+                                                        const originalBg = el.style.backgroundColor;
+                                                        el.style.backgroundColor = "#FEF3C7";
+                                                        setTimeout(() => {
+                                                            el.style.backgroundColor = originalBg;
+                                                        }, 2000);
+                                                    }
+                                                }}
+                                            >
                                                 <div className="italic text-gray-500">Replying to:</div>
                                                 <div>
                                                     <div className="font-semibold">{msg.replyTo.senderName}</div>
@@ -149,6 +158,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                                 </div>
                                             </div>
                                         )}
+
 
                                         {/* The bubble */}
                                         <div
