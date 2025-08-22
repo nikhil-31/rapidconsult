@@ -13,6 +13,10 @@ import {deserializeMessage, Message} from "../models/Message";
 
 const {Text} = Typography;
 
+// 🔑 Extend UploadFile with preview support
+interface PreviewFile extends UploadFile {
+    preview?: string;
+}
 
 interface ChatViewProps {
     conversation: Conversation;
@@ -30,7 +34,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
-    const [files, setFiles] = useState<UploadFile[]>([]);
+    const [files, setFiles] = useState<PreviewFile[]>([]); // ✅ use extended type
     const [showEmoji, setShowEmoji] = useState(false);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
 
@@ -44,7 +48,8 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     }, [conversation]);
 
     const handleSend = () => {
-        if (!input) return;
+        if (!input && files.length === 0) return; // ✅ prevent empty send
+
         const payload = {
             type: "chat_message",
             conversationId: conversationId,
@@ -159,7 +164,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                             </div>
                                         )}
 
-
                                         {/* The bubble */}
                                         <div
                                             className={`p-2 rounded-2xl shadow max-w-xs break-words ${
@@ -210,7 +214,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                             {msg.timestamp && (
                                                 <div className="text-[10px] text-gray-400 mt-1 text-right">
                                                     {new Date(msg.timestamp).toLocaleString([], {
-                                                        // year: "numeric",
                                                         month: "short",
                                                         day: "numeric",
                                                         hour: "2-digit",
@@ -260,17 +263,47 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 </div>
             )}
 
+            {/* Preview Area */}
+            {files.length > 0 && (
+                <div className="p-2 flex justify-end">
+                    <div className="flex gap-2 overflow-x-auto max-w-[70%]">
+                        {files.map((file) => (
+                            <div key={file.uid} className="relative">
+                                {file.type?.startsWith("image/") ? (
+                                    <img
+                                        src={(file as any).preview || URL.createObjectURL(file as any)}
+                                        alt={file.name}
+                                        className="h-40 rounded shadow object-contain"
+                                    />
+                                ) : (
+                                    <div className="p-3 bg-gray-200 rounded">{file.name}</div>
+                                )}
+                                <Button
+                                    size="small"
+                                    type="text"
+                                    icon={<CloseOutlined/>}
+                                    className="absolute top-0 right-0 bg-white"
+                                    onClick={() =>
+                                        setFiles((prev) => prev.filter((f) => f.uid !== file.uid))
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Input Area */}
             <div className="p-2 border-t bg-white flex items-center gap-2">
                 <Upload
                     beforeUpload={(file) => {
-                        setFiles([file]);
-                        return false; // prevent auto upload
+                        if (file.type.startsWith("image/")) {
+                            (file as any).preview = URL.createObjectURL(file);
+                        }
+                        setFiles((prev) => [...prev, file]);
+                        return false; // prevent auto-upload
                     }}
-                    fileList={files}
-                    onRemove={(file) => {
-                        setFiles((prev) => prev.filter((f) => f.uid !== file.uid));
-                    }}
+                    showUploadList={false} // 👈 disable AntD’s default preview
                 >
                     <Button icon={<UploadOutlined/>}/>
                 </Upload>
@@ -305,8 +338,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 </div>
             )}
         </div>
-
-
     );
 };
 
