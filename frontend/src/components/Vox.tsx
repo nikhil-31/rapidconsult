@@ -62,12 +62,23 @@ const Vox: React.FC = () => {
                                 : conv.groupChat?.avatar;
                             let lastMessage = 'No messages yet';
                             if (conv.lastMessage) {
+                                // Default to content
+                                let displayContent = conv.lastMessage.content;
+
+                                // ✅ If it's a file-type message and has no content, show "Media"
+                                if (
+                                    (!displayContent || displayContent.trim() === "") &&
+                                    (conv.lastMessage.type === "file")
+                                ) {
+                                    displayContent = "Media";
+                                }
+
                                 if (conv.lastMessage.senderId === user?.id) {
-                                    lastMessage = conv.lastMessage.content;
+                                    lastMessage = displayContent;
                                 } else if (!isDirect) {
-                                    lastMessage = `${conv.lastMessage.senderName}: ${conv.lastMessage.content}`;
+                                    lastMessage = `${conv.lastMessage.senderName}: ${displayContent}`;
                                 } else {
-                                    lastMessage = conv.lastMessage.content;
+                                    lastMessage = displayContent;
                                 }
                             }
                             return (
