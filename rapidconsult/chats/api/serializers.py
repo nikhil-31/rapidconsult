@@ -156,7 +156,9 @@ class ReadReceiptSerializer(serializers.Serializer):
 
 
 class MongoMessageSerializer(serializers.Serializer):
+    id = serializers.CharField()
     conversationId = serializers.CharField()
+    senderName = serializers.CharField()
     senderId = serializers.CharField()
     content = serializers.CharField(required=False, allow_blank=True)
     type = serializers.CharField()
@@ -182,10 +184,17 @@ class MongoMessageSerializer(serializers.Serializer):
                 return {
                     "id": str(obj.replyTo.id),
                     "conversationId": obj.replyTo.conversationId,
+                    "senderId": obj.replyTo.senderId,
                     "senderName": obj.replyTo.senderName,
                     "content": obj.replyTo.content,
-                    "messageType": obj.replyTo.type,
+                    "type": obj.replyTo.type,
                     "timestamp": obj.replyTo.timestamp.isoformat() if obj.replyTo.timestamp else None,
+                    "media": {
+                        "url": obj.media.url,
+                        "filename": obj.media.filename,
+                        "size": obj.media.size,
+                        "mimeType": obj.media.mimeType,
+                    } if obj.media else None,
                 }
             except Exception:
                 return str(obj.replyTo)  # fallback to ID if not a full object

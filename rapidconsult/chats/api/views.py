@@ -283,8 +283,8 @@ class ImageMessageViewSet(viewsets.ViewSet):
             conversation_id,
             {
                 "type": "chat_message_echo",
-                "message": VoxChatConsumer.serialize_message(msg),
+                "message": MongoMessageSerializer(msg).data,
             }
         )
 
-        return Response(VoxChatConsumer.serialize_message(msg))
+        return Response(MongoMessageSerializer(msg).data)
