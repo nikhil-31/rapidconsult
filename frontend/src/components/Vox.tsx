@@ -82,7 +82,20 @@ const Vox: React.FC = () => {
                                     <List.Item.Meta
                                         avatar={<Avatar src={avatarUrl || undefined}>{!avatarUrl && name?.[0]}</Avatar>}
                                         title={<Text strong>{name}</Text>}
-                                        description={<Text type="secondary">{lastMessage}</Text>}
+                                        description={
+                                            <Text
+                                                type="secondary"
+                                                style={{
+                                                    whiteSpace: "nowrap",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    display: "block",
+                                                    maxWidth: "250px",
+                                                }}
+                                            >
+                                                {lastMessage}
+                                            </Text>
+                                        }
                                     />
                                 </List.Item>
                             );
@@ -103,14 +116,14 @@ const Vox: React.FC = () => {
                                             ? {
                                                 ...c,
                                                 lastMessage: {
-                                                    messageId: message.id,        // map to correct field
+                                                    messageId: message.id,
                                                     content: message.content,
                                                     senderId: message.senderId,
                                                     senderName: message.senderName,
                                                     timestamp: message.timestamp,
                                                     type: message.messageType,
                                                 },
-                                                updatedAt: message.timestamp,   // keep list sorting fresh
+                                                updatedAt: message.timestamp,
                                             }
                                             : c
                                     )
