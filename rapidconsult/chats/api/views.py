@@ -223,7 +223,7 @@ class ImageMessageViewSet(viewsets.ViewSet):
             msg = MongoMessage.objects.create(
                 conversationId=conversation_id,
                 senderId=str(request.user.id),
-                senderName=request.user.username,
+                senderName=str(request.user.name),
                 content=content,
                 type="file",
                 timestamp=datetime.utcnow(),
@@ -251,7 +251,7 @@ class ImageMessageViewSet(viewsets.ViewSet):
             msg = MongoMessage.objects.create(
                 conversationId=conversation_id,
                 senderId=str(request.user.id),
-                senderName=request.user.username,
+                senderName=str(request.user.name),
                 content=content,
                 type="text",
                 replyTo=replied_to_message,

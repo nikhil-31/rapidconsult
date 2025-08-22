@@ -1,6 +1,8 @@
 import boto3
 from django.conf import settings
 import uuid
+import mimetypes
+
 
 def upload_to_spaces(file, folder="chat"):
     session = boto3.session.Session()
@@ -15,11 +17,18 @@ def upload_to_spaces(file, folder="chat"):
     # Unique filename
     filename = f"{folder}/{uuid.uuid4()}-{file.name}"
 
+    # Try to get MIME type from a file, fallback to guess
+    content_type = (getattr(file, "content_type", None) or mimetypes.guess_type(file.name)[0]
+                    or "application/octet-stream")
+
     client.upload_fileobj(
         file,
         settings.AWS_STORAGE_BUCKET_NAME,
         filename,
-        ExtraArgs={"ACL": "public-read"}
+        ExtraArgs={
+            "ACL": "public-read",
+            "ContentType": content_type,
+        }
     )
 
     return f"{settings.AWS_S3_ENDPOINT_URL}/{settings.AWS_STORAGE_BUCKET_NAME}/{filename}"
