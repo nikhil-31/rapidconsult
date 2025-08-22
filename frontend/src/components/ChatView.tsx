@@ -11,6 +11,8 @@ import {AuthContext} from "../contexts/AuthContext";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {deserializeMessage, Message} from "../models/Message";
 
+import axios from "axios";
+
 const {Text} = Typography;
 
 // 🔑 Extend UploadFile with preview support
@@ -47,24 +49,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     }, [conversation]);
 
-    const handleSend = () => {
-        if (!input && files.length === 0) return; // ✅ prevent empty send
-
-        const payload = {
-            type: "chat_message",
-            conversationId: conversationId,
-            content: input,
-            messageType: files.length > 0 ? "image" : "text",
-            replyTo: replyTo ? replyTo.id : null,
-            locationId: selectedLocation?.location.id,
-            organizationId: selectedLocation?.organization.id,
-        };
-
-        sendJsonMessage(payload);
-        setInput("");
-        setFiles([]);
-        setReplyTo(null);
-    };
 
     const {readyState, sendJsonMessage} = useWebSocket(
         user ? `${wsUrl}/voxchats/${conversationId}/` : null,
@@ -113,6 +97,70 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         conversation.conversationType === "direct"
             ? conversation.directMessage?.otherParticipantName
             : conversation.groupChat?.name;
+
+
+    const handleSendText = () => {
+        const payload = {
+            type: "chat_message",
+            conversationId: conversationId,
+            content: input,
+            messageType: "text",
+            replyTo: replyTo ? replyTo.id : null,
+            locationId: selectedLocation?.location.id,
+            organizationId: selectedLocation?.organization.id,
+        };
+        sendJsonMessage(payload);
+        setInput("");
+        setFiles([]);
+        setReplyTo(null);
+    }
+
+    const handleSend = () => {
+        if (!input && files.length === 0) return;
+
+        if (files.length > 0) {
+            handleSendImage()
+        } else {
+            handleSendText()
+        }
+    };
+
+    const handleSendImage = async () => {
+        try {
+            const formData = new FormData();
+            formData.append("conversationId", conversationId);
+            formData.append("content", input);
+            formData.append("organization_id", String(selectedLocation?.organization.id ?? ""));
+            formData.append("location_id", String(selectedLocation?.location.id ?? ""));
+
+            // attach a file (extend if you want multiple)
+            if (files.length > 0) {
+                formData.append("file", files[0] as any);
+            }
+
+            // send via REST API
+            const response = await axios.post(
+                `${apiUrl}/api/save-message/`,
+                formData,
+                {
+                    headers: {
+                        "Authorization": `Token ${user?.token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            const savedMessage: Message = deserializeMessage(response.data);
+
+            setInput("");
+            setFiles([]);
+            setReplyTo(null);
+
+        } catch (error) {
+            console.error("Failed to send message:", error);
+        }
+    };
+
 
     return (
         <div className="flex flex-col h-full relative">
