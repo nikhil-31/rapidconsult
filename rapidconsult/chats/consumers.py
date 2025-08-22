@@ -4,6 +4,8 @@ from uuid import UUID
 from django.utils import timezone
 from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
+
+from chats.api.serializers import MongoMessageSerializer
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
 from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, \
@@ -231,6 +233,7 @@ class VoxChatConsumer(JsonWebsocketConsumer):
 
     @staticmethod
     def serialize_message(msg):
+        # TODO - Replace this with MongoMessageSerializer later
         message = {
             "id": str(msg.id),
             "conversationId": msg.conversationId,
@@ -239,6 +242,12 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             "content": msg.content,
             "messageType": msg.type,
             "timestamp": msg.timestamp.isoformat() if msg.timestamp else None,
+            "media": {
+                "url": msg.media.url,
+                "filename": msg.media.filename,
+                "size": msg.media.size,
+                "mimeType": msg.media.mimeType,
+            } if msg.media else None,
             "replyTo": {
                 "id": str(msg.replyTo.id),
                 "conversationId": msg.replyTo.conversationId,
@@ -256,6 +265,7 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         total_count = MongoMessage.objects(conversationId=self.conversation_id).count()
         has_more = total_count > 50
         serialized = [self.serialize_message(msg) for msg in reversed(last_msgs)]
+        # serialized = [MongoMessageSerializer(msg).data for msg in reversed(last_msgs)]
 
         self.send_json({
             "type": "last_50_messages",
@@ -321,53 +331,57 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             pass
         return super().disconnect(code)
 
+    def save_message(self, content):
+        if content.get("replyTo") is not None:
+            replied_to_message = MongoMessage.objects.get(conversationId=self.conversation_id,
+                                                          id=content["replyTo"])
+        else:
+            replied_to_message = None
+
+        msg = MongoMessage(
+            conversationId=content["conversationId"],
+            senderId=str(self.user.id),
+            senderName=str(self.user.name),
+            content=content.get("content"),
+            type=content.get("messageType", "text"),
+            timestamp=timezone.now(),
+            replyTo=replied_to_message,
+            locationId=str(content.get("locationId")),
+            organizationId=str(content.get("organizationId")),
+        )
+        msg.save()
+
+        # Update last message in UserConversation
+        last_message_info = LastMessageInfo(
+            messageId=str(msg.id),
+            content=msg.content,
+            senderId=msg.senderId,
+            senderName=msg.senderName,
+            timestamp=msg.timestamp,
+            type=msg.type,
+        )
+
+        # Update all UserConversations tied to this conversation
+        UserConversation.objects(conversationId=msg.conversationId).update(
+            set__lastMessage=last_message_info,
+            set__updatedAt=timezone.now()
+        )
+
+        # Broadcast to group
+        async_to_sync(self.channel_layer.group_send)(
+            self.conversation_id,
+            {
+                "type": "chat_message_echo",
+                "message": self.serialize_message(msg),
+            }
+        )
+
     def receive_json(self, content, **kwargs):
         message_type = content["type"]
 
         if message_type == "chat_message":
-            if content.get("replyTo") is not None:
-                replied_to_message = MongoMessage.objects.get(conversationId=self.conversation_id,
-                                                              id=content["replyTo"])
-            else:
-                replied_to_message = None
+            self.save_message(content)
 
-            msg = MongoMessage(
-                conversationId=content["conversationId"],
-                senderId=str(self.user.id),
-                senderName=str(self.user.name),
-                content=content.get("content"),
-                type=content.get("messageType", "text"),
-                timestamp=timezone.now(),
-                replyTo=replied_to_message,
-                locationId=str(content.get("locationId")),
-                organizationId=str(content.get("organizationId")),
-            )
-            msg.save()
-
-            # Update last message in UserConversation
-            last_message_info = LastMessageInfo(
-                messageId=str(msg.id),
-                content=msg.content,
-                senderId=msg.senderId,
-                senderName=msg.senderName,
-                timestamp=msg.timestamp,
-                type=msg.type,
-            )
-
-            # Update all UserConversations tied to this conversation
-            UserConversation.objects(conversationId=msg.conversationId).update(
-                set__lastMessage=last_message_info,
-                set__updatedAt=timezone.now()
-            )
-
-            # Broadcast to group
-            async_to_sync(self.channel_layer.group_send)(
-                self.conversation_id,
-                {
-                    "type": "chat_message_echo",
-                    "message": self.serialize_message(msg),
-                }
-            )
 
         # TODO - User is typing echo to the rest of the group
         elif message_type == "typing":
@@ -395,7 +409,7 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             #         }
             #     )
             #
-            # # TODO - Update unread count for user
+            # TODO - Update unread count for user
             # unread_count = Message.objects.filter(to_user=self.user, read=False).count()
             # async_to_sync(self.channel_layer.group_send)(
             #     self.user.username + "__notifications",

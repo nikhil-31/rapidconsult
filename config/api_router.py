@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
 from rapidconsult.chats.api.views import ConversationViewSet, MessageViewSet, ImageMessageUploadView, \
-    UserConversationViewSet, MongoMessageViewSet
+    UserConversationViewSet, MongoMessageViewSet, ImageMessageViewSet
 from rapidconsult.users.api.views import UserViewSet, ContactViewSet
 from rapidconsult.scheduling.api.views import (LocationViewSet, DepartmentViewSet, UnitViewSet, OrganizationViewSet,
                                                UserProfileViewSet, RoleViewSet, UnitMembershipViewSet,
@@ -26,6 +26,7 @@ router.register(r'unit-memberships', UnitMembershipViewSet, basename='unit-membe
 router.register(r'shifts', OnCallShiftViewSet, basename='shifts')
 router.register(r'allowed-location', UserOrgProfileViewSet, basename='allowed-location')
 router.register(r'active-conversations', UserConversationViewSet, basename='active-conversations')
+router.register(r'save-message', ImageMessageViewSet, basename='save-message')
 
 app_name = "api"
 urlpatterns = router.urls

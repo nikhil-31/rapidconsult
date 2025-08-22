@@ -197,6 +197,7 @@ if USE_SPACES:
     PUBLIC_MEDIA_LOCATION = 'media'
     MEDIA_URL = f'https://{AWS_S3_ENDPOINT_URL}/{PUBLIC_MEDIA_LOCATION}/'
     DEFAULT_FILE_STORAGE = 'config.storage_backends.PublicMediaStorage'
+    AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
 else:
     STATIC_URL = '/static/'
     STATIC_ROOT = BASE_DIR / 'staticfiles'
