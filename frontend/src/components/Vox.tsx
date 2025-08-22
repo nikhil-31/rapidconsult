@@ -111,21 +111,21 @@ const Vox: React.FC = () => {
                             conversation={activeConversation}
                             onNewMessage={(convId, message) => {
                                 setConversations((prev) =>
-                                    prev.map((c) =>
-                                        c.conversationId === convId
+                                    prev.map((conv) =>
+                                        conv.conversationId === convId
                                             ? {
-                                                ...c,
+                                                ...conv,
                                                 lastMessage: {
                                                     messageId: message.id,
                                                     content: message.content,
                                                     senderId: message.senderId,
                                                     senderName: message.senderName,
                                                     timestamp: message.timestamp,
-                                                    type: message.messageType,
+                                                    type: message.type,
                                                 },
                                                 updatedAt: message.timestamp,
                                             }
-                                            : c
+                                            : conv
                                     )
                                 );
 

@@ -4,10 +4,16 @@ export interface Message {
     senderId: string;
     senderName: string;
     content: string;
-    messageType: string;
+    type: string;
     timestamp: string;
     fileUrl?: string;
     replyTo?: Message;
+    media?: {
+        url: string,
+        filename: string,
+        size: number;
+        mimeType: string;
+    }
 }
 
 export function deserializeMessage(data: any): Message {
@@ -17,8 +23,14 @@ export function deserializeMessage(data: any): Message {
         senderId: data.senderId,
         senderName: data.senderName,
         content: data.content,
-        messageType: data.messageType,
+        type: data.type,
         timestamp: data.timestamp,
         replyTo: data.replyTo,
+        media: data.media ? {
+            url: data.media.url,
+            filename: data.media.filename,
+            size: data.media.size,
+            mimeType: data.media.mimeType,
+        } : undefined,
     };
 }

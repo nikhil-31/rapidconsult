@@ -172,10 +172,27 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                                 {msg.senderName}
                                             </div>
 
-                                            {msg.content &&
-                                                <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
-
-                                            {msg.fileUrl && (
+                                            {/* An Image will be displayed if it exists */}
+                                            {msg.media?.url ? (
+                                                msg.media.mimeType?.startsWith("image/") ? (
+                                                    <a href={msg.media.url} target="_blank" rel="noopener noreferrer">
+                                                        <img
+                                                            src={msg.media.url}
+                                                            alt={msg.media.filename || "image"}
+                                                            className="max-w-full mt-2 rounded-lg"
+                                                        />
+                                                    </a>
+                                                ) : (
+                                                    <a
+                                                        href={msg.media.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-500 underline mt-2 block"
+                                                    >
+                                                        {msg.media.filename || "Download file"}
+                                                    </a>
+                                                )
+                                            ) : msg.fileUrl ? (
                                                 <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
                                                     <img
                                                         src={msg.fileUrl}
@@ -183,7 +200,12 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                                         className="max-w-full mt-2 rounded-lg"
                                                     />
                                                 </a>
-                                            )}
+                                            ) : null}
+
+                                            {/* Image content text */}
+                                            {msg.content &&
+                                                <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
+
                                             {/* Timestamp */}
                                             {msg.timestamp && (
                                                 <div className="text-[10px] text-gray-400 mt-1 text-right">
