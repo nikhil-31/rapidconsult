@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from "react";
+import React, {useState, useEffect, useContext, useRef} from "react";
 import {Input, Button, Upload, List, Tooltip, Typography} from "antd";
 import {
     UploadOutlined, SendOutlined, SmileOutlined, RollbackOutlined, CloseOutlined,
@@ -10,12 +10,10 @@ import useWebSocket, {ReadyState} from "react-use-websocket";
 import {AuthContext} from "../contexts/AuthContext";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {deserializeMessage, Message} from "../models/Message";
-
 import axios from "axios";
 
 const {Text} = Typography;
 
-// 🔑 Extend UploadFile with preview support
 interface PreviewFile extends UploadFile {
     preview?: string;
 }
@@ -39,6 +37,12 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const [files, setFiles] = useState<PreviewFile[]>([]); // ✅ use extended type
     const [showEmoji, setShowEmoji] = useState(false);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
+    const [typingUsers, setTypingUsers] = useState<string[]>([]);
+
+    // Typing
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const typingTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
 
     // Reset messages when conversation changes
     useEffect(() => {
@@ -49,6 +53,24 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     }, [conversation]);
 
+    const handleTypingTimeout = (username: string, duration = 10000) => {
+        // clear any existing timer
+        if (typingTimeouts.current[username]) {
+            clearTimeout(typingTimeouts.current[username]);
+        }
+
+        // set a new one
+        typingTimeouts.current[username] = setTimeout(() => {
+            setTypingUsers((prev) => {
+                const updated = prev.filter((name) => name !== username);
+                if (updated.length === 0) {
+                    setIsTyping(false);
+                }
+                return updated;
+            });
+            delete typingTimeouts.current[username];
+        }, duration);
+    };
 
     const {readyState, sendJsonMessage} = useWebSocket(
         user ? `${wsUrl}/voxchats/${conversationId}/` : null,
@@ -74,12 +96,65 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                         const history = data.messages.map((msg: any) => (deserializeMessage(msg)));
                         setMessages(history);
                         break;
+                    case "typing":
+                        if (Number(data.userId) !== Number(user?.id)) {
+                            if (data.status === "typing") {
+                                setIsTyping(true)
+                                setTypingUsers((prev) =>
+                                    prev.includes(data.username) ? prev : [...prev, data.username]
+                                );
+                                handleTypingTimeout(data.username, 10000);
+                            } else if (data.status === "stop_typing") {
+                                setTypingUsers((prev) =>
+                                    prev.filter((name) => name !== data.username)
+                                );
+                                if (typingUsers.length === 0) {
+                                    setIsTyping(false)
+                                }
+                                if (typingTimeouts.current[data.username]) {
+                                    clearTimeout(typingTimeouts.current[data.username]);
+                                    delete typingTimeouts.current[data.username];
+                                }
+                            }
+                        }
+                        break;
                     default:
                         break;
                 }
             },
         }
     );
+
+
+    const sendTypingEvent = (status: string) => {
+        sendJsonMessage({
+            type: "typing",
+            conversationId,
+            userId: user?.id,
+            username: user?.name,
+            status: status,
+        });
+    };
+
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInput(e.target.value);
+
+        // first keystroke → mark as typing
+        if (!isTyping) {
+            setIsTyping(true);
+            sendTypingEvent("typing");
+        }
+
+        // clear previous soft timer
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // restart soft timer → stop 3s after last keystroke
+        typingTimeoutRef.current = setTimeout(() => {
+            setIsTyping(false);
+            sendTypingEvent("stop_typing");
+        }, 5000);
+    };
 
     const connectionStatus = {
         [ReadyState.CONNECTING]: "Connecting",
@@ -289,6 +364,15 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 />
             </div>
 
+            {isTyping && typingUsers.length > 0 && (
+                <div className="px-3 pb-2 pt-2 text-xs text-gray-500 italic animate-pulse">
+                    <span className="font-medium text-gray-600">
+                      {typingUsers.join(", ")}
+                    </span>{" "}
+                    {typingUsers.length > 1 ? "are" : "is"} typing<span className="animate-ping">...</span>
+                </div>
+            )}
+
             {/* Reply Context */}
             {replyTo && (
                 <div
@@ -363,7 +447,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
                 <Input.TextArea
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={handleInputChange}
                     placeholder="Type a message..."
                     autoSize={{minRows: 1, maxRows: 4}}
                     onPressEnter={(e) => {

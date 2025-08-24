@@ -375,24 +375,27 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             }
         )
 
+    def typing_status(self, content):
+        status = content["status"]
+        async_to_sync(self.channel_layer.group_send)(
+            self.conversation_id,
+            {
+                "type": "typing",
+                "userId": str(self.user.id),
+                "username": str(self.user.name),
+                "conversationId": self.conversation_id,
+                "status": status,
+            },
+        )
+
     def receive_json(self, content, **kwargs):
         message_type = content["type"]
 
         if message_type == "chat_message":
             self.save_message(content)
 
-
-        # TODO - User is typing echo to the rest of the group
         elif message_type == "typing":
-            # async_to_sync(self.channel_layer.group_send)(
-            #     self.conversation_name,
-            #     {
-            #         "type": "typing",
-            #         "user": self.user.username,
-            #         "typing": content["typing"],
-            #     },
-            # )
-            pass
+            self.typing_status(content)
 
         # TODO - Update that messages were read
         elif message_type == "read_messages":
