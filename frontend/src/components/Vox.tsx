@@ -119,6 +119,7 @@ const Vox: React.FC = () => {
                 <Content style={{background: '#fff'}}>
                     {activeConversation ? (
                         <ChatView
+                            key={activeConversation.conversationId}
                             conversation={activeConversation}
                             onNewMessage={(convId, message) => {
                                 setConversations((prev) =>

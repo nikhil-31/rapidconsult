@@ -139,6 +139,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
     // 🔹 Load more when user scrolls to top
     const loadMore = () => {
+        console.log(`load more ${hasMore}`)
         if (hasMore) {
             fetchMessages(page + 1);
         }
@@ -165,6 +166,8 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                         }
                         break;
                     case "last_50_messages":
+                        const hasMore = data.has_more
+                        setHasMore(hasMore)
                         const history = data.messages.map((msg: any) => (deserializeMessage(msg)));
                         setMessages(history);
                         break;
