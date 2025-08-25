@@ -445,7 +445,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 </div>
             </div>
 
-
+            {/* Typing users */}
             {isTyping && typingUsers.length > 0 && (
                 <div className="px-3 pb-2 pt-2 text-xs text-gray-500 italic animate-pulse">
                     <span className="font-medium text-gray-600">
