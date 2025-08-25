@@ -81,8 +81,23 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             if (pageNum === 1) {
                 setMessages(newMsgs.reverse());
             } else {
+                const list = listRef.current;
+                if (!list) return;
+
+                if (!list) return;
+
+                // ✅ Load older messages → preserve position
+                const prevScrollHeight = list.scrollHeight;
+
                 const reversed = newMsgs.reverse()
                 setMessages((prev) => [...reversed, ...prev]);
+
+                requestAnimationFrame(() => {
+                    if (list) {
+                        const newScrollHeight = list.scrollHeight;
+                        list.scrollTop = newScrollHeight - prevScrollHeight + list.scrollTop;
+                    }
+                });
             }
 
             setHasMore(!!res.data.next);
