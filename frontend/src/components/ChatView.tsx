@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, {useState, useEffect, useContext, useRef} from "react";
-import {Input, Button, Upload, List, Tooltip, Typography} from "antd";
+import {Input, Button, Upload, List, Tooltip, Typography, Spin} from "antd";
 import {
     UploadOutlined, SendOutlined, SmileOutlined, RollbackOutlined, CloseOutlined,
 } from "@ant-design/icons";
@@ -313,9 +313,14 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                     <InfiniteScroll
                         dataLength={messages.length}
                         next={loadMore}
-                        inverse={true}  // 👈 important: scroll up to load
+                        inverse={true}
                         hasMore={hasMore}
-                        loader={<p className="text-center text-xs">Loading...</p>}
+                        loader={
+                            <div className="flex flex-col items-center justify-center py-4 text-gray-500">
+                                <Spin size="small"/>
+                                <span className="mt-2 text-xs tracking-wide uppercase">Loading</span>
+                            </div>
+                        }
                         scrollableTarget="scrollableDiv"
                         style={{display: "flex", flexDirection: "column-reverse"}}
                     >
