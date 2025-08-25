@@ -172,8 +172,6 @@ class MongoMessageSerializer(serializers.Serializer):
     readBy = ReadReceiptSerializer(many=True, required=False)
     locationId = serializers.CharField(required=False, allow_blank=True)
     organizationId = serializers.CharField(required=False, allow_blank=True)
-
-    # 👇 nested reply instead of just ID
     replyTo = serializers.SerializerMethodField()
 
     @staticmethod

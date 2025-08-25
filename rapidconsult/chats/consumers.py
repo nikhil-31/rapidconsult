@@ -231,39 +231,10 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         self.conversation_id = None
         self.conversation = None
 
-    # @staticmethod
-    # def serialize_message(msg):
-    #     message = {
-    #         "id": str(msg.id),
-    #         "conversationId": msg.conversationId,
-    #         "senderId": msg.senderId,
-    #         "senderName": msg.senderName,
-    #         "content": msg.content,
-    #         "type": msg.type,
-    #         "timestamp": msg.timestamp.isoformat() if msg.timestamp else None,
-    #         "media": {
-    #             "url": msg.media.url,
-    #             "filename": msg.media.filename,
-    #             "size": msg.media.size,
-    #             "mimeType": msg.media.mimeType,
-    #         } if msg.media else None,
-    #         "replyTo": {
-    #             "id": str(msg.replyTo.id),
-    #             "conversationId": msg.replyTo.conversationId,
-    #             "senderId": msg.replyTo.senderId,
-    #             "senderName": msg.replyTo.senderName,
-    #             "content": msg.replyTo.content,
-    #             "type": msg.replyTo.type,
-    #             "timestamp": msg.replyTo.timestamp.isoformat() if msg.replyTo.timestamp else None,
-    #         } if msg.replyTo else None,
-    #     }
-    #     return message
-
     def send_last_50_messages(self):
         last_msgs = MongoMessage.objects(conversationId=self.conversation_id).order_by("-timestamp")[:50]
         total_count = MongoMessage.objects(conversationId=self.conversation_id).count()
         has_more = total_count > 50
-        # serialized = [self.serialize_message(msg) for msg in reversed(last_msgs)]
         serialized = [MongoMessageSerializer(msg).data for msg in reversed(last_msgs)]
 
         self.send_json({
