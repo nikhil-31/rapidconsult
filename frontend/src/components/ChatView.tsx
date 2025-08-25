@@ -44,6 +44,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const listRef = useRef<HTMLDivElement | null>(null);
+    const [loadError, setLoadError] = useState(false);
 
     // Typing
     const [isTyping, setIsTyping] = useState(false);
@@ -78,15 +79,18 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             );
 
             if (pageNum === 1) {
-                setMessages(newMsgs.reverse()); // reverse so newest at bottom
+                setMessages(newMsgs.reverse());
             } else {
-                setMessages((prev) => [...newMsgs.reverse(), ...prev]);
+                const reversed = newMsgs.reverse()
+                setMessages((prev) => [...reversed, ...prev]);
             }
 
             setHasMore(!!res.data.next);
             setPage(pageNum);
+            setLoadError(false);
         } catch (err) {
             console.error("Failed to fetch messages:", err);
+            setLoadError(true);
         }
     };
 
@@ -178,7 +182,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     );
 
-
     const sendTypingEvent = (status: string) => {
         sendJsonMessage({
             type: "typing",
@@ -188,7 +191,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             status: status,
         });
     };
-
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setInput(e.target.value);
@@ -225,7 +227,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         conversation.conversationType === "direct"
             ? conversation.directMessage?.otherParticipantName
             : conversation.groupChat?.name;
-
 
     const handleSendText = () => {
         const payload = {
@@ -289,7 +290,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     };
 
-
     return (
         <div className="flex flex-col h-full relative">
 
@@ -316,10 +316,27 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                         inverse={true}
                         hasMore={hasMore}
                         loader={
-                            <div className="flex flex-col items-center justify-center py-4 text-gray-500">
-                                <Spin size="small"/>
-                                <span className="mt-2 text-xs tracking-wide uppercase">Loading</span>
-                            </div>
+                            loadError ? (
+                                <div
+                                    className="w-full flex items-center justify-between bg-red-50 border border-red-200 text-red-600 px-4 py-2">
+                                    <span className="text-sm font-medium">
+                                      Couldn’t load messages
+                                    </span>
+                                    <Button
+                                        type="primary"
+                                        size="small"
+                                        danger
+                                        onClick={() => fetchMessages(page + 1)}
+                                    >
+                                        Retry
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-4 text-gray-500">
+                                    <Spin size="small"/>
+                                    <span className="mt-2 text-xs tracking-wide uppercase">Loading</span>
+                                </div>
+                            )
                         }
                         scrollableTarget="scrollableDiv"
                         style={{display: "flex", flexDirection: "column-reverse"}}
