@@ -1,4 +1,4 @@
-import React, {createContext, ReactNode, useContext, useState} from "react";
+import React, {createContext, ReactNode, useContext, useEffect, useState} from "react";
 import useWebSocket, {ReadyState} from "react-use-websocket";
 import {AuthContext} from "./AuthContext";
 
@@ -22,20 +22,20 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
     const [unreadMessageCount, setUnreadMessageCount] = useState(0);
     const wsUrl = process.env.REACT_APP_WS_URL;
 
-    const {readyState} = useWebSocket(
+    const {readyState, sendMessage} = useWebSocket(
         user ? `${wsUrl}/notifications/` : null,
         {
             queryParams: {
                 token: user ? user.token : "",
             },
             onOpen: () => {
-                // console.log("Connected to Notifications!");
+                console.log("Connected to Notifications!");
             },
             onClose: () => {
-                // console.log("Disconnected from Notifications!");
+                console.log("Disconnected from Notifications!");
             },
             onMessage: (e) => {
-                // console.log("Received message", e);
+                console.log("Received message", e);
                 const data = JSON.parse(e.data);
                 switch (data.type) {
                     case "unread_count":
@@ -44,6 +44,12 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                     case "new_message_notification":
                         setUnreadMessageCount((count) => (count += 1));
                         break;
+                    case "user_status":
+                        console.log(`User Message ${JSON.stringify(data)}`)
+                        break;
+                    case "pong":
+                        console.log(`Pong ${JSON.stringify(data)}`)
+                        break;
                     default:
                         console.error("Unknown message type!");
                         break;
@@ -51,6 +57,16 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
             },
         }
     );
+
+    // 🔹 Heartbeat every 20 seconds
+    useEffect(() => {
+        if (readyState === ReadyState.OPEN) {
+            const interval = setInterval(() => {
+                sendMessage(JSON.stringify({type: "heartbeat"}));
+            }, 20000);
+            return () => clearInterval(interval);
+        }
+    }, [readyState, sendMessage]);
 
     const connectionStatus = {
         [ReadyState.CONNECTING]: "Connecting",

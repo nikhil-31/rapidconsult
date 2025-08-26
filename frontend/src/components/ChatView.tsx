@@ -51,6 +51,9 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const typingTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
 
+    // status changes
+    const [otherUserStatus, setOtherUserStatus] = useState<"online" | "offline" | null>(null);
+
     // Reset messages when conversation changes
     useEffect(() => {
         if (conversation) {
@@ -193,6 +196,16 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                             }
                         }
                         break;
+                    // case "user_status": // 👈 updates when status changes
+                    //     if (Number(data.user_id) !== Number(user?.id)) {
+                    //         setOtherUserStatus(data.status); // "online" or "offline"
+                    //     }
+                    //     break;
+                    case "presence":
+                        if (Number(data.user_id) !== Number(user?.id)) {
+                            setOtherUserStatus(data.status); // "online" or "offline"
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -312,8 +325,16 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         <div className="flex flex-col h-full relative">
 
             {/* Header */}
-            <div className="p-3 border-b bg-white shadow-sm flex justify-center">
+            <div className="p-3 border-b bg-white shadow-sm flex flex-col items-center">
                 <Text strong>{title}</Text>
+                {otherUserStatus && (
+                    <Text
+                        type={otherUserStatus === "online" ? "success" : "secondary"}
+                        className="text-xs"
+                    >
+                        {otherUserStatus === "online" ? "Online" : "Offline"}
+                    </Text>
+                )}
             </div>
 
             <div className="px-3 py-1">

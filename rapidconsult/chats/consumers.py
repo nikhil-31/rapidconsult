@@ -6,6 +6,7 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 
 from chats.api.serializers import MongoMessageSerializer
+from chats.presence import is_online, mark_online, mark_offline, heartbeat
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
 from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, \
@@ -203,18 +204,57 @@ class NotificationConsumer(JsonWebsocketConsumer):
             self.channel_name,
         )
 
-        unread_count = Message.objects.filter(to_user=self.user, read=False).count()
-        self.send_json({
-            "type": "unread_count",
-            "unread_count": unread_count,
-        })
+        # Add to presence updates group
+        async_to_sync(self.channel_layer.group_add)(
+            "presence_updates",
+            self.channel_name,
+        )
+
+        # Mark online in Redis
+        mark_online(self.user.id)
+
+        # Broadcast ONLINE event
+        async_to_sync(self.channel_layer.group_send)(
+            "presence_updates",
+            {
+                "type": "user_status",
+                "user_id": str(self.user.id),
+                "status": "online",
+            },
+        )
 
     def disconnect(self, code):
         async_to_sync(self.channel_layer.group_discard)(
             self.notification_group_name,
             self.channel_name,
         )
+
+        # Mark offline in Redis
+        mark_offline(self.user.id)
+
+        # Broadcast OFFLINE event
+        async_to_sync(self.channel_layer.group_send)(
+            "presence_updates",
+            {
+                "type": "user_status",
+                "user_id": str(self.user.id),
+                "status": "offline",
+            },
+        )
         return super().disconnect(code)
+
+    def receive_json(self, content, **kwargs):
+        """
+        Handle incoming messages from the frontend.
+        Mainly used for heartbeats (ping).
+        """
+        msg_type = content.get("type")
+
+        if msg_type == "heartbeat":
+            heartbeat(self.user.id)
+            # self.send_json({"type": "pong"})  # optional ack
+
+        return super().receive_json(content, **kwargs)
 
     def new_message_notification(self, event):
         self.send_json(event)
@@ -222,6 +262,8 @@ class NotificationConsumer(JsonWebsocketConsumer):
     def unread_count(self, event):
         self.send_json(event)
 
+    def user_status(self, event):
+        self.send_json(event)
 
 class VoxChatConsumer(JsonWebsocketConsumer):
 
@@ -253,7 +295,7 @@ class VoxChatConsumer(JsonWebsocketConsumer):
 
         # Getting the conversation name using URL route
         self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
-        self.conversation = MongoConversation.objects(_id=self.conversation_id)
+        self.conversation = MongoConversation.objects.get(id=self.conversation_id)
 
         async_to_sync(self.channel_layer.group_add)(
             self.conversation_id,
@@ -262,6 +304,39 @@ class VoxChatConsumer(JsonWebsocketConsumer):
 
         # Sending last 50 messages
         self.send_last_50_messages()
+
+        # Get the other participant (for direct chat)
+        # participants = self.conversation.participants
+        # other = next((p for p in participants if str(p.id) != str(self.user.id)), None)
+        # if other:
+        #     self.other_user_id = str(other.id)
+        #     # Immediately tell frontend whether they’re online
+        #     self.send_json({
+        #         "type": "presence",
+        #         "user_id": self.other_user_id,
+        #         "status": "online" if is_online(self.other_user_id) else "offline",
+        #     })
+
+        participants = self.conversation.participants
+        other = next((p for p in participants if str(p.userId) != str(self.user.id)), None)
+        if other:
+            self.other_user_id = str(other.userId)
+
+            # Immediately inform frontend about other participant's status
+            self.send_json({
+                "type": "presence",
+                "user_id": self.other_user_id,
+                "status": "online" if is_online(self.other_user_id) else "offline",
+            })
+
+            # Listen for presence updates
+            async_to_sync(self.channel_layer.group_add)(
+                "presence_updates",
+                self.channel_name,
+            )
+
+        # Subscribe to presence updates
+        async_to_sync(self.channel_layer.group_add)("presence_updates", self.channel_name)
 
         # TODO - Send a list of all online users
         # self.send_json({
@@ -298,6 +373,14 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             #     },
             # )
             # self.conversation.online.remove(self.user)
+            async_to_sync(self.channel_layer.group_discard)(
+                self.conversation_id,
+                self.channel_name,
+            )
+            async_to_sync(self.channel_layer.group_discard)(
+                "presence_updates",
+                self.channel_name,
+            )
             pass
         return super().disconnect(code)
 
@@ -368,6 +451,17 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         elif message_type == "typing":
             self.typing_status(content)
 
+        elif message_type == "presence_updates":
+            if str(content["user_id"]) == str(self.other_user_id):
+                async_to_sync(self.channel_layer.group_send)(
+                    self.conversation_id,
+                    {
+                        "type": "presence",
+                        "user_id": content["user_id"],
+                        "status": content["status"],
+                    },
+                )
+
         # TODO - Update that messages were read
         elif message_type == "read_messages":
             # Mark all messages sent *to me* as read
@@ -405,6 +499,17 @@ class VoxChatConsumer(JsonWebsocketConsumer):
 
         return super().receive_json(content, **kwargs)
 
+    # --- Presence handler ---
+    def user_status(self, event):
+        """
+        Handles presence updates (online/offline).
+        """
+        self.send_json({
+            "type": "presence",
+            "user_id": event["user_id"],
+            "status": event["status"],
+        })
+
     def chat_message_echo(self, event):
         self.send_json(event)
 
@@ -424,6 +529,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         self.send_json(event)
 
     def message_read(self, event):
+        self.send_json(event)
+
+    def presence(self, event):
         self.send_json(event)
 
     @classmethod
