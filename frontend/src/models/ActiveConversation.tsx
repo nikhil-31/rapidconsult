@@ -25,7 +25,7 @@ export interface Conversation {
         timestamp: string;
         type: string;
     } | null;
-    unreadCount: string;
+    unreadCount: number;
     lastReadAt: string;
     isPinned: boolean;
     isMuted: boolean;

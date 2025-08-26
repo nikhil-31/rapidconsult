@@ -25,6 +25,8 @@ from ..consumers import VoxChatConsumer
 from bson import ObjectId
 from mongoengine.errors import ValidationError
 
+from ..utils import update_user_conversation
+
 
 class ConversationViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     serializer_class = ConversationSerializer
@@ -260,21 +262,8 @@ class ImageMessageViewSet(viewsets.ViewSet):
                 organizationId=str(organization_id),
             )
 
-        # Update last message in UserConversation
-        last_message_info = LastMessageInfo(
-            messageId=str(msg.id),
-            content=msg.content,
-            senderId=msg.senderId,
-            senderName=msg.senderName,
-            timestamp=msg.timestamp,
-            type=msg.type,
-        )
-
-        # Update all UserConversations tied to this conversation
-        UserConversation.objects(conversationId=msg.conversationId).update(
-            set__lastMessage=last_message_info,
-            set__updatedAt=timezone.now()
-        )
+        # Update user conversation
+        update_user_conversation(msg)
 
         # Broadcast over WebSocket
         channel_layer = get_channel_layer()

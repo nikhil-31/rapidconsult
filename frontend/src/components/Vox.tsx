@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, {useContext, useEffect, useState} from 'react';
 import {AuthContext} from '../contexts/AuthContext';
-import {Layout, Typography, Avatar, List} from 'antd';
+import {Layout, Typography, Avatar, List, Badge} from 'antd';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
@@ -81,6 +81,7 @@ const Vox: React.FC = () => {
                                     lastMessage = displayContent;
                                 }
                             }
+                            const unreadCount = conv.unreadCount
                             return (
                                 <List.Item
                                     style={{
@@ -89,9 +90,43 @@ const Vox: React.FC = () => {
                                         background: activeConversation?.conversationId === conv.conversationId ? '#f0f5ff' : 'transparent'
                                     }}
                                     onClick={() => setActiveConversation(conv)}
+                                    // extra={
+                                    //     conv.unreadCount > 0 ? (
+                                    //         <span
+                                    //             style={{
+                                    //                 backgroundColor: '#f5222d',
+                                    //                 color: '#fff',
+                                    //                 borderRadius: '12px',
+                                    //                 padding: '2px 8px',
+                                    //                 fontSize: '12px',
+                                    //                 fontWeight: 500,
+                                    //                 minWidth: '24px',
+                                    //                 textAlign: 'center',
+                                    //                 display: 'inline-block',
+                                    //             }}
+                                    //         >
+                                    //             {conv.unreadCount}
+                                    //         </span>
+                                    //     ) : null
+                                    // }
+                                    extra={
+                                        conv.unreadCount > 0 ? (
+                                            <Badge
+                                                count={conv.unreadCount}
+                                                style={{
+                                                    backgroundColor: '#f5222d',
+                                                    boxShadow: '0 0 0 1px #fff',
+                                                }}
+                                            />
+                                        ) : null
+                                    }
                                 >
                                     <List.Item.Meta
-                                        avatar={<Avatar src={avatarUrl || undefined}>{!avatarUrl && name?.[0]}</Avatar>}
+                                        avatar={
+                                            <Avatar src={avatarUrl || undefined}>
+                                                {!avatarUrl && name?.[0]}
+                                            </Avatar>
+                                        }
                                         title={<Text strong>{name}</Text>}
                                         description={
                                             <Text
