@@ -325,15 +325,18 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         <div className="flex flex-col h-full relative">
 
             {/* Header */}
-            <div className="p-3 border-b bg-white shadow-sm flex flex-col items-center">
-                <Text strong>{title}</Text>
+            <div className="p-4 border-b bg-white shadow-sm flex items-center justify-center gap-2">
+                <Text strong className="text-base">{title}</Text>
                 {otherUserStatus && (
-                    <Text
-                        type={otherUserStatus === "online" ? "success" : "secondary"}
-                        className="text-xs"
+                    <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            otherUserStatus === "online"
+                                ? "bg-green-100 text-green-600"
+                                : "bg-gray-100 text-gray-500"
+                        }`}
                     >
-                        {otherUserStatus === "online" ? "Online" : "Offline"}
-                    </Text>
+                      {otherUserStatus === "online" ? "Online" : "Offline"}
+                    </span>
                 )}
             </div>
 

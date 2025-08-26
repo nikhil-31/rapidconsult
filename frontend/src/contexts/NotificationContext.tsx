@@ -29,13 +29,13 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                 token: user ? user.token : "",
             },
             onOpen: () => {
-                console.log("Connected to Notifications!");
+                // console.log("Connected to Notifications!");
             },
             onClose: () => {
-                console.log("Disconnected from Notifications!");
+                // console.log("Disconnected from Notifications!");
             },
             onMessage: (e) => {
-                console.log("Received message", e);
+                // console.log("Received message", e);
                 const data = JSON.parse(e.data);
                 switch (data.type) {
                     case "unread_count":
@@ -45,13 +45,13 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                         setUnreadMessageCount((count) => (count += 1));
                         break;
                     case "user_status":
-                        console.log(`User Message ${JSON.stringify(data)}`)
+                        // console.log(`User Message ${JSON.stringify(data)}`)
                         break;
                     case "pong":
-                        console.log(`Pong ${JSON.stringify(data)}`)
+                        // console.log(`Pong ${JSON.stringify(data)}`)
                         break;
                     default:
-                        console.error("Unknown message type!");
+                        console.error("Unknown message type notification!");
                         break;
                 }
             },
