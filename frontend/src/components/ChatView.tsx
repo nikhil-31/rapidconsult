@@ -53,6 +53,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
     // status changes
     const [otherUserStatus, setOtherUserStatus] = useState<"online" | "offline" | null>(null);
+    const [lastSeen, setLastSeen] = useState<string | null>(null);
 
     // Reset messages when conversation changes
     useEffect(() => {
@@ -203,7 +204,13 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                     //     break;
                     case "presence":
                         if (Number(data.user_id) !== Number(user?.id)) {
-                            setOtherUserStatus(data.status); // "online" or "offline"
+                            setOtherUserStatus(data.status);
+                            if (data.status === "offline" && data.last_seen) {
+                                setLastSeen(data.last_seen);
+                            }
+                            if (data.status === "online") {
+                                setLastSeen(null); // clear when online
+                            }
                         }
                         break;
                     default:
@@ -335,7 +342,16 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                 : "bg-gray-100 text-gray-500"
                         }`}
                     >
-                      {otherUserStatus === "online" ? "Online" : "Offline"}
+                        {otherUserStatus === "online"
+                            ? "Online"
+                            : lastSeen
+                                ? `Last seen ${new Date(lastSeen).toLocaleString([], {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                })}`
+                                : "Offline"}
                     </span>
                 )}
             </div>

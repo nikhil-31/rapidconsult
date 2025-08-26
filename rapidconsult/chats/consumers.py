@@ -6,7 +6,7 @@ from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 
 from chats.api.serializers import MongoMessageSerializer
-from chats.presence import is_online, mark_online, mark_offline, heartbeat
+from chats.presence import is_online, mark_online, mark_offline, heartbeat, get_last_seen
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
 from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, \
@@ -265,6 +265,7 @@ class NotificationConsumer(JsonWebsocketConsumer):
     def user_status(self, event):
         self.send_json(event)
 
+
 class VoxChatConsumer(JsonWebsocketConsumer):
 
     def __init__(self):
@@ -286,6 +287,30 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             "has_more": has_more,
         })
 
+    def handle_presence(self):
+        participants = self.conversation.participants
+        other = next((p for p in participants if str(p.userId) != str(self.user.id)), None)
+        if other:
+            self.other_user_id = str(other.userId)
+
+            # Immediately inform frontend about other participant's status
+            self.send_json({
+                "type": "presence",
+                "user_id": self.other_user_id,
+                "status": "online" if is_online(self.other_user_id) else "offline",
+                "last_seen": get_last_seen(self.other_user_id),
+            })
+
+            # Listen for presence updates
+            async_to_sync(self.channel_layer.group_add)(
+                "presence_updates",
+                self.channel_name,
+            )
+
+        # Subscribe to presence updates
+        async_to_sync(self.channel_layer.group_add)("presence_updates", self.channel_name)
+
+
     def connect(self):
         self.user = self.scope["user"]
         if not self.user.is_authenticated:
@@ -305,38 +330,8 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         # Sending last 50 messages
         self.send_last_50_messages()
 
-        # Get the other participant (for direct chat)
-        # participants = self.conversation.participants
-        # other = next((p for p in participants if str(p.id) != str(self.user.id)), None)
-        # if other:
-        #     self.other_user_id = str(other.id)
-        #     # Immediately tell frontend whether they’re online
-        #     self.send_json({
-        #         "type": "presence",
-        #         "user_id": self.other_user_id,
-        #         "status": "online" if is_online(self.other_user_id) else "offline",
-        #     })
-
-        participants = self.conversation.participants
-        other = next((p for p in participants if str(p.userId) != str(self.user.id)), None)
-        if other:
-            self.other_user_id = str(other.userId)
-
-            # Immediately inform frontend about other participant's status
-            self.send_json({
-                "type": "presence",
-                "user_id": self.other_user_id,
-                "status": "online" if is_online(self.other_user_id) else "offline",
-            })
-
-            # Listen for presence updates
-            async_to_sync(self.channel_layer.group_add)(
-                "presence_updates",
-                self.channel_name,
-            )
-
-        # Subscribe to presence updates
-        async_to_sync(self.channel_layer.group_add)("presence_updates", self.channel_name)
+        # Handle online/offline and last_seen
+        self.handle_presence()
 
         # TODO - Send a list of all online users
         # self.send_json({
@@ -459,6 +454,7 @@ class VoxChatConsumer(JsonWebsocketConsumer):
                         "type": "presence",
                         "user_id": content["user_id"],
                         "status": content["status"],
+                        "last_seen": get_last_seen(self.other_user_id),
                     },
                 )
 
@@ -508,6 +504,7 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             "type": "presence",
             "user_id": event["user_id"],
             "status": event["status"],
+            "last_seen": get_last_seen(self.other_user_id),
         })
 
     def chat_message_echo(self, event):
