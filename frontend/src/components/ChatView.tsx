@@ -347,6 +347,51 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     };
 
+    // Format a date into "Today", "Yesterday", or short date
+    const formatDateHeader = (date: string) => {
+        const msgDate = new Date(date);
+        const today = new Date();
+
+        const isToday = msgDate.toDateString() === new Date().toDateString();
+        const isYesterday =
+            msgDate.toDateString() === new Date(Date.now() - 86400000).toDateString();
+
+        if (isToday) return "Today";
+        if (isYesterday) return "Yesterday";
+
+        return msgDate.toLocaleDateString([], {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+    };
+
+    // Build an array with dividers and messages
+    const renderMessagesWithDates = () => {
+        const items: any[] = [];
+        let lastDate: string | null = null;
+
+        messages.forEach((msg) => {
+            const msgDateStr = new Date(msg.timestamp).toDateString();
+
+            if (lastDate !== msgDateStr) {
+                items.push({
+                    type: "divider",
+                    id: `divider-${msgDateStr}`,
+                    dateLabel: formatDateHeader(msg.timestamp),
+                });
+                lastDate = msgDateStr;
+            }
+
+            items.push({
+                type: "message",
+                data: msg,
+            });
+        });
+
+        return items;
+    };
+
     return (
         <div className="flex flex-col h-full relative">
 
@@ -419,9 +464,27 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                         style={{display: "flex", flexDirection: "column-reverse"}}
                     >
                         <List
-                            dataSource={messages}
-                            renderItem={(msg) => {
+                            dataSource={renderMessagesWithDates()}
+                            renderItem={(item) => {
+
+                                if (item.type === "divider") {
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="flex items-center my-3"
+                                        >
+                                            <div className="flex-grow border-t border-gray-300"/>
+                                            <span className="px-3 text-xs text-gray-500 font-medium">
+                                                {item.dateLabel}
+                                            </span>
+                                            <div className="flex-grow border-t border-gray-300"/>
+                                        </div>
+                                    );
+                                }
+
+                                const msg: Message = item.data;
                                 const mine = Number(msg.senderId) === Number(user?.id);
+
                                 return (
                                     <List.Item
                                         key={msg.id}
@@ -470,7 +533,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                                         {msg.senderName}
                                                     </div>
 
-                                                    {/* An Image will be displayed if it exists */}
                                                     {msg.media?.url ? (
                                                         msg.media.mimeType?.startsWith("image/") ? (
                                                             <a href={msg.media.url} target="_blank"
@@ -501,12 +563,11 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                                         </a>
                                                     ) : null}
 
-                                                    {/* Image content text */}
-                                                    {msg.content &&
+                                                    {msg.content && (
                                                         <div
-                                                            className="whitespace-pre-wrap break-words">{msg.content}</div>}
+                                                            className="whitespace-pre-wrap break-words">{msg.content}</div>
+                                                    )}
 
-                                                    {/* Timestamp */}
                                                     {msg.timestamp && (
                                                         <div className="text-[10px] text-gray-400 mt-1 text-right">
                                                             {new Date(msg.timestamp).toLocaleString([], {
@@ -535,6 +596,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                 );
                             }}
                         />
+
                     </InfiniteScroll>
                 </div>
             </div>
