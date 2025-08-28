@@ -8,6 +8,10 @@ export interface Message {
     timestamp: string;
     fileUrl?: string;
     replyTo?: Message;
+    readBy?: {
+        userId: string;
+        readAt: string;
+    }[]
     media?: {
         url: string,
         filename: string,
@@ -26,11 +30,17 @@ export function deserializeMessage(data: any): Message {
         type: data.type,
         timestamp: data.timestamp,
         replyTo: data.replyTo,
-        media: data.media ? {
-            url: data.media.url,
-            filename: data.media.filename,
-            size: data.media.size,
-            mimeType: data.media.mimeType,
-        } : undefined,
-    };
+        readBy: data.readBy
+            ? data.readBy.map((r: any) => ({
+                userId: r.userId,
+                readAt: r.readAt,
+            })) : [],
+        media:
+            data.media ? {
+                url: data.media.url,
+                filename: data.media.filename,
+                size: data.media.size,
+                mimeType: data.media.mimeType,
+            } : undefined,
+    }
 }

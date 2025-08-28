@@ -90,25 +90,6 @@ const Vox: React.FC = () => {
                                         background: activeConversation?.conversationId === conv.conversationId ? '#f0f5ff' : 'transparent'
                                     }}
                                     onClick={() => setActiveConversation(conv)}
-                                    // extra={
-                                    //     conv.unreadCount > 0 ? (
-                                    //         <span
-                                    //             style={{
-                                    //                 backgroundColor: '#f5222d',
-                                    //                 color: '#fff',
-                                    //                 borderRadius: '12px',
-                                    //                 padding: '2px 8px',
-                                    //                 fontSize: '12px',
-                                    //                 fontWeight: 500,
-                                    //                 minWidth: '24px',
-                                    //                 textAlign: 'center',
-                                    //                 display: 'inline-block',
-                                    //             }}
-                                    //         >
-                                    //             {conv.unreadCount}
-                                    //         </span>
-                                    //     ) : null
-                                    // }
                                     extra={
                                         conv.unreadCount > 0 ? (
                                             <Badge
@@ -175,7 +156,6 @@ const Vox: React.FC = () => {
                                             : conv
                                     )
                                 );
-
                             }}/>
                     ) : (
                         <div style={{padding: 24}}>

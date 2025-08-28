@@ -141,6 +141,25 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     }, [conversation]);
 
+    useEffect(() => {
+        const list = listRef.current;
+        if (!list) return;
+
+        const handleScroll = () => {
+            // When inverse scrolling, scrollTop ~ 0 means bottom (newest message area)
+            // console.log(`scroll Top ${list.scrollTop}`)
+            if (list.scrollTop >= -50) {
+                // console.log("✅ Reached bottom of chat");
+                // message.info("You’ve reached the bottom");
+            }
+        };
+
+        list.addEventListener("scroll", handleScroll);
+        return () => {
+            list.removeEventListener("scroll", handleScroll);
+        };
+    }, []);
+
     // 🔹 Load more when user scrolls to top
     const loadMore = () => {
         console.log(`load more ${hasMore}`)
