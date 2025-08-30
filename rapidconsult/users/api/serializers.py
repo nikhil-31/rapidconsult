@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from config.roles import get_permissions_for_role
 from rapidconsult.users.models import User, Contact
-from scheduling.models import UserOrgProfile
+from rapidconsult.scheduling.models import UserOrgProfile
 
 
 class ContactSerializer(serializers.ModelSerializer):

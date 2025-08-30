@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from rapidconsult.chats.mongo.models import User as MongoUser
 from rapidconsult.users.models import User
-from scheduling.models import UserOrgProfile
+from rapidconsult.scheduling.models import UserOrgProfile
 
 
 class Command(BaseCommand):

@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
-from scheduling.models import UserOrgProfile
+from rapidconsult.scheduling.models import UserOrgProfile
 
 
 class HasOrgLocationAccess(BasePermission):

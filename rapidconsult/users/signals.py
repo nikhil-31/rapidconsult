@@ -4,7 +4,7 @@ from django.utils import timezone
 from chats.mongo.models import User as MongoUser
 from mongoengine import DoesNotExist
 
-from scheduling.models import UserOrgProfile
+from rapidconsult.scheduling.models import UserOrgProfile
 from .models import User
 
 
