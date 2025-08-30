@@ -9,8 +9,8 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from scheduling.api.permissions import check_org_admin_or_raise
-from scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
+from rapidconsult.scheduling.api.permissions import check_org_admin_or_raise
+from rapidconsult.scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
     UserOrgProfile
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer, UnitWriteSerializer, OnCallShiftSerializer, RoleSerializer, UnitMembershipSerializer, \
