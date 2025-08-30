@@ -55,6 +55,10 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const [otherUserStatus, setOtherUserStatus] = useState<"online" | "offline" | null>(null);
     const [lastSeen, setLastSeen] = useState<string | null>(null);
 
+    // unread messages
+    const [lastReadAt, setLastReadAt] = useState<string | null>(null);
+
+
     // Reset messages when conversation changes
     useEffect(() => {
         if (conversation) {
@@ -137,6 +141,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             setConversationId(conversation.conversationId);
             setMessages([]);
             setPage(1);
+            setLastReadAt(conversation.lastReadAt); // in fetchMessages
             // fetchMessages(1);
         }
     }, [conversation]);
@@ -193,6 +198,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                         setHasMore(hasMore)
                         const history = data.messages.map((msg: any) => (deserializeMessage(msg)));
                         setMessages(history);
+                        setPage(1);
                         break;
                     case "typing":
                         if (Number(data.userId) !== Number(user?.id)) {
@@ -216,11 +222,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                             }
                         }
                         break;
-                    // case "user_status": // 👈 updates when status changes
-                    //     if (Number(data.user_id) !== Number(user?.id)) {
-                    //         setOtherUserStatus(data.status); // "online" or "offline"
-                    //     }
-                    //     break;
                     case "presence":
                         if (Number(data.user_id) !== Number(user?.id)) {
                             setOtherUserStatus(data.status);
@@ -311,6 +312,18 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     };
 
+    // useEffect(() => {
+    //     const divider = document.getElementById("divider-unread");
+    //     if (divider) {
+    //         divider.scrollIntoView({behavior: "smooth", block: "center"});
+    //     } else {
+    //         // fallback scroll bottom
+    //         if (listRef.current) {
+    //             listRef.current.scrollTop = listRef.current.scrollHeight;
+    //         }
+    //     }
+    // }, [messages]);
+
     const handleSendImage = async () => {
         try {
             const formData = new FormData();
@@ -366,14 +379,16 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         });
     };
 
-    // Build an array with dividers and messages
+    // Build an array with dividers, unread divider, and messages
     const renderMessagesWithDates = () => {
         const items: any[] = [];
         let lastDate: string | null = null;
+        let unreadInserted = false;
 
         messages.forEach((msg) => {
             const msgDateStr = new Date(msg.timestamp).toDateString();
 
+            // date divider
             if (lastDate !== msgDateStr) {
                 items.push({
                     type: "divider",
@@ -381,6 +396,21 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                     dateLabel: formatDateHeader(msg.timestamp),
                 });
                 lastDate = msgDateStr;
+            }
+
+            // unread divider
+            if (
+                lastReadAt &&
+                !unreadInserted &&
+                new Date(msg.timestamp) > new Date(lastReadAt)
+            ) {
+                items.push({
+                    type: "divider",
+                    id: "divider-unread",
+                    dateLabel: "Unread messages",
+                    style: "unread",
+                });
+                unreadInserted = true;
             }
 
             items.push({
@@ -391,6 +421,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
         return items;
     };
+
 
     return (
         <div className="flex flex-col h-full relative">
@@ -471,10 +502,19 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                     return (
                                         <div
                                             key={item.id}
-                                            className="flex items-center my-3"
+                                            id={item.id} // 👈 gives us a target for scrolling
+                                            className={`flex items-center my-3 ${
+                                                item.style === "unread" ? "text-red-500" : "text-gray-500"
+                                            }`}
                                         >
                                             <div className="flex-grow border-t border-gray-300"/>
-                                            <span className="px-3 text-xs text-gray-500 font-medium">
+                                            <span
+                                                className={`px-3 text-xs font-medium ${
+                                                    item.style === "unread"
+                                                        ? "bg-red-50 border border-red-300 rounded-full"
+                                                        : ""
+                                                }`}
+                                            >
                                                 {item.dateLabel}
                                             </span>
                                             <div className="flex-grow border-t border-gray-300"/>
