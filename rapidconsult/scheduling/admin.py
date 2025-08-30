@@ -5,6 +5,7 @@ from .models import (
 )
 from django.core.exceptions import ValidationError
 from django.forms import ModelForm
+from django import forms
 
 
 @admin.register(Role)
@@ -39,22 +40,22 @@ class DepartmentAdmin(admin.ModelAdmin):
     list_filter = ('location',)
 
 
-class UserOrgProfileForm(ModelForm):
+class UserOrgProfileForm(forms.ModelForm):
     class Meta:
         model = UserOrgProfile
-        fields = '__all__'
+        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # If an instance exists and has an organization set
+        # If editing an existing instance with an organization set
         if self.instance and self.instance.organization:
-            self.fields['allowed_locations'].queryset = Location.objects.filter(
+            self.fields["allowed_locations"].queryset = Location.objects.filter(
                 organization=self.instance.organization
             )
         else:
-            # Empty queryset if no organization selected
-            self.fields['allowed_locations'].queryset = Location.objects.none()
+            # New instance without an organization yet → empty queryset
+            self.fields["allowed_locations"].queryset = Location.objects.none()
 
     def clean(self):
         cleaned_data = super().clean()
@@ -62,11 +63,18 @@ class UserOrgProfileForm(ModelForm):
         allowed_locations = cleaned_data.get("allowed_locations")
 
         if organization and allowed_locations:
-            for loc in allowed_locations:
-                if loc.organization_id != organization.id:
-                    raise ValidationError(
-                        f"Location '{loc.name}' does not belong to the selected organization '{organization.name}'."
+            # Find any invalid locations in one query
+            invalid_locations = allowed_locations.exclude(organization=organization)
+
+            if invalid_locations.exists():
+                self.add_error(
+                    "allowed_locations",
+                    ValidationError(
+                        f"Invalid locations: {', '.join(invalid_locations.values_list('name', flat=True))} "
+                        f"do not belong to organization '{organization.name}'."
                     )
+                )
+
         return cleaned_data
 
 

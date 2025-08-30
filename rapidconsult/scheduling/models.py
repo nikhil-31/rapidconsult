@@ -67,6 +67,9 @@ class UserOrgProfile(models.Model):
         return str(self.user)
 
     def clean(self):
+        if not self.pk:
+            return
+
         for location in self.allowed_locations.all():
             if location.organization_id != self.organization_id:
                 raise ValidationError(
