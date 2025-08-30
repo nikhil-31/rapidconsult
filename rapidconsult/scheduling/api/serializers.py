@@ -4,7 +4,7 @@ from rest_framework import serializers
 from config.roles import get_permissions_for_role
 from rapidconsult.scheduling.models import (Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role,
                                OnCallShift)
-from users.api.serializers import ContactSerializer
+from rapidconsult.users.api.serializers import ContactSerializer
 
 User = get_user_model()
 
