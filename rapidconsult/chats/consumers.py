@@ -5,9 +5,9 @@ from django.utils import timezone
 from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 
-from chats.api.serializers import MongoMessageSerializer
-from chats.presence import is_online, mark_online, mark_offline, heartbeat, get_last_seen
-from chats.utils import update_user_conversation
+from rapidconsult.chats.api.serializers import MongoMessageSerializer
+from rapidconsult.chats.presence import is_online, mark_online, mark_offline, heartbeat, get_last_seen
+from rapidconsult.chats.utils import update_user_conversation
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
 from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, \
