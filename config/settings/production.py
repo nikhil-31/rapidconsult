@@ -21,6 +21,12 @@ from .base import env
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1"])
+# https://docs.djangoproject.com/en/5.2/ref/csrf/
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://api.crystalmelting.com",
+#     "https://rapidconsult.netlify.app"
+# ]
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -45,14 +51,11 @@ CACHES = {
 # -------------------------------------------------------------------------------
 # Tools that generate code samples can use SERVERS to point to the correct domain
 SPECTACULAR_SETTINGS["SERVERS"] = [
-    {"url": "https://rapidconsult.com", "description": "Production server"},
+    {"url": "https://api.crystalmelting.com", "description": "Production server"},
 ]
 
 # SECURITY
 # ------------------------------------------------------------------------------
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://api.crystalmelting.com",
-# ]
 # # https://docs.djangoproject.com/en/dev/ref/settings/#secure-proxy-ssl-header
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # # https://docs.djangoproject.com/en/dev/ref/settings/#secure-ssl-redirect
