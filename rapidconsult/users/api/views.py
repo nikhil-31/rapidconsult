@@ -9,7 +9,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.authtoken.models import Token
 
 from rapidconsult.users.models import User, Contact
-from scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
+from rapidconsult.scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
 
 from .serializers import UserSerializer
 from config.roles import get_permissions_for_role
