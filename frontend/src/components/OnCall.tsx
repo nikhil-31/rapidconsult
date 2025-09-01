@@ -62,7 +62,7 @@ const OnCall: React.FC = () => {
 
     return (
         <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
-            <Sider width={400} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
+            <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
                 <div style={{padding: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
                 </div>
