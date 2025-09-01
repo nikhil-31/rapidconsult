@@ -329,12 +329,20 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     // }, [messages]);
 
     useEffect(() => {
+        let timer: NodeJS.Timeout;
+
         if (conversationId && readyState === ReadyState.OPEN) {
-            sendJsonMessage({
-                type: "read_messages",
-                conversationId: conversationId,
-            });
+            timer = setTimeout(() => {
+                sendJsonMessage({
+                    type: "read_messages",
+                    conversationId: conversationId,
+                });
+            }, 10000); // 10 seconds delay
         }
+
+        return () => {
+            if (timer) clearTimeout(timer); // cleanup on unmount or dep change
+        };
     }, [conversationId, readyState]);
 
     const handleSendImage = async () => {
