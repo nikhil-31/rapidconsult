@@ -79,75 +79,85 @@ const OnCall: React.FC = () => {
                                             hoverable
                                             onClick={() => handleUnitClick(unit.id)}
                                             style={{
-                                                borderRadius: 4, // slight rounding for better elevation look
-                                                margin: 5, // ✅ small gap between cards
-                                                boxShadow: "0 2px 8px rgba(0,0,0,0.15)", // ✅ subtle elevation
-                                                width: "calc(100% - 10px)", // account for margin
+                                                borderRadius: 6,
+                                                margin: "6px 5px",
+                                                boxShadow: "0 3px 10px rgba(0,0,0,0.12)", // softer shadow
+                                                width: "calc(100% - 10px)",
                                                 minHeight: 140,
                                                 border: "1px solid #f0f0f0",
                                             }}
-                                            bodyStyle={{padding: 12}}
+                                            bodyStyle={{padding: 14}}
                                         >
-                                            <Title level={5} style={{marginBottom: 6, fontSize: 13}}>
+                                            {/* Unit name */}
+                                            <Title
+                                                level={5}
+                                                style={{
+                                                    marginBottom: 5,
+                                                    fontSize: 14,
+                                                    fontWeight: 600,
+                                                }}
+                                            >
                                                 {unit.name}
                                             </Title>
 
+                                            {/* Shifts */}
                                             {unit.oncall && unit.oncall.length > 0 ? (
-                                                unit.oncall.map((shift) => (
+                                                unit.oncall.map((shift, idx) => (
                                                     <div
                                                         key={shift.id}
                                                         style={{
                                                             padding: "8px 10px",
                                                             marginTop: 6,
-                                                            borderRadius: 6,
-                                                            background: "#fafafa",
-                                                            border: "1px solid #f0f0f0",
+                                                            borderTop: idx > 0 ? "1px solid #f0f0f0" : "none",
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            gap: 2,
+                                                            background: "#fafafa",   // ✅ light grey background
+                                                            borderRadius: 4,         // ✅ soft rounded corners
                                                         }}
                                                     >
-                                                        {/* Name + Job title */}
-                                                        <div style={{marginBottom: 4}}>
-                                                            <Text strong style={{fontSize: 13, display: "block"}}>
-                                                                👤 {shift.name}
-                                                            </Text>
-                                                            <Text type="secondary" style={{fontSize: 11}}>
-                                                                {shift.job_title}
-                                                            </Text>
-                                                        </div>
+                                                        {/* Name + role */}
+                                                        <Text strong style={{fontSize: 13}}>
+                                                            👤 {shift.name}
+                                                        </Text>
+                                                        <Text type="secondary" style={{fontSize: 11}}>
+                                                            {shift.job_title}
+                                                        </Text>
 
                                                         {/* Time */}
-                                                        <div style={{marginBottom: 4}}>
-                                                            <Text style={{fontSize: 11}}>
-                                                                🕒{" "}
-                                                                {new Date(shift.shift_start).toLocaleTimeString([], {
-                                                                    hour: "2-digit",
-                                                                    minute: "2-digit",
-                                                                })}{" "}
-                                                                –{" "}
-                                                                {new Date(shift.shift_end).toLocaleTimeString([], {
-                                                                    hour: "2-digit",
-                                                                    minute: "2-digit",
-                                                                })}
-                                                            </Text>
-                                                        </div>
+                                                        <Text style={{fontSize: 11}}>
+                                                            🕒{" "}
+                                                            {new Date(shift.shift_start).toLocaleTimeString([], {
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                            })}{" "}
+                                                            –{" "}
+                                                            {new Date(shift.shift_end).toLocaleTimeString([], {
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                            })}
+                                                        </Text>
 
                                                         {/* Contact */}
                                                         {shift.primary_contact && (
-                                                            <div>
-                                                                <Text strong
-                                                                      style={{fontSize: 11}}>
+                                                            <a
+                                                                style={{marginTop: 2}}
+                                                            >
+                                                                <Text strong style={{fontSize: 11}}>
                                                                     📞 {shift.primary_contact.number}
                                                                 </Text>
-                                                            </div>
+                                                            </a>
                                                         )}
                                                     </div>
                                                 ))
                                             ) : (
-                                                <Text type="secondary" style={{fontSize: 11, fontStyle: "italic"}}>
+                                                <Text
+                                                    type="secondary"
+                                                    style={{fontSize: 11, fontStyle: "italic"}}
+                                                >
                                                     No one on-call
                                                 </Text>
                                             )}
-
-
                                         </Card>
                                     )) || <Text type="secondary">Loading units...</Text>}
                                 </div>
