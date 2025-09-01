@@ -67,9 +67,20 @@ const OnCall: React.FC = () => {
                 <Menu mode="inline" style={{borderInlineEnd: "none"}}>
                     {selectedLocationId &&
                         departments[selectedLocationId]?.map((department) => (
+
                             <Menu.SubMenu
                                 key={`dep-${department.id}`}
-                                title={<span style={{fontWeight: 600}}>{department.name}</span>}
+                                title={
+                                    <span
+                                        style={{
+                                            fontWeight: 700,
+                                            fontSize: 15,
+                                            color: "#262626",
+                                        }}
+                                    >
+                                        {department.name}
+                                    </span>
+                                }
                                 popupClassName="custom-submenu"
                             >
                                 <div style={{padding: 0, margin: 0}}>
@@ -80,12 +91,12 @@ const OnCall: React.FC = () => {
                                             onClick={() => handleUnitClick(unit.id)}
                                             style={{
                                                 borderRadius: 6,
-                                                margin: "6px 5px",
-                                                boxShadow: "none", // ❌ removed elevation
-                                                width: "calc(100% - 10px)",
+                                                margin: "6px 20px",
+                                                boxShadow: "none",
+                                                width: "auto",
                                                 minHeight: 140,
-                                                border: "1px solid #d9d9d9", // ✅ subtle AntD-like border
-                                                borderLeft: "1px solid #d9d9d9", // ✅ accent border at edge
+                                                border: "1px solid #d9d9d9",
+                                                borderLeft: "3px solid #d9d9d9"
                                             }}
                                             bodyStyle={{padding: 14}}
                                         >
