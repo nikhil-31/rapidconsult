@@ -233,6 +233,9 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                             }
                         }
                         break;
+                    case "read_messages_ack":
+                        setLastReadAt(data.lastReadAt);
+                        break;
                     default:
                         break;
                 }
@@ -312,6 +315,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         }
     };
 
+    // Scroll upto the divider
     // useEffect(() => {
     //     const divider = document.getElementById("divider-unread");
     //     if (divider) {
@@ -323,6 +327,15 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     //         }
     //     }
     // }, [messages]);
+
+    useEffect(() => {
+        if (conversationId && readyState === ReadyState.OPEN) {
+            sendJsonMessage({
+                type: "read_messages",
+                conversationId: conversationId,
+            });
+        }
+    }, [conversationId, readyState]);
 
     const handleSendImage = async () => {
         try {

@@ -311,7 +311,6 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         # Subscribe to presence updates
         async_to_sync(self.channel_layer.group_add)("presence_updates", self.channel_name)
 
-
     def connect(self):
         self.user = self.scope["user"]
         if not self.user.is_authenticated:
@@ -411,6 +410,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             }
         )
 
+        # Updating lastReadAt for the user, user read the messages before he sent the message
+        self.update_last_read_at()
+
     def typing_status(self, content):
         status = content["status"]
         async_to_sync(self.channel_layer.group_send)(
@@ -423,6 +425,32 @@ class VoxChatConsumer(JsonWebsocketConsumer):
                 "status": status,
             },
         )
+
+    def update_last_read_at(self):
+        now = timezone.now()
+
+        # Update UserConversation doc
+        UserConversation.objects(
+            userId=str(self.user.id), conversationId=self.conversation_id
+        ).update_one(set__lastReadAt=now, set__unreadCount=0)
+
+        # Broadcast back to group (so other clients of this user or admins know)
+        async_to_sync(self.channel_layer.group_send)(
+            self.conversation_id,
+            {
+                "type": "last_read_update",
+                "userId": str(self.user.id),
+                "conversationId": self.conversation_id,
+                "lastReadAt": now.isoformat(),
+            },
+        )
+
+        # Ack to the same client (so UI updates divider)
+        self.send_json({
+            "type": "read_messages_ack",
+            "conversationId": self.conversation_id,
+            "lastReadAt": now.isoformat(),
+        })
 
     def receive_json(self, content, **kwargs):
         message_type = content["type"]
@@ -445,31 +473,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
                     },
                 )
 
-        # TODO - Update that messages were read
         elif message_type == "read_messages":
-            # Mark all messages sent *to me* as read
-            # messages_to_me = self.conversation.messages.filter(to_user=self.user, read=False)
-            #
-            # for msg in messages_to_me:
-            #     async_to_sync(self.channel_layer.group_send)(
-            #         self.conversation_name,
-            #         {
-            #             "type": "message_read",
-            #             "message_id": str(msg.id),
-            #         }
-            #     )
-            #
-            # TODO - Update unread count for user
-            # unread_count = Message.objects.filter(to_user=self.user, read=False).count()
-            # async_to_sync(self.channel_layer.group_send)(
-            #     self.user.username + "__notifications",
-            #     {
-            #         "type": "unread_count",
-            #         "unread_count": unread_count,
-            #     },
-            # )
-            # messages_to_me.update(read=True)
-            pass
+            self.update_last_read_at()
+
 
         # TODO - Connection check
         elif message_type == "ping":
@@ -516,6 +522,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         self.send_json(event)
 
     def presence(self, event):
+        self.send_json(event)
+
+    def last_read_update(self, event):
         self.send_json(event)
 
     @classmethod
