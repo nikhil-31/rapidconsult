@@ -12,7 +12,7 @@ from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.api.serializers import MessageSerializer
 from rapidconsult.chats.mongo.models import Conversation as MongoConversation, Message as MongoMessage, \
     User as MongoUser, LastMessageInfo, UserConversation
-
+from mongoengine.queryset.visitor import Q
 
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -433,6 +433,15 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         UserConversation.objects(
             userId=str(self.user.id), conversationId=self.conversation_id
         ).update_one(set__lastReadAt=now, set__unreadCount=0)
+
+        # Update the message readBy till now
+        MongoMessage.objects(
+            Q(conversationId=self.conversation_id) &
+            Q(timestamp__lte=now) &
+            Q(readBy__not__elemMatch={"userId": self.user.id})
+        ).update(
+            add_to_set__readBy={"userId": self.user.id, "readAt": now}
+        )
 
         # Broadcast back to group (so other clients of this user or admins know)
         async_to_sync(self.channel_layer.group_send)(

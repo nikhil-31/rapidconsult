@@ -152,8 +152,7 @@ const Vox: React.FC = () => {
                                                     type: message.type,
                                                 },
                                                 updatedAt: message.timestamp,
-                                            }
-                                            : conv
+                                            } : conv
                                     )
                                 );
                             }}/>
