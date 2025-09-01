@@ -1,5 +1,6 @@
 import {Department} from "./Department";
 import {Member} from "./Member";
+import {OnCall} from "./OnCall";
 
 
 export interface Unit {
@@ -7,5 +8,6 @@ export interface Unit {
     name: string;
     display_picture: string | null;
     members: Member[];
-    department: Department
+    department: Department;
+    oncall?: OnCall[];
 }
