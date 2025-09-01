@@ -81,10 +81,11 @@ const OnCall: React.FC = () => {
                                             style={{
                                                 borderRadius: 6,
                                                 margin: "6px 5px",
-                                                boxShadow: "0 3px 10px rgba(0,0,0,0.12)", // softer shadow
+                                                boxShadow: "none", // ❌ removed elevation
                                                 width: "calc(100% - 10px)",
                                                 minHeight: 140,
-                                                border: "1px solid #f0f0f0",
+                                                border: "1px solid #d9d9d9", // ✅ subtle AntD-like border
+                                                borderLeft: "1px solid #d9d9d9", // ✅ accent border at edge
                                             }}
                                             bodyStyle={{padding: 14}}
                                         >
@@ -112,19 +113,16 @@ const OnCall: React.FC = () => {
                                                             display: "flex",
                                                             flexDirection: "column",
                                                             gap: 2,
-                                                            background: "#fafafa",   // ✅ light grey background
-                                                            borderRadius: 4,         // ✅ soft rounded corners
+                                                            background: "#fafafa",
+                                                            borderRadius: 4,
                                                         }}
                                                     >
-                                                        {/* Name + role */}
                                                         <Text strong style={{fontSize: 13}}>
                                                             👤 {shift.name}
                                                         </Text>
                                                         <Text type="secondary" style={{fontSize: 11}}>
                                                             {shift.job_title}
                                                         </Text>
-
-                                                        {/* Time */}
                                                         <Text style={{fontSize: 11}}>
                                                             🕒{" "}
                                                             {new Date(shift.shift_start).toLocaleTimeString([], {
@@ -137,12 +135,8 @@ const OnCall: React.FC = () => {
                                                                 minute: "2-digit",
                                                             })}
                                                         </Text>
-
-                                                        {/* Contact */}
                                                         {shift.primary_contact && (
-                                                            <a
-                                                                style={{marginTop: 2}}
-                                                            >
+                                                            <a style={{marginTop: 2}}>
                                                                 <Text strong style={{fontSize: 11}}>
                                                                     📞 {shift.primary_contact.number}
                                                                 </Text>
