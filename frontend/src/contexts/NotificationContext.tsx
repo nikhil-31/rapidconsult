@@ -26,6 +26,7 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                                                                                    children,
                                                                                }) => {
     const {user} = useContext(AuthContext);
+    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
     const wsUrl = process.env.REACT_APP_WS_URL;
 
     // 🔹 Memoize socket URL so it doesn’t rebuild unnecessarily
@@ -52,8 +53,10 @@ export const NotificationContextProvider: React.FC<{ children: ReactNode }> = ({
                 const data = JSON.parse(e.data);
                 switch (data.type) {
                     case "unread_count":
+                        setUnreadMessageCount(data.unread_count);
                         break;
                     case "new_message_notification":
+                        setUnreadMessageCount((count) => count + 1);
                         break;
                     case "user_status":
                         console.log(`User Status: ${JSON.stringify(data)}`);
