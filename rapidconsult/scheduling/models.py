@@ -1,6 +1,6 @@
 from django.conf import settings
+from django.utils import timezone
 from django.core.exceptions import ValidationError
-
 # Create your models here.
 from django.db import models
 
@@ -89,6 +89,12 @@ class Unit(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.department.name})"
+
+    def get_current_oncall_shifts(self):
+        now = timezone.now()
+        return (
+            self.shifts.filter(start_time__lte=now, end_time__gte=now).select_related("user", "user__user")
+        )
 
 
 class UnitMembership(models.Model):

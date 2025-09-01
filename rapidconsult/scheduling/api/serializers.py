@@ -2,8 +2,9 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from config.roles import get_permissions_for_role
-from rapidconsult.scheduling.models import (Address, Organization, Location, Department, Unit, UserOrgProfile, UnitMembership, Role,
-                               OnCallShift)
+from rapidconsult.scheduling.models import (Address, Organization, Location, Department, Unit, UserOrgProfile,
+                                            UnitMembership, Role,
+                                            OnCallShift)
 from rapidconsult.users.api.serializers import ContactSerializer
 
 User = get_user_model()
@@ -172,10 +173,11 @@ class UnitWriteSerializer(serializers.ModelSerializer):
 class UnitSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
     members = UnitMembershipSerializer(source='unitmembership_set', many=True, required=False)
+    oncall = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
-        fields = ['id', 'name', 'department', 'display_picture', 'members']
+        fields = ['id', 'name', 'department', 'display_picture', 'members', 'oncall']
 
     def create(self, validated_data):
         members_data = validated_data.pop('unitmembership_set', [])
@@ -196,6 +198,30 @@ class UnitSerializer(serializers.ModelSerializer):
             for member in members_data:
                 UnitMembership.objects.create(unit=instance, **member)
         return instance
+
+    def get_oncall(self, obj):
+        shifts = obj.get_current_oncall_shifts()
+        results = []
+        for shift in shifts:
+            user_profile = shift.user  # UserOrgProfile
+            user = user_profile.user  # AUTH_USER_MODEL instance
+
+            # Find primary contact
+            primary_contact = None
+            if hasattr(user, "phone_numbers"):
+                contact_qs = user.phone_numbers.all()
+                primary_contact = contact_qs.filter(primary=True).first() or contact_qs.first()
+
+            results.append({
+                "id": shift.id,
+                "user_id": user_profile.id,
+                "name": user.name,
+                "job_title": user_profile.job_title,
+                "shift_start": shift.start_time,
+                "shift_end": shift.end_time,
+                "primary_contact": ContactSerializer(primary_contact).data if primary_contact else None,
+            })
+        return results
 
 
 class OnCallShiftSerializer(serializers.ModelSerializer):
