@@ -9,6 +9,8 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+
+from chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
 from rapidconsult.scheduling.api.permissions import check_org_admin_or_raise
 from rapidconsult.scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
     UserOrgProfile
@@ -145,7 +147,28 @@ class UnitViewSet(viewsets.ModelViewSet):
         department = serializer.validated_data['department']
         org = department.location.organization
         check_org_admin_or_raise(self.request.user, org)
-        serializer.save()
+
+        # Save the Unit first
+        unit = serializer.save()
+
+        # The Current logged-in user is the creator
+        created_by_id = str(self.request.user.id)
+
+        # Collect unit members
+        member_ids = list(unit.members.values_list("id", flat=True))
+        if created_by_id not in member_ids:
+            member_ids.append(created_by_id)
+
+        # Create the Mongo group chat
+        create_group_chat(
+            created_by_id=created_by_id,
+            name=unit.name,
+            description=f"Group chat for unit {unit.name}",
+            member_ids=[str(mid) for mid in member_ids],
+            location_id=str(department.location_id),
+            organization_id=str(department.location_id.organization_id),
+            unit_id=str(unit.id),
+        )
 
     def perform_update(self, serializer):
         department = serializer.instance.department
@@ -212,7 +235,10 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
         # Check if the user being assigned belongs to the same org
         self.validate_org_membership(unit, user_profile)
 
-        serializer.save()
+        membership = serializer.save()
+
+        sql_user_id = str(user_profile.user.id)  # Django User.id
+        add_user_to_group_chat(unit_id=unit.id, user_id=sql_user_id, is_admin=membership.is_admin)
 
     def perform_update(self, serializer):
         """
@@ -222,15 +248,16 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
         org = unit.department.location.organization
         check_org_admin_or_raise(self.request.user, org)
 
-        # user_profile = serializer.validated_data.get('user')
-        # self.validate_org_membership(unit, user_profile)
-
-        # Optional: prevent changing unit across orgs
+        # Optional: prevent changing unit across orgs - this will not happen
         new_unit = serializer.validated_data.get('unit')
         if new_unit and new_unit.department.location.organization != org:
             raise PermissionDenied("Cannot change to a unit from another organization.")
 
-        serializer.save()
+        membership = serializer.save()
+
+        sql_user_id = str(membership.user.user.id)
+        remove_user_from_group_chat(unit_id=membership.unit.id, user_id=sql_user_id)
+        add_user_to_group_chat(unit_id=membership.unit.id, user_id=sql_user_id, is_admin=membership.is_admin)
 
     def perform_destroy(self, instance):
         """
@@ -238,6 +265,10 @@ class UnitMembershipViewSet(viewsets.ModelViewSet):
         """
         org = instance.unit.department.location.organization
         check_org_admin_or_raise(self.request.user, org)
+
+        sql_user_id = str(instance.user.user.id)
+        remove_user_from_group_chat(unit_id=instance.unit.id, user_id=sql_user_id)
+
         instance.delete()
 
 

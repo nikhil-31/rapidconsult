@@ -114,57 +114,76 @@ def create_group_chat(created_by_id, name, description, member_ids, location_id,
     return conv
 
 
-# def add_member_to_group(conversation_id, new_member_id):
-#     """
-#     Adds a new member to an existing group chat.
-#     """
-#     # Verify user exists in Mongo
-#     user = User.objects(sql_user_id=new_member_id).first()
-#     if not user:
-#         raise ValidationError({"detail": "User does not exist."})
-#
-#     # Fetch the conversation
-#     conv = Conversation.objects(id=conversation_id, type="group").first()
-#     if not conv:
-#         raise ValidationError({"detail": "Conversation not found."})
-#
-#     # Check if member already exists
-#     if any(p.userId == new_member_id for p in conv.participants):
-#         return conv  # Already a member
-#
-#     # Add new participant
-#     conv.participants.append(
-#         Participant(
-#             userId=new_member_id,
-#             role="member",
-#             joinedAt=datetime.datetime.utcnow()
-#         )
-#     )
-#     conv.updatedAt = datetime.datetime.utcnow()
-#     conv.save()
-#
-#     # Create UserConversation for the new member
-#     UserConversation(
-#         _id=str(ObjectId()),
-#         userId=new_member_id,
-#         conversationId=str(conv.id),
-#         conversationType="group",
-#         groupChat=GroupChatInfo(
-#             name=conv.name,
-#             description=conv.description,
-#             memberCount=len(conv.participants),
-#             adminIds=[conv.createdBy],
-#             myRole="member"
-#         ),
-#         updatedAt=datetime.datetime.utcnow(),
-#         locationId=conv.locationId,
-#         organizationId=conv.organizationId,
-#     ).save()
-#
-#     # Update memberCount in all existing UserConversation docs
-#     UserConversation.objects(conversationId=str(conv.id)).update(
-#         set__groupChat__memberCount=len(conv.participants),
-#         set__updatedAt=datetime.datetime.utcnow()
-#     )
-#
-#     return conv
+def add_user_to_group_chat(unit_id: str, user_id: str, is_admin: bool=False):
+    """Add a participant to the unit's group chat conversation."""
+    conversation = Conversation.objects(unitId=str(unit_id), type="group").first()
+    if not conversation:
+        return None
+
+    # Check if already a participant
+    if any(p.userId == user_id for p in conversation.participants):
+        return conversation
+
+    # Check if the user is a legitimate user
+    user = User.objects(sql_user_id=user_id).first()
+    if not user:
+        raise ValidationError({"detail": "User does not exist."})
+
+    name = user.displayName
+    role = "admin" if is_admin else "member"
+
+    participant = Participant(
+        userId=user_id,
+        name=name,
+        role=role,
+        joinedAt=datetime.datetime.utcnow()
+    )
+    conversation.participants.append(participant)
+    conversation.updatedAt = datetime.datetime.utcnow()
+    conversation.save()
+
+    # Also add UserConversation record
+    UserConversation(
+        _id=str(ObjectId()),
+        userId=user_id,
+        conversationId=str(conversation.id),
+        conversationType="group",
+        groupChat=dict(
+            name=conversation.name,
+            description=conversation.description,
+            memberCount=len(conversation.participants),
+            adminIds=[conversation.createdBy],
+            myRole="member",
+        ),
+        updatedAt=datetime.datetime.utcnow(),
+        locationId=conversation.locationId,
+        organizationId=conversation.organizationId,
+        unitId=conversation.unitId,
+    ).save()
+
+    return conversation
+
+
+def remove_user_from_group_chat(unit_id: str, user_id: str):
+    """Remove a participant from the unit's group chat conversation."""
+    conversation = Conversation.objects(unitId=str(unit_id), type="group").first()
+    if not conversation:
+        return None
+
+    print(user_id)
+
+    if not User.objects(sql_user_id=user_id).only("sql_user_id").first():
+        raise ValidationError({"detail": "User does not exist."})
+
+    before_count = len(conversation.participants)
+    conversation.participants = [p for p in conversation.participants if p.userId != user_id]
+    after_count = len(conversation.participants)
+
+    if before_count != after_count:
+        conversation.updatedAt = datetime.datetime.utcnow()
+        conversation.save()
+
+    # Remove their UserConversation record
+    UserConversation.objects(userId=user_id, conversationId=str(conversation.id)).delete()
+
+    return conversation
