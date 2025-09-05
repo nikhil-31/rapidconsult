@@ -14,6 +14,7 @@ from rapidconsult.chats.mongo.models import Conversation as MongoConversation, M
     User as MongoUser, LastMessageInfo, UserConversation
 from mongoengine.queryset.visitor import Q
 
+
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
@@ -333,41 +334,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         # Handle online/offline and last_seen
         self.handle_presence()
 
-        # TODO - Send a list of all online users
-        # self.send_json({
-        #     "type": "online_user_list",
-        #     "users": [user.username for user in self.conversation.online.all()],
-        # })
-
-        # TODO - Current User joined the group
-        # async_to_sync(self.channel_layer.group_send)(
-        #     self.conversation_name,
-        #     {
-        #         "type": "user_join",
-        #         "user": self.user.username,
-        #     },
-        # )
-        # self.conversation.online.add(self.user)
-
-        # TODO - Initial unread count of messages that were not read
-        # unread_count = Message.objects.filter(to_user=self.user, read=False).count()
-        # self.send_json({
-        #     "type": "unread_count",
-        #     "unread_count": unread_count,
-        # })
-
     def disconnect(self, code):
         print("Disconnected!")
         if self.user.is_authenticated:
-            # TODO - User is marked as offline and leaves the group/direct message
-            # async_to_sync(self.channel_layer.group_send)(
-            #     self.conversation_name,
-            #     {
-            #         "type": "user_leave",
-            #         "user": self.user.username,
-            #     },
-            # )
-            # self.conversation.online.remove(self.user)
             async_to_sync(self.channel_layer.group_discard)(
                 self.conversation_id,
                 self.channel_name,
