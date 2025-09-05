@@ -55,9 +55,13 @@ class Command(BaseCommand):
                 continue
 
             # Collect unit members
-            member_ids = list(unit.members.values_list("id", flat=True))
+            member_ids = [m.user.id or m.user.username for m in unit.members.select_related("user")]
             if not member_ids:
                 continue
+
+            member_names = [f"{m.user.name} - {m.user.id}" or m.user.username for m in
+                            unit.members.select_related("user")]
+            print(f"{unit.name} - Member names: {member_names}")
 
             try:
                 create_group_chat(
