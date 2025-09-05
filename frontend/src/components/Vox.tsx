@@ -18,7 +18,8 @@ const Vox: React.FC = () => {
     const {selectedLocation} = useOrgLocation();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [activeConversation, setActiveConversation] = useState<Conversation | null>(null); // NEW
+    const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+    const [totalConversations, setTotalConversations] = useState<number | null>(0);
 
     useEffect(() => {
         if (!user) return;
@@ -35,6 +36,7 @@ const Vox: React.FC = () => {
                         headers: {Authorization: `Token ${user.token}`},
                     });
                     setConversations(response.data.results);
+                    setTotalConversations(response.data.count);
                 } catch (err) {
                     console.error('Error fetching conversations:', err);
                 }
@@ -48,86 +50,90 @@ const Vox: React.FC = () => {
 
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
                 <div style={{padding: 16}}>
-                    <Title level={5} style={{marginBottom: 10}}>Conversations</Title>
-                    <List
-                        itemLayout="horizontal"
-                        dataSource={conversations}
-                        renderItem={conv => {
-                            const isDirect = conv.conversationType === 'direct';
-                            const name = isDirect
-                                ? conv.directMessage?.otherParticipantName
-                                : conv.groupChat?.name;
-                            const avatarUrl = isDirect
-                                ? conv.directMessage?.otherParticipantAvatar
-                                : conv.groupChat?.avatar;
-                            let lastMessage = 'No messages yet';
-                            if (conv.lastMessage) {
-                                // Default to content
-                                let displayContent = conv.lastMessage.content;
+                    <div>
+                        <Title level={5} style={{marginBottom: 10}}>Conversations - {totalConversations}</Title>
+                    </div>
 
-                                // ✅ If it's a file-type message and has no content, show "Media"
-                                if (
-                                    (!displayContent || displayContent.trim() === "") &&
-                                    (conv.lastMessage.type === "file")
-                                ) {
-                                    displayContent = "Media";
-                                }
+                    <div style={{flex: 1, overflowY: 'auto'}}>
+                        <List
+                            itemLayout="horizontal"
+                            dataSource={conversations}
+                            renderItem={conv => {
+                                const isDirect = conv.conversationType === 'direct';
+                                const name = isDirect
+                                    ? conv.directMessage?.otherParticipantName
+                                    : conv.groupChat?.name;
+                                const avatarUrl = isDirect
+                                    ? conv.directMessage?.otherParticipantAvatar
+                                    : conv.groupChat?.avatar;
+                                let lastMessage = 'No messages yet';
+                                if (conv.lastMessage) {
+                                    // Default to content
+                                    let displayContent = conv.lastMessage.content;
 
-                                if (conv.lastMessage.senderId === user?.id) {
-                                    lastMessage = displayContent;
-                                } else if (!isDirect) {
-                                    lastMessage = `${conv.lastMessage.senderName}: ${displayContent}`;
-                                } else {
-                                    lastMessage = displayContent;
-                                }
-                            }
-                            const unreadCount = conv.unreadCount
-                            return (
-                                <List.Item
-                                    style={{
-                                        padding: '8px 16px',
-                                        cursor: 'pointer',
-                                        background: activeConversation?.conversationId === conv.conversationId ? '#f0f5ff' : 'transparent'
-                                    }}
-                                    onClick={() => setActiveConversation(conv)}
-                                    extra={
-                                        conv.unreadCount > 0 ? (
-                                            <Badge
-                                                count={conv.unreadCount}
-                                                style={{
-                                                    backgroundColor: '#f5222d',
-                                                    boxShadow: '0 0 0 1px #fff',
-                                                }}
-                                            />
-                                        ) : null
+                                    if (
+                                        (!displayContent || displayContent.trim() === "") &&
+                                        (conv.lastMessage.type === "file")
+                                    ) {
+                                        displayContent = "Media";
                                     }
-                                >
-                                    <List.Item.Meta
-                                        avatar={
-                                            <Avatar src={avatarUrl || undefined}>
-                                                {!avatarUrl && name?.[0]}
-                                            </Avatar>
+
+                                    if (conv.lastMessage.senderId === user?.id) {
+                                        lastMessage = displayContent;
+                                    } else if (!isDirect) {
+                                        lastMessage = `${conv.lastMessage.senderName}: ${displayContent}`;
+                                    } else {
+                                        lastMessage = displayContent;
+                                    }
+                                }
+                                const unreadCount = conv.unreadCount
+                                return (
+                                    <List.Item
+                                        style={{
+                                            padding: '8px 16px',
+                                            cursor: 'pointer',
+                                            background: activeConversation?.conversationId === conv.conversationId ? '#f0f5ff' : 'transparent'
+                                        }}
+                                        onClick={() => setActiveConversation(conv)}
+                                        extra={
+                                            conv.unreadCount > 0 ? (
+                                                <Badge
+                                                    count={conv.unreadCount}
+                                                    style={{
+                                                        backgroundColor: '#f5222d',
+                                                        boxShadow: '0 0 0 1px #fff',
+                                                    }}
+                                                />
+                                            ) : null
                                         }
-                                        title={<Text strong>{name}</Text>}
-                                        description={
-                                            <Text
-                                                type="secondary"
-                                                style={{
-                                                    whiteSpace: "nowrap",
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    display: "block",
-                                                    maxWidth: "250px",
-                                                }}
-                                            >
-                                                {lastMessage}
-                                            </Text>
-                                        }
-                                    />
-                                </List.Item>
-                            );
-                        }}
-                    />
+                                    >
+                                        <List.Item.Meta
+                                            avatar={
+                                                <Avatar src={avatarUrl || undefined}>
+                                                    {!avatarUrl && name?.[0]}
+                                                </Avatar>
+                                            }
+                                            title={<Text strong>{name}</Text>}
+                                            description={
+                                                <Text
+                                                    type="secondary"
+                                                    style={{
+                                                        whiteSpace: "nowrap",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        display: "block",
+                                                        maxWidth: "250px",
+                                                    }}
+                                                >
+                                                    {lastMessage}
+                                                </Text>
+                                            }
+                                        />
+                                    </List.Item>
+                                );
+                            }}
+                        />
+                    </div>
                 </div>
             </Sider>
 

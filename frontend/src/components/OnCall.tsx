@@ -68,124 +68,132 @@ const OnCall: React.FC = () => {
     }, [selectedLocationId]);
 
     return (
-        <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
-            <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
+        <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
+            <Sider
+                width={350}
+                style={{
+                    backgroundColor: '#ffffff',
+                    borderRight: '1px solid #f0f0f0',
+                    overflow: 'hidden',
+                }}
+            >
                 <div style={{padding: 16}}>
                     <Title level={5} style={{marginBottom: 10}}>Departments</Title>
                 </div>
 
-                <Menu mode="inline" style={{borderInlineEnd: "none"}}>
-                    {selectedLocationId &&
-                        departments[selectedLocationId]?.map((department) => (
-
-                            <Menu.SubMenu
-                                key={`dep-${department.id}`}
-                                title={
-                                    <span
-                                        style={{
-                                            fontWeight: 700,
-                                            fontSize: 15,
-                                            color: "#262626",
-                                        }}
-                                    >
-                                        {department.name}
-                                    </span>
-                                }
-                                popupClassName="custom-submenu"
-                            >
-                                <div style={{padding: 0, margin: 0}}>
-                                    {units[department.id]?.map((unit) => {
-                                        const isSelected = selectedUnitId === unit.id;
-                                        return (
-                                            <Card
-                                                key={`unit-${unit.id}`}
-                                                hoverable
-                                                onClick={() => handleUnitClick(unit)}
-                                                style={{
-                                                    borderRadius: 6,
-                                                    margin: "6px 15px",
-                                                    boxShadow: isSelected ? "0 0 2px rgba(255, 77, 79, 0.5)" : "none", // 🔴 red glow
-                                                    width: "auto",
-                                                    minHeight: 140,
-                                                    border: isSelected ? "1px solid #ff4d4f" : "1px solid #d9d9d9", // 🔴 red outline
-                                                    borderLeft: isSelected ? "2px solid #ff4d4f" : "2px solid #d9d9d9",
-                                                    background: isSelected ? "#fff1f0" : "#fff", // 🔴 pale red background
-                                                    transition: "all 0.2s ease-in-out",
-                                                    cursor: "pointer",
-                                                }}
-                                                bodyStyle={{padding: 14}}
-                                            >
-                                                {/* Unit name */}
-                                                <Title
-                                                    level={5}
+                {/* Scrollable container */}
+                <div style={{height: 'calc(100vh - 64px - 48px)', overflowY: 'auto'}}>
+                    <Menu mode="inline" style={{borderInlineEnd: "none"}}>
+                        {selectedLocationId &&
+                            departments[selectedLocationId]?.map((department) => (
+                                <Menu.SubMenu
+                                    key={`dep-${department.id}`}
+                                    title={
+                                        <span
+                                            style={{
+                                                fontWeight: 700,
+                                                fontSize: 15,
+                                                color: "#262626",
+                                            }}
+                                        >
+                                {department.name}
+                            </span>
+                                    }
+                                    popupClassName="custom-submenu"
+                                >
+                                    <div style={{padding: 0, margin: 0}}>
+                                        {units[department.id]?.map((unit) => {
+                                            const isSelected = selectedUnitId === unit.id;
+                                            return (
+                                                <Card
+                                                    key={`unit-${unit.id}`}
+                                                    hoverable
+                                                    onClick={() => handleUnitClick(unit)}
                                                     style={{
-                                                        marginBottom: 5,
-                                                        fontSize: 14,
-                                                        fontWeight: 600,
+                                                        borderRadius: 6,
+                                                        margin: "6px 15px",
+                                                        boxShadow: isSelected ? "0 0 2px rgba(255, 77, 79, 0.5)" : "none",
+                                                        width: "auto",
+                                                        minHeight: 140,
+                                                        border: isSelected ? "1px solid #ff4d4f" : "1px solid #d9d9d9",
+                                                        borderLeft: isSelected ? "2px solid #ff4d4f" : "2px solid #d9d9d9",
+                                                        background: isSelected ? "#fff1f0" : "#fff",
+                                                        transition: "all 0.2s ease-in-out",
+                                                        cursor: "pointer",
                                                     }}
+                                                    bodyStyle={{padding: 14}}
                                                 >
-                                                    {unit.name}
-                                                </Title>
-
-                                                {/* Shifts */}
-                                                {unit.oncall && unit.oncall.length > 0 ? (
-                                                    unit.oncall.map((shift, idx) => (
-                                                        <div
-                                                            key={shift.id}
-                                                            style={{
-                                                                padding: "8px 10px",
-                                                                marginTop: 6,
-                                                                borderTop: idx > 0 ? "1px solid #f0f0f0" : "none",
-                                                                display: "flex",
-                                                                flexDirection: "column",
-                                                                gap: 2,
-                                                                background: "#fafafa",
-                                                                borderRadius: 4,
-                                                            }}
-                                                        >
-                                                            <Text strong style={{fontSize: 13}}>
-                                                                👤 {shift.name}
-                                                            </Text>
-                                                            <Text type="secondary" style={{fontSize: 11}}>
-                                                                {shift.job_title}
-                                                            </Text>
-                                                            <Text style={{fontSize: 11}}>
-                                                                🕒{" "}
-                                                                {new Date(shift.shift_start).toLocaleTimeString([], {
-                                                                    hour: "2-digit",
-                                                                    minute: "2-digit",
-                                                                })}{" "}
-                                                                –{" "}
-                                                                {new Date(shift.shift_end).toLocaleTimeString([], {
-                                                                    hour: "2-digit",
-                                                                    minute: "2-digit",
-                                                                })}
-                                                            </Text>
-                                                            {shift.primary_contact && (
-                                                                <a style={{marginTop: 2}}>
-                                                                    <Text strong style={{fontSize: 11}}>
-                                                                        📞 {shift.primary_contact.number}
-                                                                    </Text>
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <Text
-                                                        type="secondary"
-                                                        style={{fontSize: 11, fontStyle: "italic"}}
+                                                    <Title
+                                                        level={5}
+                                                        style={{
+                                                            marginBottom: 5,
+                                                            fontSize: 14,
+                                                            fontWeight: 600,
+                                                        }}
                                                     >
-                                                        No one on-call
-                                                    </Text>
-                                                )}
-                                            </Card>
-                                        );
-                                    }) || <Text type="secondary">Loading units...</Text>}
-                                </div>
-                            </Menu.SubMenu>
-                        ))}
-                </Menu>
+                                                        {unit.name}
+                                                    </Title>
+
+                                                    {unit.oncall && unit.oncall.length > 0 ? (
+                                                        unit.oncall.map((shift, idx) => (
+                                                            <div
+                                                                key={shift.id}
+                                                                style={{
+                                                                    padding: "8px 10px",
+                                                                    marginTop: 6,
+                                                                    borderTop: idx > 0 ? "1px solid #f0f0f0" : "none",
+                                                                    display: "flex",
+                                                                    flexDirection: "column",
+                                                                    gap: 2,
+                                                                    background: "#fafafa",
+                                                                    borderRadius: 4,
+                                                                }}
+                                                            >
+                                                                <Text strong style={{fontSize: 13}}>
+                                                                    👤 {shift.name}
+                                                                </Text>
+                                                                <Text type="secondary" style={{fontSize: 11}}>
+                                                                    {shift.job_title}
+                                                                </Text>
+                                                                <Text style={{fontSize: 11}}>
+                                                                    🕒{" "}
+                                                                    {new Date(shift.shift_start).toLocaleTimeString([], {
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                    })}{" "}
+                                                                    –{" "}
+                                                                    {new Date(shift.shift_end).toLocaleTimeString([], {
+                                                                        hour: "2-digit",
+                                                                        minute: "2-digit",
+                                                                    })}
+                                                                </Text>
+                                                                {shift.primary_contact && (
+                                                                    <a style={{marginTop: 2}}>
+                                                                        <Text strong style={{fontSize: 11}}>
+                                                                            📞 {shift.primary_contact.number}
+                                                                        </Text>
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <Text
+                                                            type="secondary"
+                                                            style={{fontSize: 11, fontStyle: "italic"}}
+                                                        >
+                                                            No one on-call
+                                                        </Text>
+                                                    )}
+                                                </Card>
+                                            );
+                                        }) || <Text type="secondary">Loading units...</Text>}
+                                    </div>
+                                </Menu.SubMenu>
+                            ))}
+                    </Menu>
+                </div>
             </Sider>
+
 
             <Layout>
                 <Content style={{background: '#fff'}}>
@@ -194,24 +202,7 @@ const OnCall: React.FC = () => {
                             key={activeConversation.conversationId}
                             conversation={activeConversation}
                             onNewMessage={(convId, message) => {
-                                // setConversations((prev) =>
-                                //     prev.map((conv) =>
-                                //         conv.conversationId === convId
-                                //             ? {
-                                //                 ...conv,
-                                //                 lastMessage: {
-                                //                     messageId: message.id,
-                                //                     content: message.content,
-                                //                     senderId: message.senderId,
-                                //                     senderName: message.senderName,
-                                //                     timestamp: message.timestamp,
-                                //                     type: message.type,
-                                //                 },
-                                //                 updatedAt: message.timestamp,
-                                //             }
-                                //             : conv
-                                //     )
-                                // );
+
                             }}
                         />
                     ) : (
