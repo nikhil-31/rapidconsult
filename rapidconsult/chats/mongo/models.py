@@ -37,6 +37,7 @@ class User(Document):
 # ---------------------------
 class Participant(EmbeddedDocument):
     userId = StringField(required=True)
+    name = StringField()
     role = StringField(choices=["member", "admin", "owner"])
     joinedAt = DateTimeField()
     lastReadAt = DateTimeField()
@@ -70,6 +71,7 @@ class Conversation(Document):
     groupSettings = EmbeddedDocumentField(GroupSettings)
     locationId = StringField()
     organizationId = StringField()
+    unitId = StringField()
 
     meta = {
         "collection": "conversations",
@@ -186,6 +188,7 @@ class UserConversation(Document):
     updatedAt = DateTimeField(default=datetime.datetime.utcnow)
     locationId = StringField()
     organizationId = StringField()
+    unitId = StringField()
 
     meta = {
         "collection": "user_conversations",

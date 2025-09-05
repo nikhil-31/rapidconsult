@@ -21,7 +21,7 @@ const OnCall: React.FC = () => {
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments`, {
+            const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments/`, {
                 params: {location_id: locationId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
@@ -34,7 +34,7 @@ const OnCall: React.FC = () => {
 
     const fetchUnits = async (departmentId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Unit[]> = await axios.get(`${apiUrl}/api/units`, {
+            const res: AxiosResponse<Unit[]> = await axios.get(`${apiUrl}/api/units/`, {
                 params: {department_id: departmentId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
@@ -46,6 +46,7 @@ const OnCall: React.FC = () => {
 
     const handleUnitClick = (unitId: number): void => {
         setSelectedUnitId(unitId); // ✅ update selected
+
         // could load more details or open chat
         console.log(`unit id ${unitId}`)
     };

@@ -135,6 +135,7 @@ class GroupChatSerializer(serializers.Serializer):
     name = serializers.CharField()
     description = serializers.CharField(required=False, allow_blank=True)
     member_ids = serializers.ListField(child=serializers.CharField(), min_length=2)
+    unit_id = serializers.CharField()
 
 
 # Message serialization

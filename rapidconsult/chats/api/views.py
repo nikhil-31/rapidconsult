@@ -133,8 +133,9 @@ class UserConversationViewSet(viewsets.ViewSet):
                 data["name"],
                 data.get("description", ""),
                 data["member_ids"],
-                organization_id=organization_id,
-                location_id=location_id,
+                organization_id,
+                location_id,
+                data["unit_id"],
             )
             return Response({"conversation_id": str(conv.id)}, status=status.HTTP_201_CREATED)
 
