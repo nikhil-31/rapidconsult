@@ -129,13 +129,13 @@ class UserConversationViewSet(viewsets.ViewSet):
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
             conv = create_group_chat(
-                user_id,
-                data["name"],
-                data.get("description", ""),
-                data["member_ids"],
-                organization_id,
-                location_id,
-                data["unit_id"],
+                created_by_id=user_id,
+                name=data["name"],
+                description=data.get("description", ""),
+                member_ids=data["member_ids"],
+                location_id=location_id,
+                organization_id=organization_id,
+                unit_id=data["unit_id"],
             )
             return Response({"conversation_id": str(conv.id)}, status=status.HTTP_201_CREATED)
 

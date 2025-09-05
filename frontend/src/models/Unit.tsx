@@ -1,6 +1,7 @@
 import {Department} from "./Department";
 import {Member} from "./Member";
 import {OnCall} from "./OnCall";
+import {Conversation} from "./ActiveConversation";
 
 
 export interface Unit {
@@ -10,4 +11,5 @@ export interface Unit {
     members: Member[];
     department: Department;
     oncall?: OnCall[];
+    conversation?: Conversation
 }

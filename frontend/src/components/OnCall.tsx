@@ -5,6 +5,8 @@ import {Layout, Menu, Typography, Card} from 'antd';
 import {Department} from "../models/Department";
 import {Unit} from "../models/Unit";
 import {useOrgLocation} from "../contexts/LocationContext";
+import ChatView from "./ChatView";
+import {Conversation} from "../models/ActiveConversation";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -18,6 +20,7 @@ const OnCall: React.FC = () => {
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null); // ✅ track selected unit
     const {selectedLocation} = useOrgLocation();
+    const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
@@ -44,11 +47,14 @@ const OnCall: React.FC = () => {
         }
     };
 
-    const handleUnitClick = (unitId: number): void => {
-        setSelectedUnitId(unitId); // ✅ update selected
+    const handleUnitClick = (unit: Unit): void => {
+        setSelectedUnitId(unit.id);
 
-        // could load more details or open chat
-        console.log(`unit id ${unitId}`)
+        if (unit.conversation) {
+            setActiveConversation(unit.conversation);
+        } else {
+            setActiveConversation(null)
+        }
     };
 
     useEffect(() => {
@@ -94,7 +100,7 @@ const OnCall: React.FC = () => {
                                             <Card
                                                 key={`unit-${unit.id}`}
                                                 hoverable
-                                                onClick={() => handleUnitClick(unit.id)}
+                                                onClick={() => handleUnitClick(unit)}
                                                 style={{
                                                     borderRadius: 6,
                                                     margin: "6px 15px",
@@ -179,15 +185,38 @@ const OnCall: React.FC = () => {
                             </Menu.SubMenu>
                         ))}
                 </Menu>
-
-
             </Sider>
 
             <Layout>
-                <Content style={{padding: '32px 48px', background: '#fff'}}>
-                    <div>
-                        <h1>Group chat</h1>
-                    </div>
+                <Content style={{background: '#fff'}}>
+                    {activeConversation ? (
+                        <ChatView
+                            key={activeConversation.conversationId}
+                            conversation={activeConversation}
+                            onNewMessage={(convId, message) => {
+                                // setConversations((prev) =>
+                                //     prev.map((conv) =>
+                                //         conv.conversationId === convId
+                                //             ? {
+                                //                 ...conv,
+                                //                 lastMessage: {
+                                //                     messageId: message.id,
+                                //                     content: message.content,
+                                //                     senderId: message.senderId,
+                                //                     senderName: message.senderName,
+                                //                     timestamp: message.timestamp,
+                                //                     type: message.type,
+                                //                 },
+                                //                 updatedAt: message.timestamp,
+                                //             }
+                                //             : conv
+                                //     )
+                                // );
+                            }}
+                        />
+                    ) : (
+                        <div style={{padding: 20}}>Select a unit to see its chat</div>
+                    )}
                 </Content>
             </Layout>
         </Layout>
