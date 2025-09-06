@@ -3,6 +3,8 @@ import {Modal, Form, Select, DatePicker, Button, message} from 'antd';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {useOrgLocation} from "../contexts/LocationContext";
+import {PaginatedResponse} from "../models/PaginatedResponse";
+import {Department} from "../models/Department";
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
@@ -36,9 +38,12 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         if (!selectedLocationId) return;
 
         axios.get(`${apiUrl}/api/departments/?location_id=${selectedLocationId}`, {
-            headers: {Authorization: `Token ${user?.token}`},
+            headers: {
+                Authorization: `Token ${user?.token}`
+            },
         }).then(res => {
-            setDepartments(res.data);
+            const data = res.data.results;
+            setDepartments(data);
         });
     }, [selectedLocationId]);
 
@@ -46,8 +51,13 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         if (!selectedDepartment) return;
 
         axios.get(`${apiUrl}/api/units?department_id=${selectedDepartment}`, {
-            headers: {Authorization: `Token ${user?.token}`},
-        }).then(res => setUnits(res.data));
+            headers: {
+                Authorization: `Token ${user?.token}`
+            },
+        }).then(res => {
+            const data = res.data.results
+            setUnits(data)
+        });
     }, [selectedDepartment]);
 
     useEffect(() => {

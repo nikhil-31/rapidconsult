@@ -19,6 +19,7 @@ import {EventData} from "../models/EventData";
 import {ProfileData} from "../models/ProfileData";
 import {UserModel} from "../models/UserModel";
 import {CalendarOutlined} from '@ant-design/icons';
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const locales: Record<string, Locale> = {
     'en-US': require('date-fns/locale/en-US'),
@@ -70,11 +71,11 @@ const CalendarView: React.FC = () => {
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments`, {
+            const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(`${apiUrl}/api/departments`, {
                 params: {location_id: locationId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
-            const deps = res.data;
+            const deps = res.data.results;
             setDepartments(prev => ({...prev, [locationId]: deps}));
             deps.forEach((dep: Department) => {
                 fetchUnits(dep.id);
@@ -86,11 +87,12 @@ const CalendarView: React.FC = () => {
 
     const fetchUnits = async (departmentId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Unit[]> = await axios.get(`${apiUrl}/api/units`, {
+            const res: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(`${apiUrl}/api/units`, {
                 params: {department_id: departmentId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
-            setUnits(prev => ({...prev, [departmentId]: res.data}));
+            const units = res.data.results
+            setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
             console.error('Failed to fetch units:', err);
         }
@@ -98,12 +100,12 @@ const CalendarView: React.FC = () => {
 
     const handleUnitClick = async (unitId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Shift[]> = await axios.get(`${apiUrl}/api/shifts`, {
+            const res: AxiosResponse<PaginatedResponse<Shift>> = await axios.get(`${apiUrl}/api/shifts`, {
                 params: {unit: unitId},
                 headers: {Authorization: `Token ${user?.token}`},
             });
-
-            const formatted: EventData[] = res.data.map((shift: Shift) => ({
+            const data = res.data.results
+            const formatted: EventData[] = data.map((shift: Shift) => ({
                 id: shift.id,
                 title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
                 start: new Date(shift.start_time),
@@ -194,15 +196,15 @@ const CalendarView: React.FC = () => {
 
     const handleMyShiftsClick = async () => {
         try {
-            const res: AxiosResponse<Shift[]> = await axios.get(`${apiUrl}/api/shifts`, {
+            const res: AxiosResponse<PaginatedResponse<Shift>> = await axios.get(`${apiUrl}/api/shifts`, {
                 params: {
                     user: getOrgProfileId(user),
                     location: selectedLocationId
                 },
                 headers: {Authorization: `Token ${user?.token}`},
             });
-
-            const formatted: EventData[] = res.data.map((shift: Shift) => ({
+            const data = res.data.results
+            const formatted: EventData[] = data.map((shift: Shift) => ({
                 id: shift.id,
                 title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
                 start: new Date(shift.start_time),

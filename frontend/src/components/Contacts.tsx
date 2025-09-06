@@ -7,12 +7,13 @@ import {
     List
 } from 'antd';
 import {UserOutlined} from '@ant-design/icons';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
 import {UserModel} from "../models/UserModel";
 import {ProfileData} from "../models/ProfileData";
 import ProfileDetails from "./ProfileDetails";
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Header, Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -43,11 +44,12 @@ const Dashboard: React.FC = () => {
 
     const fetchUserData = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/users/all/`, {
+            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(`${apiUrl}/api/users/all/`, {
                 params: {location_id: selectedLocation?.location.id},
                 headers: {Authorization: `Token ${user?.token}`},
             });
-            const filteredUsers = res.data.filter((u: UserModel) => u.id !== user?.id);
+            const data = res.data.results
+            const filteredUsers = data.filter((u: UserModel) => u.id !== user?.id);
             setUsers(filteredUsers);
         } catch (error) {
             console.error('Error fetching user data:', error);

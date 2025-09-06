@@ -1,11 +1,12 @@
 import React, {useContext, useEffect, useState} from 'react';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {Modal, Form, Input, Select, Upload, Button, Typography, message, Divider, Flex} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import {Role} from '../models/Role';
 import {AuthContext} from '../contexts/AuthContext';
 import {UserModel} from '../models/UserModel';
 import {OrgProfile} from '../models/OrgProfile';
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Title} = Typography;
 
@@ -37,7 +38,10 @@ export default function UserModal({
             .get(`${apiUrl}/api/roles/`, {
                 headers: {Authorization: `Token ${user?.token}`},
             })
-            .then((res) => setRoles(res.data))
+            .then((res: AxiosResponse<PaginatedResponse<Role>>) => {
+                const data = res.data.results
+                setRoles(data)
+            })
             .catch((err) => console.error('Failed to fetch roles', err));
     }, []);
 
@@ -47,7 +51,10 @@ export default function UserModal({
                 .get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
                     headers: {Authorization: `Token ${user?.token}`},
                 })
-                .then((res) => setLocations(res.data))
+                .then((res: AxiosResponse<PaginatedResponse<Location>>) => {
+                    const data = res.data.results
+                    setLocations(data)
+                })
                 .catch((err) => console.error('Failed to fetch locations', err));
         }
     }, [selectedOrgId]);

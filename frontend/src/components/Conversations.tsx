@@ -30,7 +30,7 @@ export function Conversations() {
             }
 
             const data = await res.json();
-            setUsers(data);
+            setUsers(data.results);
         }
 
         fetchUsers();

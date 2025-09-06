@@ -7,7 +7,8 @@ import {
 } from '@ant-design/icons';
 import {AuthContext} from '../contexts/AuthContext';
 import {Unit} from '../models/Unit';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Title} = Typography;
 
@@ -29,7 +30,7 @@ export default function UnitTable({selectedOrgId, onCreate, onEdit, onReload,}: 
         if (!selectedOrgId) return;
         setLoading(true);
         try {
-            const response = await axios.get(
+            const response: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(
                 `${apiUrl}/api/units/?organization_id=${selectedOrgId}`,
                 {
                     headers: {
@@ -37,7 +38,8 @@ export default function UnitTable({selectedOrgId, onCreate, onEdit, onReload,}: 
                     },
                 }
             );
-            setUnits(response.data);
+            const data = response.data.results
+            setUnits(data);
         } catch (error) {
             console.error('Failed to fetch units:', error);
             message.error('Failed to load units');

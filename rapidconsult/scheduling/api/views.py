@@ -111,6 +111,14 @@ class DepartmentViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You do not belong to this organization.")
 
         queryset = Department.objects.filter(location__organization__id=org_id)
+
+        # Apply pagination if configured
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Fallback: no pagination
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

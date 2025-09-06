@@ -1,10 +1,11 @@
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import React, {useContext, useEffect, useState} from 'react';
 import {AuthContext} from '../contexts/AuthContext';
 import {Layout, Typography, Avatar, List, Badge} from 'antd';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -27,7 +28,7 @@ const Vox: React.FC = () => {
         if (selectedLocation) {
             const fetchConversations = async () => {
                 try {
-                    const response = await axios.get(`${apiUrl}/api/active-conversations/`, {
+                    const response: AxiosResponse<PaginatedResponse<Conversation>> = await axios.get(`${apiUrl}/api/active-conversations/`, {
                         params: {
                             user_id: user.id,
                             organization_id: selectedLocation?.organization.id,

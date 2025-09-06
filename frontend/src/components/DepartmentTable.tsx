@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {
     Table,
     Button,
@@ -17,6 +17,7 @@ import {
 } from '@ant-design/icons';
 import { AuthContext } from '../contexts/AuthContext';
 import { Department } from '../models/Department';
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const { Title } = Typography;
 
@@ -43,7 +44,7 @@ export default function DepartmentTable({
             if (!selectedOrgId) return;
 
             try {
-                const response = await axios.get(
+                const response: AxiosResponse<PaginatedResponse<Department>> = await axios.get(
                     `${apiUrl}/api/departments/org?organization_id=${selectedOrgId}`,
                     {
                         headers: {
@@ -51,10 +52,10 @@ export default function DepartmentTable({
                         },
                     }
                 );
-                setDepartments(response.data);
+                const data = response.data.results
+                setDepartments(data);
             } catch (error) {
                 console.error('Failed to fetch departments:', error);
-                message.error('Failed to fetch departments');
             } finally {
                 setLoading(false);
             }

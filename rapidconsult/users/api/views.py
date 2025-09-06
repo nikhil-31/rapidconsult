@@ -45,10 +45,19 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
                 org_profiles__allowed_locations__id=location_id
             ).distinct()
 
+        # Apply pagination if available
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserSerializer(
+                page, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        # Fallback: no pagination configured
         serializer = UserSerializer(
             queryset, many=True, context={"request": request}
         )
-        return Response(status=status.HTTP_200_OK, data=serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CustomObtainAuthTokenView(ObtainAuthToken):

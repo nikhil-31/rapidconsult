@@ -1,5 +1,5 @@
 import {useContext, useEffect, useState} from 'react';
-import axios from 'axios';
+import axios, {AxiosResponse} from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import UserModal from './UserModal';
 import UserTableSection from './UserTable';
@@ -16,6 +16,7 @@ import {Unit} from '../models/Unit';
 
 import {Select, Typography, Divider, Layout, message, Row, Col} from 'antd';
 import {Role} from "../models/Role";
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Option} = Select;
 const {Title, Text} = Typography;
@@ -45,35 +46,43 @@ export default function Admin() {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get<UserModel[]>(`${apiUrl}/api/users/all`, {
-                headers: {Authorization: `Token ${user?.token}`},
-                params: {organization: selectedOrgId},
-            });
-            setUsers(res.data);
+            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(
+                `${apiUrl}/api/users/all`,
+                {
+                    headers: {Authorization: `Token ${user?.token}`},
+                    params: {organization: selectedOrgId},
+                }
+            );
+
+            // Access the actual user list from `results`
+            const data= res.data.results;
+            setUsers(data);
         } catch (error) {
             console.error('Error fetching users', error);
         }
     };
-
     const fetchLocations = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/locations/`, {
+            const res: AxiosResponse<PaginatedResponse<Location>> = await axios.get(`${apiUrl}/api/locations/`, {
                 headers: {Authorization: `Token ${user?.token}`},
                 params: {organization_id: selectedOrgId},
             });
-            setLocations(res.data);
+            const data = res.data.results
+            setLocations(data);
         } catch (error) {
             console.error('Error fetching locations', error);
         }
     };
 
+
     const fetchDepartments = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/departments/org`, {
+            const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(`${apiUrl}/api/departments/org`, {
                 headers: {Authorization: `Token ${user?.token}`},
                 params: {organization_id: selectedOrgId},
             });
-            setDepartments(res.data);
+            const data = res.data.results
+            setDepartments(data);
         } catch (error) {
             console.error('Error fetching departments', error);
         }

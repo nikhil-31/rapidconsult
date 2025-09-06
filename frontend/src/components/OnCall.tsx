@@ -7,6 +7,7 @@ import {Unit} from "../models/Unit";
 import {useOrgLocation} from "../contexts/LocationContext";
 import ChatView from "./ChatView";
 import {Conversation} from "../models/ActiveConversation";
+import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -24,26 +25,36 @@ const OnCall: React.FC = () => {
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Department[]> = await axios.get(`${apiUrl}/api/departments/`, {
-                params: {location_id: locationId},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            setDepartments(prev => ({...prev, [locationId]: res.data}));
-            res.data.forEach(dep => fetchUnits(dep.id));
+            const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(
+                `${apiUrl}/api/departments/`,
+                {
+                    params: {location_id: locationId},
+                    headers: {Authorization: `Token ${user?.token}`},
+                }
+            );
+
+            const departments = res.data.results;
+            setDepartments(prev => ({...prev, [locationId]: departments}));
+            departments.forEach(dep => fetchUnits(dep.id));
         } catch (err) {
-            console.error('Failed to fetch departments:', err);
+            console.error("Failed to fetch departments:", err);
         }
     };
 
     const fetchUnits = async (departmentId: number): Promise<void> => {
         try {
-            const res: AxiosResponse<Unit[]> = await axios.get(`${apiUrl}/api/units/`, {
-                params: {department_id: departmentId},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            setUnits(prev => ({...prev, [departmentId]: res.data}));
+            const res: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(
+                `${apiUrl}/api/units/`,
+                {
+                    params: {department_id: departmentId},
+                    headers: {Authorization: `Token ${user?.token}`},
+                }
+            );
+
+            const units = res.data.results;
+            setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
-            console.error('Failed to fetch units:', err);
+            console.error("Failed to fetch units:", err);
         }
     };
 
