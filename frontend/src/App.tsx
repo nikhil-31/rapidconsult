@@ -13,6 +13,7 @@ import EditProfile from "./components/EditProfile";
 import OnCall from "./components/OnCall";
 import {LocationProvider} from "./contexts/LocationContext";
 import Vox from "./components/Vox";
+import NotFound from "./components/NotFound";
 
 
 export default function App() {
@@ -71,6 +72,7 @@ export default function App() {
                                 }
                             />
                         </Route>
+                        <Route path="*" element={<NotFound />} />
                     </Routes>
                 </LocationProvider>
             </AuthContextProvider>
