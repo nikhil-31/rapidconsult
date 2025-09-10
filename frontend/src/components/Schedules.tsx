@@ -1,6 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
 import dayjs from 'dayjs';
-import {Layout, Menu, Button, Typography, Space,} from 'antd';
+import {Layout, Menu, Button, Typography, Space, Skeleton} from 'antd';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {Calendar, dateFnsLocalizer, View, Views,} from 'react-big-calendar';
 import {Locale} from 'date-fns';
@@ -56,9 +56,13 @@ const CalendarView: React.FC = () => {
     const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
     const [detailModalOpen, setDetailModalOpen] = useState<boolean>(false);
 
-    const [myShifts, setMyShifts] = useState<EventData[]>([]);
     const [selectedKey, setSelectedKey] = useState('my-shifts');
     const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([]);
+
+    // Loading
+    const [loadingDepartments, setLoadingDepartments] = useState(false);
+    const [loadingUnits, setLoadingUnits] = useState<Record<number, boolean>>({});
+    const [loadingEvents, setLoadingEvents] = useState(false);
 
     const stringToColor = (str: string): string => {
         let hash = 0;
@@ -70,6 +74,7 @@ const CalendarView: React.FC = () => {
     };
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
+        setLoadingDepartments(true);
         try {
             const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(`${apiUrl}/api/departments`, {
                 params: {location_id: locationId},
@@ -82,10 +87,13 @@ const CalendarView: React.FC = () => {
             });
         } catch (err) {
             console.error('Failed to fetch departments:', err);
+        } finally {
+            setLoadingDepartments(false);
         }
     };
 
     const fetchUnits = async (departmentId: number): Promise<void> => {
+        setLoadingUnits(prev => ({...prev, [departmentId]: true}));
         try {
             const res: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(`${apiUrl}/api/units`, {
                 params: {department_id: departmentId},
@@ -95,10 +103,13 @@ const CalendarView: React.FC = () => {
             setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
             console.error('Failed to fetch units:', err);
+        } finally {
+            setLoadingUnits(prev => ({...prev, [departmentId]: false}));
         }
     };
 
     const handleUnitClick = async (unitId: number): Promise<void> => {
+        setLoadingEvents(true);
         try {
             const res: AxiosResponse<PaginatedResponse<Shift>> = await axios.get(`${apiUrl}/api/shifts`, {
                 params: {unit: unitId},
@@ -125,6 +136,8 @@ const CalendarView: React.FC = () => {
             setEvents(formatted);
         } catch (err) {
             console.error('Failed to fetch shifts for unit:', err);
+        } finally {
+            setLoadingEvents(false);
         }
     };
 
@@ -195,6 +208,7 @@ const CalendarView: React.FC = () => {
     }
 
     const handleMyShiftsClick = async () => {
+        setLoadingEvents(true)
         try {
             const res: AxiosResponse<PaginatedResponse<Shift>> = await axios.get(`${apiUrl}/api/shifts`, {
                 params: {
@@ -224,37 +238,30 @@ const CalendarView: React.FC = () => {
             setEvents(formatted);
         } catch (err) {
             console.error('Failed to fetch my shifts:', err);
+        } finally {
+            setLoadingEvents(false)
         }
     };
 
     return (
-        <Layout style={{minHeight: '100vh', background: '#f9f9f9'}}>
-
-            <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
-
+        <Layout style={{minHeight: "100vh", background: "#f9f9f9"}}>
+            <Sider
+                width={350}
+                style={{backgroundColor: "#ffffff", borderRight: "1px solid #f0f0f0"}}
+            >
                 <div
                     key="my-shifts"
                     onClick={handleMyShiftsClick}
                     style={{
-                        padding: '8px 16px',
-                        paddingTop: '8px',
-                        marginTop: '16px',
-                        cursor: 'pointer',
+                        padding: "8px 16px",
+                        marginTop: "16px",
+                        cursor: "pointer",
                         borderRadius: 6,
-                        transition: 'all 0.2s',
+                        transition: "all 0.2s",
                         fontWeight: 500,
-                        backgroundColor: selectedKey === 'my-shifts' ? '#e6f7ff' : 'transparent',
-                        color: selectedKey === 'my-shifts' ? '#1890ff' : 'inherit',
-                    }}
-                    onMouseEnter={(e) => {
-                        if (selectedKey !== 'my-shifts') {
-                            e.currentTarget.style.backgroundColor = '#f5f5f5';
-                        }
-                    }}
-                    onMouseLeave={(e) => {
-                        if (selectedKey !== 'my-shifts') {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                        }
+                        backgroundColor:
+                            selectedKey === "my-shifts" ? "#e6f7ff" : "transparent",
+                        color: selectedKey === "my-shifts" ? "#1890ff" : "inherit",
                     }}
                 >
                     📅 My Shifts
@@ -262,48 +269,66 @@ const CalendarView: React.FC = () => {
 
                 {/* Departments Title */}
                 <div style={{paddingLeft: 16, paddingRight: 16, paddingTop: 16}}>
-                    <Title level={5} style={{marginBottom: 10}}>Departments</Title>
+                    <Title level={5} style={{marginBottom: 10}}>
+                        Departments
+                    </Title>
                 </div>
 
-                {/* Departments Menu */}
-                <Menu
-                    mode="inline"
-                    style={{borderInlineEnd: 'none'}}
-                    selectedKeys={menuSelectedKeys}
-                    defaultOpenKeys={
-                        selectedLocationId && departments[selectedLocationId]
-                            ? departments[selectedLocationId].map(dep => `dep-${dep.id}`)
-                            : []
-                    }
-                >
-                    {selectedLocationId &&
-                        departments[selectedLocationId]?.map(department => (
-                            <Menu.SubMenu
-                                key={`dep-${department.id}`}
-                                title={<span style={{fontWeight: 500}}>{department.name}</span>}
-                            >
-                                {units[department.id]?.map(unit => (
-                                    <Menu.Item
-                                        key={`unit-${unit.id}`}
-                                        onClick={() => handleUnitClick(unit.id)}
-                                    >
-                                        {unit.name}
-                                    </Menu.Item>
-                                )) || <Menu.Item disabled>Loading units...</Menu.Item>}
-                            </Menu.SubMenu>
-                        ))}
-                </Menu>
+                {/* Departments Menu OR Skeleton */}
+                {loadingDepartments ? (
+                    <div style={{padding: "0 16px"}}>
+                        <Skeleton active paragraph={{rows: 6}}/>
+                    </div>
+                ) : (
+                    <Menu
+                        mode="inline"
+                        style={{borderInlineEnd: "none"}}
+                        selectedKeys={menuSelectedKeys}
+                        defaultOpenKeys={
+                            selectedLocationId && departments[selectedLocationId]
+                                ? departments[selectedLocationId].map((dep) => `dep-${dep.id}`)
+                                : []
+                        }
+                    >
+                        {selectedLocationId &&
+                            departments[selectedLocationId]?.map((department) => (
+                                <Menu.SubMenu
+                                    key={`dep-${department.id}`}
+                                    title={<span style={{fontWeight: 500}}>{department.name}</span>}
+                                >
+                                    {units[department.id] ? (
+                                        units[department.id].map((unit) => (
+                                            <Menu.Item
+                                                key={`unit-${unit.id}`}
+                                                onClick={() => handleUnitClick(unit.id)}
+                                            >
+                                                {unit.name}
+                                            </Menu.Item>
+                                        ))
+                                    ) : (
+                                        <Menu.Item disabled>
+                                            <Skeleton.Input active size="small" style={{width: 120}}/>
+                                        </Menu.Item>
+                                    )}
+                                </Menu.SubMenu>
+                            ))}
+                    </Menu>
+                )}
             </Sider>
 
             <Layout>
-                <Content style={{padding: '32px 48px', background: '#fff'}}>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: 24
-                    }}>
-                        <Title level={3} style={{margin: 0}}>On-Call Shift Calendar</Title>
+                <Content style={{padding: "32px 48px", background: "#fff"}}>
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 24,
+                        }}
+                    >
+                        <Title level={3} style={{margin: 0}}>
+                            On-Call Shift Calendar
+                        </Title>
                         <Space>
                             <Button
                                 type="primary"
@@ -313,56 +338,51 @@ const CalendarView: React.FC = () => {
                             >
                                 Add Shift
                             </Button>
-                            {shiftModalOpen && (
-                                <CreateShiftModal
-                                    visible={shiftModalOpen}
-                                    onClose={() => setShiftModalOpen(false)}
-                                    onShiftCreated={() => {
-                                        setShiftModalOpen(false)
-                                        handleShiftUpdate()
-                                    }}
-                                />
-                            )}
                         </Space>
                     </div>
 
-                    <Calendar
-                        key={events.length}
-                        localizer={localizer}
-                        events={events}
-                        startAccessor="start"
-                        endAccessor="end"
-                        views={[Views.DAY, Views.WEEK, Views.MONTH]}
-                        view={view}
-                        onView={setView}
-                        date={date}
-                        onNavigate={setDate}
-                        onSelectEvent={handleEventClick}
-                        selectable
-                        style={{
-                            height: 600,
-                            backgroundColor: '#fff',
-                            padding: 16,
-                            border: '1px solid #f0f0f0',
-                            borderRadius: 8,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                        }}
-                        eventPropGetter={(event: EventData) => {
-                            const backgroundColor = stringToColor(event.username);
-                            return {
-                                style: {
-                                    backgroundColor,
-                                    borderRadius: '4px',
-                                    color: '#000',
-                                    border: '1px solid #ccc',
-                                    padding: '4px'
-                                }
-                            };
-                        }}
-                        components={{
-                            event: EventItem
-                        }}
-                    />
+                    {/* Calendar OR Skeleton */}
+                    {loadingEvents ? (
+                        <Skeleton active paragraph={{rows: 1}}/>
+                    ) : (
+                        <Calendar
+                            key={events.length}
+                            localizer={localizer}
+                            events={events}
+                            startAccessor="start"
+                            endAccessor="end"
+                            views={[Views.DAY, Views.WEEK, Views.MONTH]}
+                            view={view}
+                            onView={setView}
+                            date={date}
+                            onNavigate={setDate}
+                            onSelectEvent={handleEventClick}
+                            selectable
+                            style={{
+                                height: 600,
+                                backgroundColor: "#fff",
+                                padding: 16,
+                                border: "1px solid #f0f0f0",
+                                borderRadius: 8,
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                            }}
+                            eventPropGetter={(event: EventData) => {
+                                const backgroundColor = stringToColor(event.username);
+                                return {
+                                    style: {
+                                        backgroundColor,
+                                        borderRadius: "4px",
+                                        color: "#000",
+                                        border: "1px solid #ccc",
+                                        padding: "4px",
+                                    },
+                                };
+                            }}
+                            components={{
+                                event: EventItem,
+                            }}
+                        />
+                    )}
 
                     <ShiftDetailModal
                         visible={detailModalOpen}

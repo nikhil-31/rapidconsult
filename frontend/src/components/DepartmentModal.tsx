@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {Modal, Form, Input, Select, Upload, Button, message} from 'antd';
+import {Modal, Form, Input, Select, Upload, Button} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
@@ -78,12 +78,10 @@ export default function DepartmentModal({
                 });
             }
 
-            message.success(`Department ${isEditMode ? 'updated' : 'created'} successfully`);
             onSuccess();
             onClose();
         } catch (error) {
             console.error('Error saving department:', error);
-            message.error('Failed to save department');
         } finally {
             setLoading(false);
         }
