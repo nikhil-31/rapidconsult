@@ -106,7 +106,7 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <Layout style={{minHeight: '100vh'}}>
+        <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
             {/* Sidebar with Users */}
             <Sider
                 width={350}

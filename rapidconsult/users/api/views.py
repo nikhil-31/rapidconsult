@@ -1,3 +1,4 @@
+from django.db.models.query_utils import Q
 from rest_framework import status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
@@ -57,6 +58,22 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
         serializer = UserSerializer(
             queryset, many=True, context={"request": request}
         )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], url_path="search")
+    def search(self, request):
+        query = request.query_params.get("q", "").strip()
+        if not query:
+            return Response({"detail": "Missing search query"}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = self.queryset.filter(Q(name__icontains=query)).distinct()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

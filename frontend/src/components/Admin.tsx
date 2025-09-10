@@ -61,6 +61,7 @@ export default function Admin() {
             console.error('Error fetching users', error);
         }
     };
+
     const fetchLocations = async () => {
         try {
             const res: AxiosResponse<PaginatedResponse<Location>> = await axios.get(`${apiUrl}/api/locations/`, {
