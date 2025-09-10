@@ -107,11 +107,12 @@ export default function UserModal({
 
         try {
             let orgProfileId = editingUser?.organizations.find(
-                (o) => o.organization.id.toString() === selectedOrgId
+                (o) => o.organization.id.toString() === selectedOrgId.toString()
             )?.id;
 
+            let res;
             if (isEditMode && editingUser) {
-                await axios.patch(
+                res = await axios.patch(
                     `${apiUrl}/api/users/${editingUser.username}/`,
                     formData,
                     {
@@ -122,7 +123,7 @@ export default function UserModal({
                     }
                 );
             } else {
-                const res = await axios.post(`${apiUrl}/api/users/register/`, formData, {
+                res = await axios.post(`${apiUrl}/api/users/register/`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         Authorization: `Token ${user?.token}`,
@@ -131,12 +132,11 @@ export default function UserModal({
 
                 // Get org profile ID from response
                 orgProfileId = res.data?.organizations?.find(
-                    (o: any) => o.organization.id.toString() === selectedOrgId
-                )?.org_user_id;
+                    (o: OrgProfile) => o.organization.id === Number(selectedOrgId)
+                )?.id;
             }
 
-            // PATCH allowed locations
-            if (orgProfileId) {
+            if (res.status >= 200 && res.status < 300 && orgProfileId) {
                 await axios.patch(
                     `${apiUrl}/api/allowed-location/${orgProfileId}/update-locations/`,
                     {allowed_locations: values.allowed_locations},
@@ -147,6 +147,8 @@ export default function UserModal({
                         },
                     }
                 );
+            } else {
+                console.log(`Failure Status ${res.status} - orgprofileid - ${orgProfileId}`)
             }
 
             message.success(`User ${isEditMode ? 'updated' : 'created'} successfully`);
