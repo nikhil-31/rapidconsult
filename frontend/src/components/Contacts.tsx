@@ -8,7 +8,9 @@ import {UserModel} from "../models/UserModel";
 import {ProfileData} from "../models/ProfileData";
 import ProfileDetails from "./ProfileDetails";
 import {PaginatedResponse} from "../models/PaginatedResponse";
+import {Input} from "antd";
 
+const {Search} = Input;
 const {Header, Sider, Content} = Layout;
 const {Title, Text} = Typography;
 
@@ -105,6 +107,18 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    function search(query: string) {
+        axios.get(`${apiUrl}/api/users/search/`, {
+            params: {q: query},
+            headers: {Authorization: `Token ${user?.token}`},
+        }).then(res => {
+            setUsers(res.data.results || res.data); // handle paginated or non-paginated
+            setHasMore(false); // disable infinite scroll during search
+        }).catch(err => {
+            console.error("Search error:", err);
+        });
+    }
+
     return (
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
             {/* Sidebar with Users */}
@@ -120,10 +134,23 @@ const Dashboard: React.FC = () => {
                 }}
                 onScroll={handleScroll}
             >
-                <div>
+                <div style={{paddingBottom: 12}}>
                     <Title level={5} style={{marginBottom: 10}}>
                         Users - {totalUsers}
                     </Title>
+                    <Search
+                        placeholder="Search users by name"
+                        allowClear
+                        enterButton
+                        onSearch={(value) => {
+                            if (!value) {
+                                // reset back to normal fetch
+                                fetchUserData(1);
+                            } else {
+                                search(value)
+                            }
+                        }}
+                    />
                 </div>
 
                 {loading ? (
