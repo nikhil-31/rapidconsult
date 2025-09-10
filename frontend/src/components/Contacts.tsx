@@ -1,11 +1,5 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {
-    Layout,
-    Avatar,
-    Typography,
-    Spin,
-    List
-} from 'antd';
+import {Layout, Avatar, Typography, List, Skeleton} from 'antd';
 import {UserOutlined} from '@ant-design/icons';
 import axios, {AxiosResponse} from 'axios';
 import {useOrgLocation} from "../contexts/LocationContext";
@@ -88,11 +82,25 @@ const Dashboard: React.FC = () => {
                     overflowY: 'auto'
                 }}
             >
-                <Title level={4}>
-                    Users - {users.length}
-                </Title>
+                <div>
+                    <Title level={5} style={{marginBottom: 10}}>
+                        Users - {users.length}
+                    </Title>
+                </div>
                 {loading ? (
-                    <Spin/>
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={Array.from(Array(2).keys())}
+                        renderItem={() => (
+                            <List.Item style={{padding: '8px 16px'}}>
+                                <List.Item.Meta
+                                    avatar={<Skeleton.Avatar active size="large" shape="circle"/>}
+                                    title={<Skeleton.Input active size="small" style={{width: 150}}/>}
+                                    description={<Skeleton.Input active size="small" style={{width: 220}}/>}
+                                />
+                            </List.Item>
+                        )}
+                    />
                 ) : (
                     <List
                         itemLayout="horizontal"

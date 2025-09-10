@@ -63,7 +63,7 @@ const Vox: React.FC = () => {
                         {loading ? (
                             <List
                                 itemLayout="horizontal"
-                                dataSource={Array.from(Array(2).keys())} // 6 shimmer items
+                                dataSource={Array.from(Array(2).keys())}
                                 renderItem={(i) => (
                                     <List.Item style={{padding: '8px 16px'}}>
                                         <List.Item.Meta
