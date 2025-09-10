@@ -12,30 +12,20 @@ import {
     Button,
     Avatar,
     Upload,
-    message,
     Table,
     Modal,
     Checkbox,
     Typography,
     Space,
-    Row,
-    Col
 } from 'antd';
 import {UploadOutlined, PlusOutlined} from '@ant-design/icons';
 
 const {Title, Text} = Typography;
 
-interface FormErrors {
-    name?: string;
-    username?: string;
-    email?: string;
-    profile_picture?: string;
-    general?: string;
-
-    [key: string]: string | undefined;
-}
-
 const EditProfile: React.FC = () => {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const {user} = useContext(AuthContext);
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<ProfileData>({
         name: '',
         username: '',
@@ -47,14 +37,10 @@ const EditProfile: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string>('');
-    const [errors, setErrors] = useState<FormErrors>({});
     const [contactModalVisible, setContactModalVisible] = useState(false);
     const [editingContact, setEditingContact] = useState<Contact | null>(null);
     const [contactForm] = Form.useForm();
-
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const {user} = useContext(AuthContext);
-    const navigate = useNavigate();
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const fetchProfile = async () => {
         try {
@@ -74,7 +60,6 @@ const EditProfile: React.FC = () => {
             setLoading(false);
         } catch (err) {
             console.error(err);
-            message.error('Failed to load profile');
             setLoading(false);
         }
     };
@@ -85,16 +70,14 @@ const EditProfile: React.FC = () => {
 
     const handleFileChange = (file: File) => {
         if (!file.type.startsWith('image/')) {
-            message.error('Please select a valid image file');
             return Upload.LIST_IGNORE;
         }
         if (file.size > 5 * 1024 * 1024) {
-            message.error('File size must be less than 5MB');
             return Upload.LIST_IGNORE;
         }
         setSelectedFile(file);
         setPreviewUrl(URL.createObjectURL(file));
-        return false; // prevent upload
+        return false;
     };
 
     const handleSubmit = async (values: any) => {
@@ -112,11 +95,9 @@ const EditProfile: React.FC = () => {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            message.success('Profile updated successfully');
             navigate('/profile');
         } catch (err: any) {
             console.error(err);
-            message.error(err.response?.data?.general || 'Failed to update profile');
         } finally {
             setSaving(false);
         }
@@ -146,42 +127,32 @@ const EditProfile: React.FC = () => {
                 await axios.put(`${apiUrl}/api/contacts/${editingContact.id}/`, contactData, {
                     headers: {Authorization: `Token ${user?.token}`},
                 });
-                message.success('Contact updated');
             } else {
                 await axios.post(`${apiUrl}/api/contacts/`, contactData, {
                     headers: {Authorization: `Token ${user?.token}`},
                 });
-                message.success('Contact added');
             }
             fetchProfile();
             setContactModalVisible(false);
         } catch (err) {
             console.error(err);
-            message.error('Failed to save contact');
         }
     };
 
-    const handleDeleteContact = async (contactId: number) => {
-        console.log(`Delete contact ${contactId}`)
+    const handleDelete = async () => {
+        if (!editingContact) return;
 
-        Modal.confirm({
-            title: 'Delete Contact',
-            content: 'Are you sure you want to delete this contact?',
-            okText: 'Yes',
-            cancelText: 'No',
-            onOk: async () => {
-                try {
-                    await axios.delete(`${apiUrl}/api/contacts/${contactId}/`, {
-                        headers: {Authorization: `Token ${user?.token}`},
-                    });
-                    fetchProfile();
-                    message.success('Contact deleted');
-                } catch (err) {
-                    console.error(err);
-                    message.error('Failed to delete contact');
-                }
-            },
-        });
+        try {
+            await axios.delete(`${apiUrl}/api/contacts/${editingContact.id}/`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            });
+            fetchProfile();
+            setContactModalVisible(false);
+            setConfirmDelete(false);
+            setEditingContact(null);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const contactColumns = [
@@ -214,9 +185,6 @@ const EditProfile: React.FC = () => {
                 <Space>
                     <Button type="link" onClick={() => openContactModal(record)}>
                         Edit
-                    </Button>
-                    <Button type="link" danger onClick={() => handleDeleteContact(record.id)}>
-                        Delete
                     </Button>
                 </Space>
             ),
@@ -268,9 +236,16 @@ const EditProfile: React.FC = () => {
 
                 {/* Contact Table */}
                 <Form.Item label="Contacts">
-                    <Button type="dashed" icon={<PlusOutlined/>} onClick={() => openContactModal()} block>
-                        Add Contact
-                    </Button>
+                    <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 16}}>
+                        <Button
+                            type="primary"
+                            danger
+                            icon={<PlusOutlined/>}
+                            onClick={() => openContactModal()}
+                        >
+                            Add Contact
+                        </Button>
+                    </div>
                     <Table
                         columns={contactColumns}
                         dataSource={profile.contacts}
@@ -282,12 +257,14 @@ const EditProfile: React.FC = () => {
 
                 {/* Actions */}
                 <Form.Item>
-                    <Space>
-                        <Button type="primary" danger htmlType="submit" loading={saving}>
-                            Save Changes
-                        </Button>
-                        <Button onClick={() => navigate('/profile')}>Cancel</Button>
-                    </Space>
+                    <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
+                        <Space>
+                            <Button type="primary" danger htmlType="submit" loading={saving}>
+                                Save Changes
+                            </Button>
+                            <Button onClick={() => navigate('/profile')}>Cancel</Button>
+                        </Space>
+                    </div>
                 </Form.Item>
             </Form>
 
@@ -295,7 +272,10 @@ const EditProfile: React.FC = () => {
             <Modal
                 title={editingContact ? 'Edit Contact' : 'Add Contact'}
                 open={contactModalVisible}
-                onCancel={() => setContactModalVisible(false)}
+                onCancel={() => {
+                    setContactModalVisible(false);
+                    setConfirmDelete(false);
+                }}
                 footer={null}
             >
                 <Form form={contactForm} layout="vertical" onFinish={handleContactSubmit}>
@@ -316,15 +296,37 @@ const EditProfile: React.FC = () => {
                     </Form.Item>
 
                     <Form.Item>
-                        <Space style={{display: 'flex', justifyContent: 'flex-end'}}>
-                            <Button onClick={() => setContactModalVisible(false)}>Cancel</Button>
-                            <Button type="primary" htmlType="submit">
-                                {editingContact ? 'Update Contact' : 'Add Contact'}
-                            </Button>
+                        <Space style={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                            {editingContact && (
+                                <div>
+                                    {!confirmDelete && (
+                                        <Button danger onClick={() => setConfirmDelete(true)}>
+                                            Delete
+                                        </Button>
+                                    )}
+                                    {confirmDelete && (
+                                        <Space>
+                                            <span>Are you sure?</span>
+                                            <Button danger onClick={handleDelete}>
+                                                Yes
+                                            </Button>
+                                            <Button onClick={() => setConfirmDelete(false)}>No</Button>
+                                        </Space>
+                                    )}
+                                </div>
+                            )}
+
+                            <Space>
+                                <Button onClick={() => setContactModalVisible(false)}>Cancel</Button>
+                                <Button type="primary" htmlType="submit">
+                                    {editingContact ? 'Update Contact' : 'Add Contact'}
+                                </Button>
+                            </Space>
                         </Space>
                     </Form.Item>
                 </Form>
             </Modal>
+
         </div>
     );
 };
