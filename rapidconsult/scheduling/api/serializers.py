@@ -1,12 +1,12 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from chats.api.serializers import UserConversationSerializer
 from config.roles import get_permissions_for_role
 from rapidconsult.scheduling.models import (Address, Organization, Location, Department, Unit, UserOrgProfile,
                                             UnitMembership, Role,
                                             OnCallShift)
 from rapidconsult.users.api.serializers import ContactSerializer
+from rapidconsult.chats.api.serializers import UserConversationSerializer
 
 User = get_user_model()
 
