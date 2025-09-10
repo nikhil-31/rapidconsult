@@ -37,8 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_organizations(self, user):
-        org_profiles = user.org_profiles.select_related("organization", "role")
         from rapidconsult.scheduling.api.serializers import OrganizationSerializer, RoleSerializer, LocationSerializer
+        org_profiles = user.org_profiles.select_related("organization", "role")
         orgs_data = []
         for profile in org_profiles:
             org_data = {

@@ -34,21 +34,49 @@ const Dashboard: React.FC = () => {
 
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<UserModel[]>([]);
+    const [totalUsers, setTotalUsers] = useState<string>("0");
     const [profile, setProfile] = useState<ProfileData | null>(null);
 
-    const fetchUserData = async () => {
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+
+    const fetchUserData = async (pageNum = 1) => {
+        if (!selectedLocation?.location?.id) return;
+
         try {
-            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(`${apiUrl}/api/users/all/`, {
-                params: {location_id: selectedLocation?.location.id},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            const data = res.data.results
-            const filteredUsers = data.filter((u: UserModel) => u.id !== user?.id);
-            setUsers(filteredUsers);
+            if (pageNum === 1) setLoading(true);
+            else setLoadingMore(true);
+
+            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(
+                `${apiUrl}/api/users/all/`,
+                {
+                    params: {
+                        location_id: selectedLocation?.location.id,
+                        page: pageNum,
+                    },
+                    headers: {Authorization: `Token ${user?.token}`},
+                }
+            );
+
+            const data = res.data.results.filter((u: UserModel) => u.id !== user?.id);
+            const totalUsers = res.data.count.toString()
+            setTotalUsers(totalUsers)
+            if (pageNum === 1) {
+                setUsers(data);
+            } else {
+                setUsers(prev => [...prev, ...data]);
+            }
+
+            setHasMore(!!res.data.next); // assumes API returns `next` if more pages exist
+            setPage(pageNum);
         } catch (error) {
             console.error('Error fetching user data:', error);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
     };
 
@@ -70,6 +98,13 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const {scrollTop, scrollHeight, clientHeight} = e.currentTarget;
+        if (scrollHeight - scrollTop <= clientHeight + 100 && hasMore && !loadingMore) {
+            fetchUserData(page + 1);
+        }
+    };
+
     return (
         <Layout style={{minHeight: '100vh'}}>
             {/* Sidebar with Users */}
@@ -79,14 +114,18 @@ const Dashboard: React.FC = () => {
                     background: '#fff',
                     borderRight: '1px solid #f0f0f0',
                     padding: '24px',
-                    overflowY: 'auto'
+                    overflowY: 'auto',
+                    height: '100vh',
+                    marginBottom: '24px'
                 }}
+                onScroll={handleScroll}
             >
                 <div>
                     <Title level={5} style={{marginBottom: 10}}>
-                        Users - {users.length}
+                        Users - {totalUsers}
                     </Title>
                 </div>
+
                 {loading ? (
                     <List
                         itemLayout="horizontal"
@@ -169,8 +208,13 @@ const Dashboard: React.FC = () => {
                                 />
                             </List.Item>
                         )}
-                    />
-
+                    >
+                        {loadingMore && (
+                            <div style={{textAlign: 'center', padding: 12}}>
+                                <Skeleton avatar paragraph={{rows: 1}} active/>
+                            </div>
+                        )}
+                    </List>
                 )}
             </Sider>
 
