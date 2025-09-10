@@ -17,6 +17,7 @@ import {
     Checkbox,
     Typography,
     Space,
+    Skeleton,
 } from 'antd';
 import {UploadOutlined, PlusOutlined} from '@ant-design/icons';
 
@@ -191,7 +192,48 @@ const EditProfile: React.FC = () => {
         },
     ];
 
-    if (loading) return <Card loading style={{maxWidth: 600, margin: '50px auto'}}/>;
+    if (loading)
+        return (
+            <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
+                {/* Profile Picture */}
+                <Form layout="vertical">
+                    <Form.Item label="Profile Picture">
+                        <Space direction="vertical">
+                            <Skeleton.Avatar size={80} active/>
+                            <Skeleton.Button style={{width: 120}} active/>
+                        </Space>
+                    </Form.Item>
+
+                    {/* Full Name */}
+                    <Form.Item label="Full Name">
+                        <Skeleton.Input style={{width: '100%'}} active/>
+                    </Form.Item>
+
+                    {/* Email */}
+                    <Form.Item label="Email">
+                        <Skeleton.Input style={{width: '100%'}} active/>
+                    </Form.Item>
+
+                    {/* Add Contact Button */}
+                    <Form.Item label="Contacts">
+                        <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 16}}>
+                            <Skeleton.Button style={{width: 120}} active/>
+                        </div>
+                        {/* Contacts Table Skeleton */}
+                        <Skeleton active paragraph={{rows: 3}}/>
+                    </Form.Item>
+
+                    {/* Actions */}
+                    <Form.Item>
+                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
+                            <Skeleton.Button style={{width: 120}} active/>
+                            <Skeleton.Button style={{width: 80}} active/>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </div>
+        );
+
 
     return (
 
