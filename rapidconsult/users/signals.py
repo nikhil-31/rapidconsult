@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
-from chats.mongo.models import User as MongoUser
+from rapidconsult.chats.mongo.models import User as MongoUser
 from mongoengine import DoesNotExist
 
 from rapidconsult.scheduling.models import UserOrgProfile
