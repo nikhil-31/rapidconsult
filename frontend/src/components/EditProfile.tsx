@@ -28,6 +28,7 @@ const EditProfile: React.FC = () => {
     const {user} = useContext(AuthContext);
     const navigate = useNavigate();
     const [profile, setProfile] = useState<ProfileData>({
+        id: 0,
         name: '',
         username: '',
         email: '',

@@ -2,7 +2,7 @@ import {Contact} from "./Contact";
 import {OrgProfile} from "./OrgProfile";
 
 export interface ProfileData {
-    id?: number;
+    id: number;
     name: string;
     username: string;
     email: string;

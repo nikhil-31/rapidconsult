@@ -1,10 +1,12 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {Avatar, Button, Card, Col, Descriptions, Divider, List, Row, Table, Typography} from 'antd';
 import {useNavigate} from 'react-router-dom';
 import {Contact} from '../models/Contact';
 import {Address} from '../models/Address';
 import {ProfileData} from "../models/ProfileData";
 import {useOrgLocation} from "../contexts/LocationContext";
+import axios from "axios";
+import {AuthContext} from "../contexts/AuthContext";
 
 const {Title, Text} = Typography;
 
@@ -15,6 +17,7 @@ interface AllowedLocation {
 }
 
 interface ProfileDetailsProps {
+    id: number;
     name: string;
     email: string;
     profilePicture?: string;
@@ -22,19 +25,25 @@ interface ProfileDetailsProps {
     locations: AllowedLocation[] | null;
     showEditProfile: boolean;
     profile: ProfileData;
+    startConversation: boolean;
 }
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({
+                                                           id,
                                                            name,
                                                            email,
                                                            profilePicture,
                                                            contacts,
                                                            locations,
                                                            showEditProfile,
+                                                           startConversation,
                                                            profile
                                                        }) => {
+    const apiUrl = process.env.REACT_APP_API_URL;
     const navigate = useNavigate();
     const {selectedLocation} = useOrgLocation();
+    const {user} = useContext(AuthContext);
+
     const contactColumns = [
         {title: 'Label', dataIndex: 'label', key: 'label'},
         {title: 'Type', dataIndex: 'type', key: 'type'},
@@ -63,6 +72,38 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         return null;
     }
 
+    async function handleStartChat() {
+        console.log("start chat click");
+
+        try {
+            const response = await axios.post(
+                `${apiUrl}/api/active-conversations/`,
+                {
+                    type: "direct",
+                    user1_id: user?.id,
+                    user2_id: id,
+                    organization_id: selectedLocation?.organization.id.toString(),
+                    location_id: selectedLocation?.location.id.toString(),
+                },
+                {
+                    headers: {
+                        Authorization: `Token ${user?.token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+            const conversationId= response.data.conversation_id
+            navigate(`/?conversation=${conversationId}`);
+            console.log("Conversation created:", response.data);
+        } catch (error: any) {
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+            } else {
+                console.error("Request failed:", error.message);
+            }
+        }
+    }
+
     return (
         <div>
             {/* Profile Header */}
@@ -83,6 +124,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                             </Col>
                         </Row>
                     </Col>
+                    {startConversation &&
+                        <Col>
+                            <Button type="primary" danger onClick={() => handleStartChat()}>
+                                Chat
+                            </Button>
+                        </Col>
+                    }
                     {showEditProfile &&
                         <Col>
                             <Button type="primary" danger onClick={() => navigate('/profile/edit')}>

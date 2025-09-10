@@ -6,6 +6,7 @@ import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
 import {PaginatedResponse} from "../models/PaginatedResponse";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -14,6 +15,8 @@ const Vox: React.FC = () => {
     const {user} = useContext(AuthContext);
     const orgs = user?.organizations || [];
     const apiUrl = process.env.REACT_APP_API_URL as string;
+    const routerLocation = useLocation();
+    const navigate = useNavigate();
 
     const {selectedLocation} = useOrgLocation();
 
@@ -39,6 +42,17 @@ const Vox: React.FC = () => {
                     });
                     setConversations(response.data.results);
                     setTotalConversations(response.data.count);
+
+                    const params = new URLSearchParams(routerLocation.search);
+                    const conversationId = params.get("conversation");
+                    if (conversationId) {
+                        const found = response.data.results.find(
+                            (c) => c.conversationId.toString() === conversationId
+                        );
+                        if (found) {
+                            setActiveConversation(found);
+                        }
+                    }
                 } catch (err) {
                     console.error('Error fetching conversations:', err);
                 } finally {

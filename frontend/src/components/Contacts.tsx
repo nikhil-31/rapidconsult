@@ -64,8 +64,13 @@ const Dashboard: React.FC = () => {
             );
 
             const data = res.data.results.filter((u: UserModel) => u.id !== user?.id);
-            const totalUsers = res.data.count.toString()
-            setTotalUsers(totalUsers)
+            const totalUsers = res.data.count
+            if (totalUsers > 0) {
+                const users = totalUsers - 1
+                setTotalUsers(users.toString())
+            } else {
+                setTotalUsers(totalUsers.toString())
+            }
             if (pageNum === 1) {
                 setUsers(data);
             } else {
@@ -250,6 +255,7 @@ const Dashboard: React.FC = () => {
                 {profile ? (
                     <div style={{padding: 24}}>
                         <ProfileDetails
+                            id={profile.id}
                             name={profile.name}
                             email={profile.email}
                             profilePicture={profile.profile_picture}
@@ -257,6 +263,7 @@ const Dashboard: React.FC = () => {
                             showEditProfile={false}
                             locations={null}
                             profile={profile}
+                            startConversation={true}
                         />
                     </div>
                 ) : (

@@ -18,6 +18,7 @@ const Profile = () => {
     const apiUrl = process.env.REACT_APP_API_URL;
     const {user} = useContext(AuthContext);
 
+
     const fetchProfile = async () => {
         try {
             const res = await axios.get(`${apiUrl}/api/profile/me/`, {
@@ -68,7 +69,6 @@ const Profile = () => {
         );
     }
 
-
     const allowedLocations: AllowedLocation[] = profile.organizations.flatMap(org =>
         org.allowed_locations.map(loc => ({
             name: loc.name,
@@ -80,6 +80,7 @@ const Profile = () => {
     return (
         <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
             <ProfileDetails
+                id={profile?.id}
                 name={profile.name}
                 email={profile.email}
                 profilePicture={profile.profile_picture}
@@ -87,6 +88,7 @@ const Profile = () => {
                 locations={allowedLocations}
                 showEditProfile={true}
                 profile={profile}
+                startConversation={false}
             />
         </div>
     );
