@@ -169,10 +169,10 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": True,
+    "disable_existing_loggers": False,  # allow Django's defaults
     "formatters": {
         "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
+            "format": "%(levelname)s %(asctime)s %(name)s %(process)d %(thread)d %(message)s",
         },
     },
     "handlers": {
@@ -184,13 +184,21 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
+        "django.request": {  # <--- ADD THIS
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
         "django.db.backends": {
             "level": "ERROR",
             "handlers": ["console"],
             "propagate": False,
         },
-        # Errors logged by the SDK itself
-        "sentry_sdk": {"level": "ERROR", "handlers": ["console"], "propagate": False},
+        "sentry_sdk": {
+            "level": "ERROR",
+            "handlers": ["console"],
+            "propagate": False,
+        },
         "django.security.DisallowedHost": {
             "level": "ERROR",
             "handlers": ["console"],
@@ -198,6 +206,7 @@ LOGGING = {
         },
     },
 }
+
 
 # Sentry
 # # ------------------------------------------------------------------------------
