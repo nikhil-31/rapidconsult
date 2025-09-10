@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
+from rapidconsult.chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
 from rapidconsult.scheduling.api.permissions import check_org_admin_or_raise
 from rapidconsult.scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
     UserOrgProfile
