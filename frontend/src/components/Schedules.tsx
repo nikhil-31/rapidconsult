@@ -338,6 +338,16 @@ const CalendarView: React.FC = () => {
                             >
                                 Add Shift
                             </Button>
+                            {shiftModalOpen && (
+                                <CreateShiftModal
+                                    visible={shiftModalOpen}
+                                    onClose={() => setShiftModalOpen(false)}
+                                    onShiftCreated={() => {
+                                        setShiftModalOpen(false)
+                                        handleShiftUpdate()
+                                    }}
+                                />
+                            )}
                         </Space>
                     </div>
 
@@ -361,10 +371,6 @@ const CalendarView: React.FC = () => {
                             style={{
                                 height: 600,
                                 backgroundColor: "#fff",
-                                padding: 16,
-                                border: "1px solid #f0f0f0",
-                                borderRadius: 8,
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
                             }}
                             eventPropGetter={(event: EventData) => {
                                 const backgroundColor = stringToColor(event.username);
