@@ -1,16 +1,12 @@
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 
-import {Chat} from "./components/Chat";
 import {Login} from "./components/Login";
 import {Navbar} from "./components/Navbar";
 import {AuthContextProvider} from "./contexts/AuthContext";
 import {ProtectedRoute} from "./components/ProtectedRoute";
-import {Conversations} from "./components/Conversations";
-import {ActiveConversations} from "./components/ActiveConversations";
 import {NotificationContextProvider} from "./contexts/NotificationContext";
 import CalendarView from "./components/Schedules";
 import Contacts from "./components/Contacts";
-import {OrgProvider} from "./contexts/OrgContext";
 import Admin from "./components/Admin";
 import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
@@ -28,35 +24,49 @@ export default function App() {
                         <Route
                             path="/"
                             element={
-
                                 <NotificationContextProvider>
                                     <Navbar/>
                                 </NotificationContextProvider>
-
                             }
                         >
-                            <Route path="login" element={<Login/>}/>
-                            <Route path="" element={<Conversations/>}/>
+                            <Route path="login" element={
+                                <Login/>
+                            }/>
+                            <Route path="" element={
+                                <ProtectedRoute>
+                                    <Vox/>
+                                </ProtectedRoute>
+                            }/>
+                            <Route path="/oncall" element={
+                                <ProtectedRoute>
+                                    <OnCall/>
+                                </ProtectedRoute>
+                            }/>
+                            <Route path="/contacts" element={
+                                <ProtectedRoute>
+                                    <Contacts/>
+                                </ProtectedRoute>
+                            }/>
+                            <Route path="/schedules" element={
+                                <ProtectedRoute>
+                                    <CalendarView/>
+                                </ProtectedRoute>
+                            }/>
+                            <Route path="/admin" element={
+                                <ProtectedRoute>
+                                    <Admin/>
+                                </ProtectedRoute>
+                            }/>
+                            <Route path="/profile" element={
+                                <ProtectedRoute>
+                                    <Profile/>
+                                </ProtectedRoute>
+                            }/>
                             <Route
-                                path="chats/:conversationName"
+                                path="/profile/edit"
                                 element={
                                     <ProtectedRoute>
-                                        <Chat/>
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route path="/vox" element={<Vox/>}/>
-                            <Route path="/oncall" element={<OnCall/>}/>
-                            <Route path="/contacts" element={<Contacts/>}/>
-                            <Route path="/schedules" element={<CalendarView/>}/>
-                            <Route path="/admin" element={<Admin/>}/>
-                            <Route path="/profile" element={<Profile/>}/>
-                            <Route path="/profile/edit" Component={EditProfile}/>
-                            <Route
-                                path="conversations/"
-                                element={
-                                    <ProtectedRoute>
-                                        <ActiveConversations/>
+                                        <EditProfile/>
                                     </ProtectedRoute>
                                 }
                             />

@@ -103,19 +103,6 @@ export function Navbar() {
                                                 Schedules
                                             </Link>
                                         </li>
-                                        {/* TODO - Remove later */}
-                                        <li>
-                                            <Link
-                                                to="/vox"
-                                                className={`block py-2 pr-4 pl-3 md:p-0 ${
-                                                    isActive("/vox")
-                                                        ? "text-red-700 font-semibold"
-                                                        : "text-black"
-                                                }`}
-                                            >
-                                                vox
-                                            </Link>
-                                        </li>
                                         <li>
                                             <Link
                                                 to="/oncall"
