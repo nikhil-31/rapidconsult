@@ -1,14 +1,9 @@
-import datetime
-
 from django.core.management.base import BaseCommand, CommandError
-from django.utils import timezone
-
-from rapidconsult.scheduling.models import Unit
-from rapidconsult.scheduling.models import UserOrgProfile
 
 # Import your mongo helper
 from rapidconsult.chats.api.mongo import create_group_chat
 from rapidconsult.chats.mongo.models import Conversation
+from rapidconsult.scheduling.models import Unit
 
 
 class Command(BaseCommand):
