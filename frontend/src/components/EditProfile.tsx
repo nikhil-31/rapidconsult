@@ -195,42 +195,44 @@ const EditProfile: React.FC = () => {
     if (loading)
         return (
             <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
-                {/* Profile Picture */}
-                <Form layout="vertical">
-                    <Form.Item label="Profile Picture">
-                        <Space direction="vertical">
-                            <Skeleton.Avatar size={80} active/>
-                            <Skeleton.Button style={{width: 120}} active/>
-                        </Space>
-                    </Form.Item>
+                <Card>
+                    {/* Profile Picture */}
+                    <Form layout="vertical">
+                        <Form.Item label="Profile Picture">
+                            <Space direction="vertical">
+                                <Skeleton.Avatar size={80} active/>
+                                <Skeleton.Button style={{width: 120}} active/>
+                            </Space>
+                        </Form.Item>
 
-                    {/* Full Name */}
-                    <Form.Item label="Full Name">
-                        <Skeleton.Input style={{width: '100%'}} active/>
-                    </Form.Item>
+                        {/* Full Name */}
+                        <Form.Item label="Full Name">
+                            <Skeleton.Input style={{width: '100%'}} active/>
+                        </Form.Item>
 
-                    {/* Email */}
-                    <Form.Item label="Email">
-                        <Skeleton.Input style={{width: '100%'}} active/>
-                    </Form.Item>
+                        {/* Email */}
+                        <Form.Item label="Email">
+                            <Skeleton.Input style={{width: '100%'}} active/>
+                        </Form.Item>
 
-                    {/* Add Contact Button */}
-                    <Form.Item label="Contacts">
-                        <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 16}}>
-                            <Skeleton.Button style={{width: 120}} active/>
-                        </div>
-                        {/* Contacts Table Skeleton */}
-                        <Skeleton active paragraph={{rows: 3}}/>
-                    </Form.Item>
+                        {/* Add Contact Button */}
+                        <Form.Item label="Contacts">
+                            <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 16}}>
+                                <Skeleton.Button style={{width: 120}} active/>
+                            </div>
+                            {/* Contacts Table Skeleton */}
+                            <Skeleton active paragraph={{rows: 3}}/>
+                        </Form.Item>
 
-                    {/* Actions */}
-                    <Form.Item>
-                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
-                            <Skeleton.Button style={{width: 120}} active/>
-                            <Skeleton.Button style={{width: 80}} active/>
-                        </div>
-                    </Form.Item>
-                </Form>
+                        {/* Actions */}
+                        <Form.Item>
+                            <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
+                                <Skeleton.Button style={{width: 120}} active/>
+                                <Skeleton.Button style={{width: 80}} active/>
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </Card>
             </div>
         );
 
@@ -238,137 +240,138 @@ const EditProfile: React.FC = () => {
     return (
 
         <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
-            <Title level={3}>Edit Profile</Title>
+            <Card>
+                <Title level={3}>Edit Profile</Title>
 
-            <Form
-                layout="vertical"
-                onFinish={handleSubmit}
-                initialValues={{name: profile.name, email: profile.email}}
-            >
-                {/* Profile Picture */}
-                <Form.Item label="Profile Picture">
-                    <Space direction="vertical">
-                        <Avatar size={80} src={previewUrl || '/doctor-default.png'}/>
-                        <Upload beforeUpload={handleFileChange} showUploadList={false}>
-                            <Button icon={<UploadOutlined/>}>Change Picture</Button>
-                        </Upload>
-                    </Space>
-                </Form.Item>
-
-                {/* Name */}
-                <Form.Item
-                    label="Full Name"
-                    name="name"
-                    rules={[{required: true, message: 'Name is required'}]}
+                <Form
+                    layout="vertical"
+                    onFinish={handleSubmit}
+                    initialValues={{name: profile.name, email: profile.email}}
                 >
-                    <Input/>
-                </Form.Item>
+                    {/* Profile Picture */}
+                    <Form.Item label="Profile Picture">
+                        <Space direction="vertical">
+                            <Avatar size={80} src={previewUrl || '/doctor-default.png'}/>
+                            <Upload beforeUpload={handleFileChange} showUploadList={false}>
+                                <Button icon={<UploadOutlined/>}>Change Picture</Button>
+                            </Upload>
+                        </Space>
+                    </Form.Item>
 
-                {/* Email */}
-                <Form.Item
-                    label="Email"
-                    name="email"
-                    rules={[
-                        {required: true, message: 'Email is required'},
-                        {type: 'email', message: 'Enter a valid email'},
-                    ]}
-                >
-                    <Input/>
-                </Form.Item>
+                    {/* Name */}
+                    <Form.Item
+                        label="Full Name"
+                        name="name"
+                        rules={[{required: true, message: 'Name is required'}]}
+                    >
+                        <Input/>
+                    </Form.Item>
 
-                {/* Contact Table */}
-                <Form.Item label="Contacts">
-                    <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 16}}>
-                        <Button
-                            type="primary"
-                            danger
-                            icon={<PlusOutlined/>}
-                            onClick={() => openContactModal()}
-                        >
-                            Add Contact
-                        </Button>
-                    </div>
-                    <Table
-                        columns={contactColumns}
-                        dataSource={profile.contacts}
-                        rowKey="id"
-                        style={{marginTop: 16}}
-                        pagination={false}
-                    />
-                </Form.Item>
+                    {/* Email */}
+                    <Form.Item
+                        label="Email"
+                        name="email"
+                        rules={[
+                            {required: true, message: 'Email is required'},
+                            {type: 'email', message: 'Enter a valid email'},
+                        ]}
+                    >
+                        <Input/>
+                    </Form.Item>
 
-                {/* Actions */}
-                <Form.Item>
-                    <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
-                        <Space>
-                            <Button type="primary" danger htmlType="submit" loading={saving}>
-                                Save Changes
+                    {/* Contact Table */}
+                    <Form.Item label="Contacts">
+                        <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 16}}>
+                            <Button
+                                type="primary"
+                                danger
+                                icon={<PlusOutlined/>}
+                                onClick={() => openContactModal()}
+                            >
+                                Add Contact
                             </Button>
-                            <Button onClick={() => navigate('/profile')}>Cancel</Button>
-                        </Space>
-                    </div>
-                </Form.Item>
-            </Form>
-
-            {/* Contact Modal */}
-            <Modal
-                title={editingContact ? 'Edit Contact' : 'Add Contact'}
-                open={contactModalVisible}
-                onCancel={() => {
-                    setContactModalVisible(false);
-                    setConfirmDelete(false);
-                }}
-                footer={null}
-            >
-                <Form form={contactForm} layout="vertical" onFinish={handleContactSubmit}>
-                    <Form.Item label="Label" name="label" rules={[{required: true}]}>
-                        <Input placeholder="Mobile, Work, Home"/>
+                        </div>
+                        <Table
+                            columns={contactColumns}
+                            dataSource={profile.contacts}
+                            rowKey="id"
+                            style={{marginTop: 16}}
+                            pagination={false}
+                        />
                     </Form.Item>
 
-                    <Form.Item label="Type" name="type" rules={[{required: true}]}>
-                        <Input/>
-                    </Form.Item>
-
-                    <Form.Item label="Number/Contact" name="number" rules={[{required: true}]}>
-                        <Input/>
-                    </Form.Item>
-
-                    <Form.Item name="primary" valuePropName="checked">
-                        <Checkbox>Set as primary contact</Checkbox>
-                    </Form.Item>
-
+                    {/* Actions */}
                     <Form.Item>
-                        <Space style={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
-                            {editingContact && (
-                                <div>
-                                    {!confirmDelete && (
-                                        <Button danger onClick={() => setConfirmDelete(true)}>
-                                            Delete
-                                        </Button>
-                                    )}
-                                    {confirmDelete && (
-                                        <Space>
-                                            <span>Are you sure?</span>
-                                            <Button danger onClick={handleDelete}>
-                                                Yes
-                                            </Button>
-                                            <Button onClick={() => setConfirmDelete(false)}>No</Button>
-                                        </Space>
-                                    )}
-                                </div>
-                            )}
-
+                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: 8}}>
                             <Space>
-                                <Button onClick={() => setContactModalVisible(false)}>Cancel</Button>
-                                <Button type="primary" htmlType="submit">
-                                    {editingContact ? 'Update Contact' : 'Add Contact'}
+                                <Button type="primary" danger htmlType="submit" loading={saving}>
+                                    Save Changes
                                 </Button>
+                                <Button onClick={() => navigate('/profile')}>Cancel</Button>
                             </Space>
-                        </Space>
+                        </div>
                     </Form.Item>
                 </Form>
-            </Modal>
 
+                {/* Contact Modal */}
+                <Modal
+                    title={editingContact ? 'Edit Contact' : 'Add Contact'}
+                    open={contactModalVisible}
+                    onCancel={() => {
+                        setContactModalVisible(false);
+                        setConfirmDelete(false);
+                    }}
+                    footer={null}
+                >
+                    <Form form={contactForm} layout="vertical" onFinish={handleContactSubmit}>
+                        <Form.Item label="Label" name="label" rules={[{required: true}]}>
+                            <Input placeholder="Mobile, Work, Home"/>
+                        </Form.Item>
+
+                        <Form.Item label="Type" name="type" rules={[{required: true}]}>
+                            <Input/>
+                        </Form.Item>
+
+                        <Form.Item label="Number/Contact" name="number" rules={[{required: true}]}>
+                            <Input/>
+                        </Form.Item>
+
+                        <Form.Item name="primary" valuePropName="checked">
+                            <Checkbox>Set as primary contact</Checkbox>
+                        </Form.Item>
+
+                        <Form.Item>
+                            <Space style={{display: 'flex', justifyContent: 'space-between', width: '100%'}}>
+                                {editingContact && (
+                                    <div>
+                                        {!confirmDelete && (
+                                            <Button danger onClick={() => setConfirmDelete(true)}>
+                                                Delete
+                                            </Button>
+                                        )}
+                                        {confirmDelete && (
+                                            <Space>
+                                                <span>Are you sure?</span>
+                                                <Button danger onClick={handleDelete}>
+                                                    Yes
+                                                </Button>
+                                                <Button onClick={() => setConfirmDelete(false)}>No</Button>
+                                            </Space>
+                                        )}
+                                    </div>
+                                )}
+
+                                <Space>
+                                    <Button onClick={() => setContactModalVisible(false)}>Cancel</Button>
+                                    <Button type="primary" htmlType="submit">
+                                        {editingContact ? 'Update Contact' : 'Add Contact'}
+                                    </Button>
+                                </Space>
+                            </Space>
+                        </Form.Item>
+                    </Form>
+                </Modal>
+            </Card>
         </div>
     );
 };
