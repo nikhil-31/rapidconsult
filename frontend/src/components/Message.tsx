@@ -18,7 +18,6 @@ export function Message({message}: { message: MessageModel }) {
     function formatDate(timestamp: string) {
         const date = new Date(timestamp);
         return date.toLocaleDateString([], {
-            // year: 'numeric',
             month: 'short',
             day: 'numeric'
         });
@@ -50,10 +49,6 @@ export function Message({message}: { message: MessageModel }) {
                     )}
 
                     <div className="text-right text-xs text-gray-500">
-                        {/* Date */}
-                        {/*<div className="text-[10px]">{formatDate(message.timestamp)}</div>*/}
-                        {/* Time + Read Receipt */}
-
                         <div>
                             {formatMessageTimestamp(message.timestamp)}, {formatDate(message.timestamp)}
                             {isOwnMessage && (

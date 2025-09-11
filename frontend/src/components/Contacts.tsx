@@ -11,7 +11,7 @@ import {PaginatedResponse} from "../models/PaginatedResponse";
 import {Input} from "antd";
 
 const {Search} = Input;
-const {Header, Sider, Content} = Layout;
+const {Sider} = Layout;
 const {Title, Text} = Typography;
 
 const COLORS = [
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
                 setUsers(prev => [...prev, ...data]);
             }
 
-            setHasMore(!!res.data.next); // assumes API returns `next` if more pages exist
+            setHasMore(!!res.data.next);
             setPage(pageNum);
         } catch (error) {
             console.error('Error fetching user data:', error);
@@ -117,8 +117,8 @@ const Dashboard: React.FC = () => {
             params: {q: query},
             headers: {Authorization: `Token ${user?.token}`},
         }).then(res => {
-            setUsers(res.data.results || res.data); // handle paginated or non-paginated
-            setHasMore(false); // disable infinite scroll during search
+            setUsers(res.data.results || res.data);
+            setHasMore(false);
         }).catch(err => {
             console.error("Search error:", err);
         });
@@ -149,7 +149,6 @@ const Dashboard: React.FC = () => {
                         enterButton
                         onSearch={(value) => {
                             if (!value) {
-                                // reset back to normal fetch
                                 fetchUserData(1);
                             } else {
                                 search(value)

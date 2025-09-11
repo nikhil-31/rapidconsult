@@ -1,13 +1,9 @@
+import axios, {AxiosResponse} from 'axios';
 import React, {useEffect, useState, useContext} from 'react';
-import {
-    Table, Button, Avatar, Space, Typography, message, Tooltip, Row, Col
-} from 'antd';
-import {
-    EditOutlined, DeleteOutlined, PlusOutlined
-} from '@ant-design/icons';
+import {Table, Button, Avatar, Space, Typography, message, Tooltip, Row, Col} from 'antd';
+import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {AuthContext} from '../contexts/AuthContext';
 import {Unit} from '../models/Unit';
-import axios, {AxiosResponse} from 'axios';
 import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Title} = Typography;

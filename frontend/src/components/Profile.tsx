@@ -1,11 +1,10 @@
 import React, {useContext, useEffect, useState} from 'react';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
-import {Card, Col, Row, Skeleton} from 'antd';
 import {Address} from "../models/Address";
 import ProfileDetails from './ProfileDetails';
 import {ProfileData} from "../models/ProfileData";
-
+import {Card, Col, Row, Skeleton} from 'antd';
 
 interface AllowedLocation {
     name: string;
@@ -17,7 +16,6 @@ const Profile = () => {
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const apiUrl = process.env.REACT_APP_API_URL;
     const {user} = useContext(AuthContext);
-
 
     const fetchProfile = async () => {
         try {

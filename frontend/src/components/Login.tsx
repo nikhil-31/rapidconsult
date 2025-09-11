@@ -1,7 +1,7 @@
+import {Form, Input, Button, Typography, Alert, Card, Row, Col} from 'antd';
 import {useFormik} from 'formik';
 import {useContext, useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {Form, Input, Button, Typography, Alert, Card, Row, Col} from 'antd';
 import {AuthContext} from '../contexts/AuthContext';
 
 const {Title} = Typography;

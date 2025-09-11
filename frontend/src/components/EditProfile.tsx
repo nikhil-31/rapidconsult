@@ -5,21 +5,8 @@ import {AuthContext} from '../contexts/AuthContext';
 import {useNavigate} from 'react-router-dom';
 import {ProfileData} from '../models/ProfileData';
 import {Contact} from '../models/Contact';
-import {
-    Card,
-    Form,
-    Input,
-    Button,
-    Avatar,
-    Upload,
-    Table,
-    Modal,
-    Checkbox,
-    Typography,
-    Space,
-    Skeleton,
-} from 'antd';
 import {UploadOutlined, PlusOutlined} from '@ant-design/icons';
+import {Card, Form, Input, Button, Avatar, Upload, Table, Modal, Checkbox, Typography, Space, Skeleton,} from 'antd';
 
 const {Title, Text} = Typography;
 
@@ -164,9 +151,9 @@ const EditProfile: React.FC = () => {
             key: 'label',
             render: (text: string, record: Contact) => (
                 <span>
-          {text || record.type}{' '}
+                    {text || record.type}{' '}
                     {record.primary && <Text type="danger">Primary</Text>}
-        </span>
+                </span>
             ),
         },
         {
@@ -239,7 +226,6 @@ const EditProfile: React.FC = () => {
 
 
     return (
-
         <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>
             <Card>
                 <Title level={3}>Edit Profile</Title>

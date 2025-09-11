@@ -31,13 +31,13 @@ const OnCall: React.FC = () => {
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(
-                `${apiUrl}/api/departments/`,
-                {
-                    params: {location_id: locationId},
-                    headers: {Authorization: `Token ${user?.token}`},
-                }
-            );
+            const res: AxiosResponse<PaginatedResponse<Department>> =
+                await axios.get(`${apiUrl}/api/departments/`,
+                    {
+                        params: {location_id: locationId},
+                        headers: {Authorization: `Token ${user?.token}`},
+                    }
+                );
 
             const departments = res.data.results;
             setDepartments(prev => ({...prev, [locationId]: departments}));
@@ -117,15 +117,13 @@ const OnCall: React.FC = () => {
                                     <Menu.SubMenu
                                         key={`dep-${department.id}`}
                                         title={
-                                            <span
-                                                style={{
-                                                    fontWeight: 700,
-                                                    fontSize: 15,
-                                                    color: "#262626",
-                                                }}
-                                            >
-                                {department.name}
-                            </span>
+                                            <span style={{
+                                                fontWeight: 700,
+                                                fontSize: 15,
+                                                color: "#262626",
+                                            }}>
+                                                {department.name}
+                                            </span>
                                         }
                                         popupClassName="custom-submenu"
                                     >
@@ -220,11 +218,8 @@ const OnCall: React.FC = () => {
                                 ))}
                         </Menu>
                     )}
-
-
                 </div>
             </Sider>
-
 
             <Layout>
                 <Content style={{background: '#fff'}}>

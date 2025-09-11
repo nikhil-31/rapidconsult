@@ -6,7 +6,7 @@ import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
 import {PaginatedResponse} from "../models/PaginatedResponse";
-import { useLocation, useNavigate } from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;

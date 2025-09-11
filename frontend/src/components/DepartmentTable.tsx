@@ -1,25 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import axios, {AxiosResponse} from 'axios';
-import {
-    Table,
-    Button,
-    Avatar,
-    Typography,
-    Space,
-    Spin,
-    Tooltip,
-    message
-} from 'antd';
-import {
-    EditOutlined,
-    DeleteOutlined,
-    PlusOutlined
-} from '@ant-design/icons';
-import { AuthContext } from '../contexts/AuthContext';
-import { Department } from '../models/Department';
+import {Table, Button, Avatar, Typography, Space, Spin, Tooltip, message} from 'antd';
+import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
+import {AuthContext} from '../contexts/AuthContext';
+import {Department} from '../models/Department';
 import {PaginatedResponse} from "../models/PaginatedResponse";
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 interface DepartmentTableProps {
     selectedOrgId: string;
@@ -29,12 +16,13 @@ interface DepartmentTableProps {
 }
 
 export default function DepartmentTable({
-    selectedOrgId,
-    onEdit,
-    onReload,
-    onCreate,
-}: DepartmentTableProps) {
-    const { user } = useContext(AuthContext);
+                                            selectedOrgId,
+                                            onEdit,
+                                            onReload,
+                                            onCreate,
+                                        }: DepartmentTableProps) {
+
+    const {user} = useContext(AuthContext);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -88,7 +76,7 @@ export default function DepartmentTable({
             render: (url: string | null) =>
                 url ? (
                     <Tooltip title="Department Image">
-                        <Avatar src={url} size={40} />
+                        <Avatar src={url} size={40}/>
                     </Tooltip>
                 ) : (
                     '—'
@@ -102,14 +90,14 @@ export default function DepartmentTable({
                 <Space>
                     <Tooltip title="Edit">
                         <Button
-                            icon={<EditOutlined />}
+                            icon={<EditOutlined/>}
                             type="text"
                             onClick={() => onEdit(record)}
                         />
                     </Tooltip>
                     <Tooltip title="Delete">
                         <Button
-                            icon={<DeleteOutlined />}
+                            icon={<DeleteOutlined/>}
                             type="text"
                             danger
                             onClick={() => handleDelete(record.id)}
@@ -121,18 +109,18 @@ export default function DepartmentTable({
     ];
 
     if (!selectedOrgId) {
-        return <p style={{ color: '#999' }}>Please select an organization.</p>;
+        return <p style={{color: '#999'}}>Please select an organization.</p>;
     }
 
     return (
-        <div style={{ marginTop: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                <Title level={4} style={{ margin: 0 }}>
+        <div style={{marginTop: 24}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 16}}>
+                <Title level={4} style={{margin: 0}}>
                     Departments
                 </Title>
                 <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={<PlusOutlined/>}
                     danger
                     onClick={onCreate}
                 >
@@ -141,8 +129,8 @@ export default function DepartmentTable({
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '2rem' }}>
-                    <Spin size="large" />
+                <div style={{textAlign: 'center', padding: '2rem'}}>
+                    <Spin size="large"/>
                 </div>
             ) : (
                 <Table

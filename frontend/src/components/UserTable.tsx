@@ -1,20 +1,6 @@
 import React from 'react';
-import {
-    Table,
-    Button,
-    Avatar,
-    Space,
-    Typography,
-    Tooltip,
-    Row,
-    Col,
-    message,
-} from 'antd';
-import {
-    EditOutlined,
-    DeleteOutlined,
-    PlusOutlined,
-} from '@ant-design/icons';
+import {Table, Button, Avatar, Space, Typography, Tooltip, Row, Col} from 'antd';
+import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {UserModel} from '../models/UserModel';
 
 const {Title} = Typography;
@@ -36,7 +22,6 @@ export default function UserTableSection({
                                          }: UserTableSectionProps) {
     const handleCreateClick = () => {
         if (!selectedOrgId) {
-            message.warning('Please select an organization first.');
             return;
         }
         onCreateUser();
@@ -88,9 +73,7 @@ export default function UserTableSection({
                             danger
                             icon={<DeleteOutlined/>}
                             onClick={() => {
-                                message.warning('Delete not supported.');
-                                // Optional: confirm dialog and deletion logic
-                                // if (window.confirm('Are you sure?')) onDeleteUser(record);
+
                             }}
                         />
                     </Tooltip>

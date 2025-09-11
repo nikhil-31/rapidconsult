@@ -1,15 +1,4 @@
-import {
-    Table,
-    Button,
-    Popconfirm,
-    Space,
-    Image,
-    Typography,
-    Row,
-    Col,
-    Tooltip,
-    message,
-} from 'antd';
+import {Table, Button, Popconfirm, Space, Image, Typography, Row, Col, Tooltip, message} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {Location} from '../models/Location';
 

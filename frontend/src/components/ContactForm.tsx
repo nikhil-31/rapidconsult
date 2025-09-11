@@ -6,7 +6,6 @@ interface Contact {
     label: string;
     type: string;
     number: string;
-    // country_code: string;
     primary: boolean;
 }
 
@@ -60,10 +59,6 @@ const ContactForm = ({initialData, onSubmit, onCancel}: Props) => {
                     <option value="other">Other</option>
                 </select>
             </div>
-            {/*<div className="flex flex-col">*/}
-            {/*    <label>Country Code</label>*/}
-            {/*    <input name="country_code" value={formData.country_code} onChange={handleChange} className="input"/>*/}
-            {/*</div>*/}
             <div className="flex flex-col">
                 <label>Number</label>
                 <input name="number" value={formData.number} onChange={handleChange} className="input"/>

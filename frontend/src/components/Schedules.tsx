@@ -1,6 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
-import dayjs from 'dayjs';
 import {Layout, Menu, Button, Typography, Space, Skeleton} from 'antd';
+import dayjs from 'dayjs';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {Calendar, dateFnsLocalizer, View, Views,} from 'react-big-calendar';
 import {Locale} from 'date-fns';
@@ -16,9 +16,7 @@ import {useOrgLocation} from "../contexts/LocationContext";
 import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
 import {EventData} from "../models/EventData";
-import {ProfileData} from "../models/ProfileData";
 import {UserModel} from "../models/UserModel";
-import {CalendarOutlined} from '@ant-design/icons';
 import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const locales: Record<string, Locale> = {
@@ -76,10 +74,11 @@ const CalendarView: React.FC = () => {
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(`${apiUrl}/api/departments`, {
-                params: {location_id: locationId},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
+            const res: AxiosResponse<PaginatedResponse<Department>> =
+                await axios.get(`${apiUrl}/api/departments/`, {
+                    params: {location_id: locationId},
+                    headers: {Authorization: `Token ${user?.token}`},
+                });
             const deps = res.data.results;
             setDepartments(prev => ({...prev, [locationId]: deps}));
             deps.forEach((dep: Department) => {
@@ -95,10 +94,11 @@ const CalendarView: React.FC = () => {
     const fetchUnits = async (departmentId: number): Promise<void> => {
         setLoadingUnits(prev => ({...prev, [departmentId]: true}));
         try {
-            const res: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(`${apiUrl}/api/units`, {
-                params: {department_id: departmentId},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
+            const res: AxiosResponse<PaginatedResponse<Unit>> =
+                await axios.get(`${apiUrl}/api/units/`, {
+                    params: {department_id: departmentId},
+                    headers: {Authorization: `Token ${user?.token}`},
+                });
             const units = res.data.results
             setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {

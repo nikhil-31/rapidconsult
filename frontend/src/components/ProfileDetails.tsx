@@ -76,23 +76,23 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         console.log("start chat click");
 
         try {
-            const response = await axios.post(
-                `${apiUrl}/api/active-conversations/`,
-                {
-                    type: "direct",
-                    user1_id: user?.id,
-                    user2_id: id,
-                    organization_id: selectedLocation?.organization.id.toString(),
-                    location_id: selectedLocation?.location.id.toString(),
-                },
-                {
-                    headers: {
-                        Authorization: `Token ${user?.token}`,
-                        "Content-Type": "application/json",
+            const response =
+                await axios.post(`${apiUrl}/api/active-conversations/`,
+                    {
+                        type: "direct",
+                        user1_id: user?.id,
+                        user2_id: id,
+                        organization_id: selectedLocation?.organization.id.toString(),
+                        location_id: selectedLocation?.location.id.toString(),
                     },
-                }
-            );
-            const conversationId= response.data.conversation_id
+                    {
+                        headers: {
+                            Authorization: `Token ${user?.token}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+            const conversationId = response.data.conversation_id
             navigate(`/?conversation=${conversationId}`);
             console.log("Conversation created:", response.data);
         } catch (error: any) {

@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
 import axios, {AxiosResponse} from 'axios';
-import {Modal, Form, Input, Select, Upload, Button, Typography, message, Divider, Flex} from 'antd';
+import {Modal, Form, Input, Select, Upload, Button, Typography, message} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import {Role} from '../models/Role';
 import {AuthContext} from '../contexts/AuthContext';
@@ -47,15 +47,12 @@ export default function UserModal({
 
     useEffect(() => {
         if (selectedOrgId) {
-            axios
-                .get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
-                    headers: {Authorization: `Token ${user?.token}`},
-                })
-                .then((res: AxiosResponse<PaginatedResponse<Location>>) => {
-                    const data = res.data.results
-                    setLocations(data)
-                })
-                .catch((err) => console.error('Failed to fetch locations', err));
+            axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
+                headers: {Authorization: `Token ${user?.token}`},
+            }).then((res: AxiosResponse<PaginatedResponse<Location>>) => {
+                const data = res.data.results
+                setLocations(data)
+            }).catch((err) => console.error('Failed to fetch locations', err));
         }
     }, [selectedOrgId]);
 
@@ -112,16 +109,17 @@ export default function UserModal({
 
             let res;
             if (isEditMode && editingUser) {
-                res = await axios.patch(
-                    `${apiUrl}/api/users/${editingUser.username}/`,
-                    formData,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            Authorization: `Token ${user?.token}`,
-                        },
-                    }
-                );
+                res = await
+                    axios.patch(
+                        `${apiUrl}/api/users/${editingUser.username}/`,
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                Authorization: `Token ${user?.token}`,
+                            },
+                        }
+                    );
             } else {
                 res = await axios.post(`${apiUrl}/api/users/register/`, formData, {
                     headers: {
@@ -259,7 +257,6 @@ export default function UserModal({
                 <Form.Item name="job_title" label="Job Title">
                     <Input/>
                 </Form.Item>
-
 
                 <Form.Item>
                     <Button type="primary" htmlType="submit" block style={{marginTop: '1rem'}}>

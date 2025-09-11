@@ -15,7 +15,6 @@ import {LocationProvider} from "./contexts/LocationContext";
 import Vox from "./components/Vox";
 import NotFound from "./components/NotFound";
 
-
 export default function App() {
     return (
         <BrowserRouter>
@@ -72,7 +71,14 @@ export default function App() {
                                 }
                             />
                         </Route>
-                        <Route path="*" element={<NotFound />} />
+                        <Route
+                            path="*"
+                            element={
+                                <ProtectedRoute>
+                                    <NotFound/>
+                                </ProtectedRoute>
+                            }
+                        />
                     </Routes>
                 </LocationProvider>
             </AuthContextProvider>

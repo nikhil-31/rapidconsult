@@ -3,8 +3,6 @@ import {Modal, Form, Select, DatePicker, Button, message} from 'antd';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {useOrgLocation} from "../contexts/LocationContext";
-import {PaginatedResponse} from "../models/PaginatedResponse";
-import {Department} from "../models/Department";
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
@@ -65,17 +63,15 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
 
         axios.get(`${apiUrl}/api/units/${selectedUnit}`, {
             headers: {Authorization: `Token ${user?.token}`},
-        })
-            .then(res => {
-                const unitData = res.data;
-                const unitMembers = unitData.members || [];
-                const formattedMembers = unitMembers.map((member: any) => ({
-                    id: member.user_details.id,
-                    name: `${member.user_details.user.name || 'User'} (${member.user_details.role.name})`
-                }));
-                setMembers(formattedMembers);
-            })
-            .catch(err => console.error('Failed to fetch unit members', err));
+        }).then(res => {
+            const unitData = res.data;
+            const unitMembers = unitData.members || [];
+            const formattedMembers = unitMembers.map((member: any) => ({
+                id: member.user_details.id,
+                name: `${member.user_details.user.name || 'User'} (${member.user_details.role.name})`
+            }));
+            setMembers(formattedMembers);
+        }).catch(err => console.error('Failed to fetch unit members', err));
 
     }, [selectedUnit]);
 

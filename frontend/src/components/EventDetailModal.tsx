@@ -17,7 +17,7 @@ type ShiftDetailModalProps = {
 
 const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, onDelete, event, onUpdated}) => {
     const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL as string;
+    const apiUrl = process.env.REACT_APP_API_URL;
 
     const [isEditing, setIsEditing] = useState(false);
     const [startTime, setStartTime] = useState<Dayjs | null>(null);
@@ -144,8 +144,6 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
                     )}
                 </Descriptions.Item>
             </Descriptions>
-
-
         </Modal>
     );
 };

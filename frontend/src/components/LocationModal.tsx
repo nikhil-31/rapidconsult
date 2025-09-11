@@ -64,7 +64,6 @@ export default function LocationModal({
                     },
                 ]);
             }
-
         } else {
             form.resetFields();
         }
@@ -78,11 +77,6 @@ export default function LocationModal({
             const formData = new FormData();
             formData.append('name', values.name);
             formData.append('organization', selectedOrgId);
-            const file = fileList?.[0]?.originFileObj;
-            if (file) {
-                formData.append('display_picture', file);
-            }
-
             formData.append('address.address_1', values.address_1);
             formData.append('address.address_2', values.address_2);
             formData.append('address.city', values.city);
@@ -91,6 +85,11 @@ export default function LocationModal({
             formData.append('address.lat', values.lat);
             formData.append('address.lon', values.lon);
             formData.append('address.label', values.label);
+
+            const file = fileList?.[0]?.originFileObj;
+            if (file) {
+                formData.append('display_picture', file);
+            }
 
             const request = isEditMode
                 ? axios.patch(`${apiUrl}/api/locations/${editingLocation?.id}/`, formData, {
