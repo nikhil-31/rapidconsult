@@ -28,7 +28,7 @@ export default function UserTableSection({
     // pagination state
     const [pagination, setPagination] = useState({
         current: 1,
-        pageSize: 10,
+        pageSize: 20,
         total: 0,
     });
     const [loading, setLoading] = useState(false);
@@ -66,7 +66,6 @@ export default function UserTableSection({
 
     useEffect(() => {
         fetchUsers(pagination.current, pagination.pageSize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedOrgId]);
 
     const handleTableChange = (newPagination: any) => {

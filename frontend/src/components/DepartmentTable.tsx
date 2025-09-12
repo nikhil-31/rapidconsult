@@ -1,6 +1,15 @@
 import React, {useEffect, useState, useContext} from 'react';
 import axios, {AxiosResponse} from 'axios';
-import {Table, Button, Avatar, Typography, Space, Spin, Tooltip, message} from 'antd';
+import {
+    Table,
+    Button,
+    Avatar,
+    Typography,
+    Space,
+    Spin,
+    Tooltip,
+    message,
+} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
@@ -25,35 +34,59 @@ export default function DepartmentTable({
     const {user} = useContext(AuthContext);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 20,
+        total: 0,
+    });
+
     const apiUrl = process.env.REACT_APP_API_URL;
 
+    const fetchDepartments = async (page = 1, pageSize = 10) => {
+        if (!selectedOrgId) return;
+
+        setLoading(true);
+        try {
+            const response: AxiosResponse<PaginatedResponse<Department>> = await axios.get(
+                `${apiUrl}/api/departments/org`,
+                {
+                    headers: {
+                        Authorization: `Token ${user?.token}`,
+                    },
+                    params: {
+                        organization_id: selectedOrgId,
+                        page,
+                        page_size: pageSize,
+                    },
+                }
+            );
+            setDepartments(response.data.results);
+            setPagination(prev => ({
+                ...prev,
+                current: page,
+                pageSize,
+                total: response.data.count, // DRF pagination provides `count`
+            }));
+        } catch (error) {
+            console.error('Failed to fetch departments:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchDepartments = async () => {
-            if (!selectedOrgId) return;
-
-            try {
-                const response: AxiosResponse<PaginatedResponse<Department>> = await axios.get(
-                    `${apiUrl}/api/departments/org?organization_id=${selectedOrgId}`,
-                    {
-                        headers: {
-                            Authorization: `Token ${user?.token}`,
-                        },
-                    }
-                );
-                const data = response.data.results
-                setDepartments(data);
-            } catch (error) {
-                console.error('Failed to fetch departments:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDepartments();
+        if (selectedOrgId) {
+            fetchDepartments(pagination.current, pagination.pageSize);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedOrgId, onReload]);
 
     const handleDelete = async (deptId: number) => {
         message.warning('Delete is not supported.');
+    };
+
+    const handleTableChange = (newPagination: any) => {
+        fetchDepartments(newPagination.current, newPagination.pageSize);
     };
 
     const columns = [
@@ -137,9 +170,17 @@ export default function DepartmentTable({
                     columns={columns}
                     dataSource={departments}
                     rowKey="id"
-                    pagination={false}
                     bordered
                     size="middle"
+                    loading={loading}
+                    pagination={{
+                        current: pagination.current,
+                        pageSize: pagination.pageSize,
+                        total: pagination.total,
+                        showSizeChanger: true,
+                        showTotal: (total) => `Total ${total} departments`,
+                    }}
+                    onChange={handleTableChange}
                 />
             )}
         </div>

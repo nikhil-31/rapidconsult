@@ -1,11 +1,25 @@
-import {Table, Button, Popconfirm, Space, Image, Typography, Row, Col, Tooltip, message} from 'antd';
+import {
+    Table,
+    Button,
+    Popconfirm,
+    Space,
+    Image,
+    Typography,
+    Row,
+    Col,
+    Tooltip,
+    message
+} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {Location} from '../models/Location';
+import axios, {AxiosResponse} from "axios";
+import {PaginatedResponse} from "../models/PaginatedResponse";
+import {useContext, useEffect, useState} from "react";
+import {AuthContext} from "../contexts/AuthContext";
 
 const {Title} = Typography;
 
 interface LocationTableProps {
-    locations: Location[];
     selectedOrgId: string;
     onCreateLocation: () => void;
     onEditLocation: (location: Location) => void;
@@ -13,12 +27,66 @@ interface LocationTableProps {
 }
 
 export default function LocationTable({
-                                          locations,
                                           selectedOrgId,
                                           onCreateLocation,
                                           onEditLocation,
                                           onDeleteLocation,
                                       }: LocationTableProps) {
+
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const {user} = useContext(AuthContext);
+
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 20,
+        total: 0,
+    });
+
+    const fetchLocations = async (page = 1, pageSize = 10) => {
+        if (!selectedOrgId) return;
+
+        setLoading(true);
+        try {
+            const res: AxiosResponse<PaginatedResponse<Location>> = await axios.get(
+                `${apiUrl}/api/locations/`,
+                {
+                    headers: {Authorization: `Token ${user?.token}`},
+                    params: {
+                        organization_id: selectedOrgId,
+                        page,
+                        page_size: pageSize,
+                    },
+                }
+            );
+
+            setLocations(res.data.results);
+            setPagination((prev) => ({
+                ...prev,
+                current: page,
+                pageSize,
+                total: res.data.count, // DRF pagination response includes `count`
+            }));
+        } catch (error) {
+            console.error('Error fetching locations', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedOrgId) {
+            fetchLocations(pagination.current, pagination.pageSize);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedOrgId]);
+
+    const handleTableChange = (newPagination: any) => {
+        fetchLocations(newPagination.current, newPagination.pageSize);
+    };
+
     const columns = [
         {
             title: 'Name',
@@ -126,9 +194,17 @@ export default function LocationTable({
                 rowKey="id"
                 columns={columns}
                 dataSource={locations}
-                pagination={false}
                 bordered
                 size="middle"
+                loading={loading}
+                pagination={{
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: pagination.total,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Total ${total} locations`,
+                }}
+                onChange={handleTableChange}
             />
         </div>
     );

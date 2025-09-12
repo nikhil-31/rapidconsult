@@ -74,7 +74,6 @@ export default function Admin() {
         }
     };
 
-
     const fetchDepartments = async () => {
         try {
             const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(`${apiUrl}/api/departments/org`, {
@@ -161,7 +160,6 @@ export default function Admin() {
 
             {/* Location Section */}
             <LocationTable
-                locations={locations}
                 selectedOrgId={selectedOrgId}
                 onCreateLocation={() => setShowLocationModal(true)}
                 onEditLocation={(location) => {
