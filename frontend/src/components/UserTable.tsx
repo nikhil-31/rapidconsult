@@ -1,12 +1,14 @@
-import React from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Table, Button, Avatar, Space, Typography, Tooltip, Row, Col} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {UserModel} from '../models/UserModel';
+import axios, {AxiosResponse} from "axios";
+import {PaginatedResponse} from "../models/PaginatedResponse";
+import {AuthContext} from "../contexts/AuthContext";
 
 const {Title} = Typography;
 
 interface UserTableSectionProps {
-    users: UserModel[];
     selectedOrgId: string;
     onCreateUser: () => void;
     onEditUser: (user: UserModel) => void;
@@ -14,16 +16,65 @@ interface UserTableSectionProps {
 }
 
 export default function UserTableSection({
-                                             users,
                                              selectedOrgId,
                                              onCreateUser,
                                              onEditUser,
                                              onDeleteUser,
                                          }: UserTableSectionProps) {
-    const handleCreateClick = () => {
-        if (!selectedOrgId) {
-            return;
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const [users, setUsers] = useState<UserModel[]>([]);
+    const {user} = useContext(AuthContext);
+
+    // pagination state
+    const [pagination, setPagination] = useState({
+        current: 1,
+        pageSize: 10,
+        total: 0,
+    });
+    const [loading, setLoading] = useState(false);
+
+    const fetchUsers = async (page = 1, pageSize = 10) => {
+        if (!selectedOrgId) return;
+
+        setLoading(true);
+        try {
+            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(
+                `${apiUrl}/api/users/all`,
+                {
+                    headers: {Authorization: `Token ${user?.token}`},
+                    params: {
+                        organization: selectedOrgId,
+                        page,
+                        page_size: pageSize,
+                    },
+                }
+            );
+
+            setUsers(res.data.results);
+            setPagination((prev) => ({
+                ...prev,
+                current: page,
+                pageSize,
+                total: res.data.count, // DRF returns `count` in paginated responses
+            }));
+        } catch (error) {
+            console.error('Error fetching users', error);
+        } finally {
+            setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        fetchUsers(pagination.current, pagination.pageSize);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedOrgId]);
+
+    const handleTableChange = (newPagination: any) => {
+        fetchUsers(newPagination.current, newPagination.pageSize);
+    };
+
+    const handleCreateClick = () => {
+        if (!selectedOrgId) return;
         onCreateUser();
     };
 
@@ -72,9 +123,7 @@ export default function UserTableSection({
                             type="text"
                             danger
                             icon={<DeleteOutlined/>}
-                            onClick={() => {
-
-                            }}
+                            onClick={() => onDeleteUser(record)}
                         />
                     </Tooltip>
                 </Space>
@@ -107,7 +156,15 @@ export default function UserTableSection({
                 dataSource={users}
                 rowKey="id"
                 bordered
-                pagination={false}
+                loading={loading}
+                pagination={{
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: pagination.total,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Total ${total} users`,
+                }}
+                onChange={handleTableChange}
                 scroll={{x: true}}
                 size="middle"
             />

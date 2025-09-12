@@ -15,7 +15,6 @@ import UnitModal from './UnitModal';
 import {Unit} from '../models/Unit';
 
 import {Select, Typography, Divider, Layout, message, Row, Col} from 'antd';
-import {Role} from "../models/Role";
 import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Option} = Select;
@@ -135,7 +134,6 @@ export default function Admin() {
 
             {/* User Section */}
             <UserTableSection
-                users={users}
                 selectedOrgId={selectedOrgId}
                 onCreateUser={() => setShowUserModal(true)}
                 onEditUser={(user) => {
