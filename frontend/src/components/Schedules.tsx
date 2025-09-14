@@ -71,6 +71,31 @@ const CalendarView: React.FC = () => {
         return `hsl(${hue}, 70%, 80%)`;
     };
 
+    // Fetch all pages until `next` is null
+    const fetchAllPages = async <T, >(
+        url: string,
+        params: Record<string, any>,
+        token: string
+    ): Promise<T[]> => {
+        let results: T[] = [];
+        let nextUrl: string | null = url;
+        let currentParams = {...params};
+
+        while (nextUrl) {
+            const res: AxiosResponse<PaginatedResponse<T>> = await axios.get(nextUrl, {
+                params: currentParams,
+                headers: {Authorization: `Token ${token}`},
+            });
+
+            results = [...results, ...res.data.results];
+
+            nextUrl = res.data.next;
+            console.log(`Next url ${nextUrl}`)
+            currentParams = {};
+        }
+        return results;
+    };
+
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
@@ -111,11 +136,14 @@ const CalendarView: React.FC = () => {
     const handleUnitClick = async (unitId: number): Promise<void> => {
         setLoadingEvents(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Shift>> = await axios.get(`${apiUrl}/api/shifts`, {
-                params: {unit: unitId},
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            const data = res.data.results
+            const data = await fetchAllPages<Shift>(
+                `${apiUrl}/api/shifts/`,
+                {
+                    unit: unitId
+                },
+                user?.token!
+            );
+
             const formatted: EventData[] = data.map((shift: Shift) => ({
                 id: shift.id,
                 title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
@@ -131,15 +159,17 @@ const CalendarView: React.FC = () => {
                 unit_name: shift.unit_details.name,
                 dept_name: shift.unit_details.department.name,
             }));
+
             setSelectedKey(`unit-${unitId}`);
             setMenuSelectedKeys([`unit-${unitId}`]);
             setEvents(formatted);
         } catch (err) {
-            console.error('Failed to fetch shifts for unit:', err);
+            console.error("Failed to fetch shifts for unit:", err);
         } finally {
             setLoadingEvents(false);
         }
     };
+
 
     const EventItem: React.FC<{ event: EventData }> = ({event}) => (
         <div>
@@ -208,16 +238,16 @@ const CalendarView: React.FC = () => {
     }
 
     const handleMyShiftsClick = async () => {
-        setLoadingEvents(true)
+        setLoadingEvents(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Shift>> = await axios.get(`${apiUrl}/api/shifts`, {
-                params: {
-                    user: getOrgProfileId(user),
-                    location: selectedLocationId
-                },
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            const data = res.data.results
+            const data = await fetchAllPages<Shift>(
+                `${apiUrl}/api/shifts/`,
+                {user: getOrgProfileId(user), location: selectedLocationId},
+                user?.token!
+            );
+
+            console.log(`Size of all pages ${data.length}`)
+
             const formatted: EventData[] = data.map((shift: Shift) => ({
                 id: shift.id,
                 title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
@@ -233,13 +263,14 @@ const CalendarView: React.FC = () => {
                 unit_name: shift.unit_details.name,
                 dept_name: shift.unit_details.department.name,
             }));
-            setSelectedKey('my-shifts');
+
+            setSelectedKey("my-shifts");
             setMenuSelectedKeys([]);
             setEvents(formatted);
         } catch (err) {
-            console.error('Failed to fetch my shifts:', err);
+            console.error("Failed to fetch my shifts:", err);
         } finally {
-            setLoadingEvents(false)
+            setLoadingEvents(false);
         }
     };
 
