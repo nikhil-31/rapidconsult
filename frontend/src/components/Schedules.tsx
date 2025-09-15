@@ -90,7 +90,6 @@ const CalendarView: React.FC = () => {
             results = [...results, ...res.data.results];
 
             nextUrl = res.data.next;
-            console.log(`Next url ${nextUrl}`)
             currentParams = {};
         }
         return results;
@@ -245,9 +244,6 @@ const CalendarView: React.FC = () => {
                 {user: getOrgProfileId(user), location: selectedLocationId},
                 user?.token!
             );
-
-            console.log(`Size of all pages ${data.length}`)
-
             const formatted: EventData[] = data.map((shift: Shift) => ({
                 id: shift.id,
                 title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,

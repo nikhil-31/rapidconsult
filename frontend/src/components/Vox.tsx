@@ -1,66 +1,65 @@
-import axios, {AxiosResponse} from 'axios';
-import React, {useContext, useEffect, useState} from 'react';
-import {AuthContext} from '../contexts/AuthContext';
-import {Layout, Typography, Avatar, List, Badge, Skeleton} from 'antd';
+import axios, {AxiosResponse} from "axios";
+import React, {useContext, useEffect, useRef, useState} from "react";
+import {AuthContext} from "../contexts/AuthContext";
+import {Layout, Typography, Avatar, List, Badge, Skeleton} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
 import {PaginatedResponse} from "../models/PaginatedResponse";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useLocation} from "react-router-dom";
+import {getActiveConversations} from "../api/services";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
 
 const Vox: React.FC = () => {
     const {user} = useContext(AuthContext);
-    const orgs = user?.organizations || [];
-    const apiUrl = process.env.REACT_APP_API_URL as string;
     const routerLocation = useLocation();
-    const navigate = useNavigate();
-
     const {selectedLocation} = useOrgLocation();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
-    const [totalConversations, setTotalConversations] = useState<number | null>(0);
+    const [totalConversations, setTotalConversations] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
 
-    useEffect(() => {
-        if (!user) return;
 
-        if (selectedLocation) {
-            const fetchConversations = async () => {
-                try {
-                    setLoading(true);
-                    const response: AxiosResponse<PaginatedResponse<Conversation>> = await axios.get(`${apiUrl}/api/active-conversations/`, {
-                        params: {
-                            user_id: user.id,
-                            organization_id: selectedLocation?.organization.id,
-                            location_id: selectedLocation?.location.id
-                        },
-                        headers: {Authorization: `Token ${user.token}`},
-                    });
-                    setConversations(response.data.results);
-                    setTotalConversations(response.data.count);
+    const fetchConversations = async (pageNum: number, append = false) => {
+        if (!user || !selectedLocation) return;
+        try {
+            setLoading(true);
+            const data = await getActiveConversations(
+                user.id,
+                selectedLocation.organization.id,
+                selectedLocation.location.id,
+                pageNum // pass page
+            );
 
-                    const params = new URLSearchParams(routerLocation.search);
-                    const conversationId = params.get("conversation");
-                    if (conversationId) {
-                        const found = response.data.results.find(
-                            (c) => c.conversationId.toString() === conversationId
-                        );
-                        if (found) {
-                            setActiveConversation(found);
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error fetching conversations:', err);
-                } finally {
-                    setLoading(false);
+            setTotalConversations(data.count);
+            setConversations((prev) =>
+                append ? [...prev, ...data.results] : data.results
+            );
+
+            // handle ?conversation= param only on first load
+            if (pageNum === 1) {
+                const params = new URLSearchParams(routerLocation.search);
+                const conversationId = params.get("conversation");
+                if (conversationId) {
+                    const found = data.results.find(
+                        (c) => c.conversationId.toString() === conversationId
+                    );
+                    if (found) setActiveConversation(found);
                 }
-            };
-            fetchConversations();
+            }
+        } catch (err) {
+            console.error("Error fetching conversations:", err);
+        } finally {
+            setLoading(false);
         }
+    };
+
+    // initial load
+    useEffect(() => {
+        fetchConversations(1, false);
     }, [user, selectedLocation]);
 
     return (
