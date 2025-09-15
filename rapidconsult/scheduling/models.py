@@ -111,11 +111,24 @@ class UnitMembership(models.Model):
 
 
 class OnCallShift(models.Model):
+    SHIFT_TYPE_CHOICES = [
+        ('oncall', 'On-Call'),
+        ('outpatient', 'Out-Patient'),
+    ]
+
     user = models.ForeignKey(UserOrgProfile, on_delete=models.CASCADE, related_name='on_call_shifts', null=True,
                              blank=True)
     unit = models.ForeignKey(Unit, related_name="shifts", on_delete=models.CASCADE, null=True, blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
+    shift_type = models.CharField(
+        max_length=20,
+        choices=SHIFT_TYPE_CHOICES,
+        default='oncall',
+        help_text="Type of shift: oncall or outpatient",
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         return f"{self.user} - {self.unit.name} ({self.start_time} to {self.end_time})"

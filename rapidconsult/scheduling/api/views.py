@@ -344,6 +344,7 @@ class OnCallShiftViewSet(ModelViewSet):
         department_id = self.request.query_params.get('department')
         location_id = self.request.query_params.get('location')
         user_id = self.request.query_params.get('user')
+        shift_type = self.request.query_params.get('shift_type')
 
         if unit_id:
             queryset = queryset.filter(unit_id=unit_id)
@@ -360,4 +361,8 @@ class OnCallShiftViewSet(ModelViewSet):
         if location_id:
             queryset = queryset.filter(unit__department__location_id=location_id)
 
+        if shift_type in ['oncall', 'outpatient']:
+            queryset = queryset.filter(shift_type=shift_type)
+
         return queryset
+

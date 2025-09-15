@@ -259,4 +259,4 @@ class OnCallShiftSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OnCallShift
-        fields = ['id', 'user', 'unit', 'start_time', 'end_time', 'user_details', 'unit_details']
+        fields = ['id', 'user', 'unit', 'shift_type', 'start_time', 'end_time', 'user_details', 'unit_details']
