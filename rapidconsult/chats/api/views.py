@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from django.db.models.query_utils import Q
 from django.utils import timezone
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -145,16 +147,34 @@ class UserConversationViewSet(viewsets.ViewSet):
         user_id = str(request.user.id)
         organization_id = request.query_params.get("organization_id")
         location_id = request.query_params.get("location_id")
+        search = request.query_params.get("search", "").strip()
 
-        # Check if user exists in the collection
+        # Check if user has any conversations
         if not UserConversation.objects(userId=user_id).first():
             return Response(
                 {"error": f"No conversations found for user_id '{user_id}'"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        queryset = UserConversation.objects(userId=user_id, organizationId=organization_id,
-                                            locationId=location_id).order_by("-updatedAt")
+        # Base queryset
+        queryset = UserConversation.objects(
+            userId=user_id,
+            organizationId=organization_id,
+            locationId=location_id
+        ).order_by("-updatedAt")
+
+        # Apply search filter if provided
+        if search:
+            # Search in direct message participant name or group chat name
+            queryset = queryset.filter(
+                __raw__={
+                    "$or": [
+                        {"directMessage.otherParticipantName": {"$regex": search, "$options": "i"}},
+                        {"groupChat.name": {"$regex": search, "$options": "i"}},
+                    ]
+                }
+            )
+
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
 

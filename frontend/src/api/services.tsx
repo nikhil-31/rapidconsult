@@ -10,6 +10,7 @@ export const getActiveConversations = async (
     organizationId: number,
     locationId: number,
     page_no: number,
+    search: string,
 ): Promise<PaginatedResponse<Conversation>> => {
     const res = await api.get<PaginatedResponse<Conversation>>(
         endpoints.activeConversations,
@@ -18,7 +19,8 @@ export const getActiveConversations = async (
                 user_id: userId,
                 organization_id: organizationId,
                 location_id: locationId,
-                page: page_no
+                page: page_no,
+                search: search,
             },
         }
     );

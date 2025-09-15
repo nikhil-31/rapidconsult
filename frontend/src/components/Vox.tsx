@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useRef, useState, UIEvent} from "react";
 import {AuthContext} from "../contexts/AuthContext";
-import {Layout, Typography, List, Skeleton} from "antd";
+import {Layout, Typography, List, Skeleton, Input} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
@@ -22,6 +22,7 @@ const Vox: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const [page, setPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
+    const [searchTerm, setSearchTerm] = useState<string>("");
 
     const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -33,7 +34,8 @@ const Vox: React.FC = () => {
                 user.id,
                 selectedLocation.organization.id,
                 selectedLocation.location.id,
-                pageNum
+                pageNum,
+                searchTerm // pass search term to API
             );
 
             setTotalConversations(data.count);
@@ -42,7 +44,12 @@ const Vox: React.FC = () => {
                 append ? [...prev, ...data.results] : data.results
             );
 
-            setHasMore(data.results.length > 0 && (append ? [...conversations, ...data.results].length < data.count : data.results.length < data.count));
+            setHasMore(
+                data.results.length > 0 &&
+                    (append
+                        ? [...conversations, ...data.results].length < data.count
+                        : data.results.length < data.count)
+            );
 
             // handle ?conversation= param only on first load
             if (pageNum === 1) {
@@ -62,11 +69,11 @@ const Vox: React.FC = () => {
         }
     };
 
-    // initial load
+    // initial load or search
     useEffect(() => {
         setPage(1);
         fetchConversations(1, false);
-    }, [user, selectedLocation]);
+    }, [user, selectedLocation, searchTerm]);
 
     // load more when scrolling
     const handleScroll = (e: UIEvent<HTMLDivElement>) => {
@@ -85,6 +92,14 @@ const Vox: React.FC = () => {
                     <Title level={5} style={{marginBottom: 10}}>
                         Conversations {totalConversations ? `- ${totalConversations}` : ''}
                     </Title>
+
+                    {/* Search Bar */}
+                    <Input.Search
+                        placeholder="Search conversations"
+                        allowClear
+                        onSearch={(value) => setSearchTerm(value)}
+                        style={{marginBottom: 12}}
+                    />
 
                     <div
                         ref={listRef}
@@ -125,17 +140,17 @@ const Vox: React.FC = () => {
                                     const updated = prev.map((conv) =>
                                         conv.conversationId === convId
                                             ? {
-                                                ...conv,
-                                                lastMessage: {
-                                                    messageId: message.id,
-                                                    content: message.content,
-                                                    senderId: message.senderId,
-                                                    senderName: message.senderName,
-                                                    timestamp: message.timestamp,
-                                                    type: message.type,
-                                                },
-                                                updatedAt: message.timestamp,
-                                            }
+                                                  ...conv,
+                                                  lastMessage: {
+                                                      messageId: message.id,
+                                                      content: message.content,
+                                                      senderId: message.senderId,
+                                                      senderName: message.senderName,
+                                                      timestamp: message.timestamp,
+                                                      type: message.type,
+                                                  },
+                                                  updatedAt: message.timestamp,
+                                              }
                                             : conv
                                     );
 
@@ -149,7 +164,6 @@ const Vox: React.FC = () => {
                                 });
                             }}
                         />
-
                     ) : (
                         <div style={{padding: 24}}>
                             <Text type="secondary">Select a conversation to start chatting</Text>
