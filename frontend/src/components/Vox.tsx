@@ -35,15 +35,13 @@ const Vox: React.FC = () => {
                 selectedLocation.organization.id,
                 selectedLocation.location.id,
                 pageNum,
-                searchTerm // pass search term to API
+                searchTerm
             );
 
             setTotalConversations(data.count);
-
             setConversations((prev) =>
                 append ? [...prev, ...data.results] : data.results
             );
-
             setHasMore(
                 data.results.length > 0 &&
                     (append

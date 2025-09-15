@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from django.db.models.query_utils import Q
-from django.utils import timezone
 from asgiref.sync import async_to_sync
+from bson import ObjectId
 from channels.layers import get_channel_layer
+from mongoengine.errors import ValidationError
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
@@ -15,18 +15,13 @@ from rest_framework.viewsets import GenericViewSet
 
 from config.utils import upload_to_spaces
 from rapidconsult.chats.models import Conversation, Message, User
-from rapidconsult.chats.mongo.models import UserConversation, Message as MongoMessage, LastMessageInfo, \
-    Conversation as MongoConversation
+from rapidconsult.chats.mongo.models import UserConversation, Message as MongoMessage, Conversation as MongoConversation
 from .mongo import create_direct_message, create_group_chat
 from .paginaters import MessagePagination
 from .pagination import UserConversationPagination
 from .permissions import HasOrgLocationAccess
 from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer, DirectMessageSerializer, \
     GroupChatSerializer, MongoMessageSerializer
-from ..consumers import VoxChatConsumer
-from bson import ObjectId
-from mongoengine.errors import ValidationError
-
 from ..utils import update_user_conversation
 
 
