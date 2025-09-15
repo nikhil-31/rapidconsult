@@ -120,8 +120,9 @@ const Vox: React.FC = () => {
                             key={activeConversation.conversationId}
                             conversation={activeConversation}
                             onNewMessage={(convId, message) => {
-                                setConversations((prev) =>
-                                    prev.map((conv) =>
+                                setConversations((prev) => {
+                                    // find the conversation and update it
+                                    const updated = prev.map((conv) =>
                                         conv.conversationId === convId
                                             ? {
                                                 ...conv,
@@ -136,10 +137,19 @@ const Vox: React.FC = () => {
                                                 updatedAt: message.timestamp,
                                             }
                                             : conv
-                                    )
-                                );
+                                    );
+
+                                    // find the updated conversation
+                                    const movedConv = updated.find((c) => c.conversationId === convId);
+                                    if (!movedConv) return updated;
+
+                                    // move it to the top
+                                    const filtered = updated.filter((c) => c.conversationId !== convId);
+                                    return [movedConv, ...filtered];
+                                });
                             }}
                         />
+
                     ) : (
                         <div style={{padding: 24}}>
                             <Text type="secondary">Select a conversation to start chatting</Text>
