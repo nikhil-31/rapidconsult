@@ -22,11 +22,10 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
     const [units, setUnits] = useState([]);
     const [members, setMembers] = useState([]);
 
-    const {selectedLocation, setSelectedLocation} = useOrgLocation();
+    const {selectedLocation} = useOrgLocation();
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState<number | null>(null);
     const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
-
 
     useEffect(() => {
         setSelectedLocationId(selectedLocation?.location?.id ?? null);
@@ -36,12 +35,9 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         if (!selectedLocationId) return;
 
         axios.get(`${apiUrl}/api/departments/?location_id=${selectedLocationId}`, {
-            headers: {
-                Authorization: `Token ${user?.token}`
-            },
+            headers: {Authorization: `Token ${user?.token}`},
         }).then(res => {
-            const data = res.data.results;
-            setDepartments(data);
+            setDepartments(res.data.results);
         });
     }, [selectedLocationId]);
 
@@ -49,12 +45,9 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         if (!selectedDepartment) return;
 
         axios.get(`${apiUrl}/api/units?department_id=${selectedDepartment}`, {
-            headers: {
-                Authorization: `Token ${user?.token}`
-            },
+            headers: {Authorization: `Token ${user?.token}`},
         }).then(res => {
-            const data = res.data.results
-            setUnits(data)
+            setUnits(res.data.results);
         });
     }, [selectedDepartment]);
 
@@ -65,14 +58,12 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             headers: {Authorization: `Token ${user?.token}`},
         }).then(res => {
             const unitData = res.data;
-            const unitMembers = unitData.members || [];
-            const formattedMembers = unitMembers.map((member: any) => ({
+            const formattedMembers = (unitData.members || []).map((member: any) => ({
                 id: member.user_details.id,
                 name: `${member.user_details.user.name || 'User'} (${member.user_details.role.name})`
             }));
             setMembers(formattedMembers);
         }).catch(err => console.error('Failed to fetch unit members', err));
-
     }, [selectedUnit]);
 
     const handleSubmit = async () => {
@@ -85,6 +76,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
                 unit: values.unit,
                 start_time: start.toISOString(),
                 end_time: end.toISOString(),
+                shift_type: values.shift_type, // ✅ added shift_type
             };
 
             await axios.post(`${apiUrl}/api/shifts/`, payload, {
@@ -99,6 +91,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             form.resetFields();
             onShiftCreated();
         } catch (error) {
+            console.error(error);
             message.error('Failed to create shift');
         }
     };
@@ -111,6 +104,17 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             footer={null}
         >
             <Form layout="vertical" form={form} onFinish={handleSubmit}>
+                <Form.Item
+                    label="Shift Type"
+                    name="shift_type"
+                    rules={[{required: true, message: "Please select a shift type"}]}
+                >
+                    <Select placeholder="Select shift type">
+                        <Option value="oncall">On-Call</Option>
+                        <Option value="outpatient">Outpatient</Option>
+                    </Select>
+                </Form.Item>
+
                 <Form.Item label="Department" name="department" rules={[{required: true}]}>
                     <Select
                         placeholder="Select department"

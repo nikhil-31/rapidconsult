@@ -1,5 +1,5 @@
 import axios, {AxiosResponse} from 'axios';
-import {Layout, Menu, Button, Typography, Space, Skeleton} from 'antd';
+import {Layout, Menu, Button, Typography, Space, Skeleton, Select} from 'antd';
 import dayjs from 'dayjs';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {Calendar, dateFnsLocalizer, View, Views,} from 'react-big-calendar';
@@ -24,6 +24,7 @@ const locales: Record<string, Locale> = {
 };
 const {Sider, Content} = Layout;
 const {Title} = Typography;
+const {Option} = Select;
 
 const localizer = dateFnsLocalizer({
     format,
@@ -61,6 +62,7 @@ const CalendarView: React.FC = () => {
     const [loadingDepartments, setLoadingDepartments] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState<Record<number, boolean>>({});
     const [loadingEvents, setLoadingEvents] = useState(false);
+    const [shiftType, setShiftType] = useState<"oncall" | "outpatient">("oncall");
 
     const stringToColor = (str: string): string => {
         let hash = 0;
@@ -75,7 +77,7 @@ const CalendarView: React.FC = () => {
     const fetchAllPages = async <T, >(
         url: string,
         params: Record<string, any>,
-        token: string
+        token: string,
     ): Promise<T[]> => {
         let results: T[] = [];
         let nextUrl: string | null = url;
@@ -138,7 +140,8 @@ const CalendarView: React.FC = () => {
             const data = await fetchAllPages<Shift>(
                 `${apiUrl}/api/shifts/`,
                 {
-                    unit: unitId
+                    unit: unitId,
+                    shift_type: shiftType,
                 },
                 user?.token!
             );
@@ -169,7 +172,6 @@ const CalendarView: React.FC = () => {
         }
     };
 
-
     const EventItem: React.FC<{ event: EventData }> = ({event}) => (
         <div>
             <strong>{event.username} - ({event.job_title})</strong>
@@ -193,9 +195,11 @@ const CalendarView: React.FC = () => {
         // Trigger click behavior when page loads
         if (selectedLocationId !== null && user !== null) {
             handleMyShiftsClick();
-
+        } else if (selectedKey.startsWith("unit-")) {
+            const unitId = parseInt(selectedKey.replace("unit-", ""), 10);
+            handleUnitClick(unitId);
         }
-    }, [selectedLocationId, user]);
+    }, [selectedLocationId, user, shiftType]);
 
     const handleEventClick = (event: EventData) => {
         setSelectedEvent(event);
@@ -241,7 +245,11 @@ const CalendarView: React.FC = () => {
         try {
             const data = await fetchAllPages<Shift>(
                 `${apiUrl}/api/shifts/`,
-                {user: getOrgProfileId(user), location: selectedLocationId},
+                {
+                    user: getOrgProfileId(user),
+                    location: selectedLocationId,
+                    shift_type: shiftType
+                },
                 user?.token!
             );
             const formatted: EventData[] = data.map((shift: Shift) => ({
@@ -276,6 +284,20 @@ const CalendarView: React.FC = () => {
                 width={350}
                 style={{backgroundColor: "#ffffff", borderRight: "1px solid #f0f0f0"}}
             >
+                <div style={{padding: "16px"}}>
+                    <Title level={5} style={{marginBottom: 8}}>
+                        Shift Type
+                    </Title>
+                    <Select
+                        value={shiftType}
+                        onChange={(value) => setShiftType(value as "oncall" | "outpatient")}
+                        style={{width: "100%"}}
+                    >
+                        <Option value="oncall">On-Call</Option>
+                        <Option value="outpatient">Outpatient</Option>
+                    </Select>
+                </div>
+
                 <div
                     key="my-shifts"
                     onClick={handleMyShiftsClick}
