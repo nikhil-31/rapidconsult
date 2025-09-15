@@ -142,7 +142,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             setMessages([]);
             setPage(1);
             setLastReadAt(conversation.lastReadAt); // in fetchMessages
-            // fetchMessages(1);
         }
     }, [conversation]);
 
@@ -167,7 +166,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
     // 🔹 Load more when user scrolls to top
     const loadMore = () => {
-        console.log(`load more ${hasMore}`)
         if (hasMore) {
             fetchMessages(page + 1);
         }

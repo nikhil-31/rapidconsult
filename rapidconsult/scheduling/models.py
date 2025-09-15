@@ -93,7 +93,8 @@ class Unit(models.Model):
     def get_current_oncall_shifts(self):
         now = timezone.now()
         return (
-            self.shifts.filter(start_time__lte=now, end_time__gte=now).select_related("user", "user__user")
+            self.shifts.filter(start_time__lte=now, end_time__gte=now, shift_type="oncall")
+            .select_related("user", "user__user")
         )
 
 
