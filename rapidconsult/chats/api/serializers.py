@@ -1,6 +1,8 @@
+import datetime
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from chats.mongo.models import Consultation
 from rapidconsult.chats.models import Message, Conversation
 from rapidconsult.users.api.serializers import UserSerializer
 
@@ -198,3 +200,50 @@ class MongoMessageSerializer(serializers.Serializer):
             except Exception:
                 return str(obj.replyTo)  # fallback to ID if not a full object
         return None
+
+
+class ConsultationSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+
+    # Patient Info
+    patientName = serializers.CharField()
+    patientAge = serializers.IntegerField(required=False, allow_null=True)
+    patientSex = serializers.ChoiceField(choices=["male", "female", "other"], required=False)
+    department = serializers.CharField(required=False, allow_blank=True)
+    ward = serializers.CharField(required=False, allow_blank=True)
+
+    # Referral Info
+    referredByDoctorId = serializers.CharField()
+    referredToDoctorId = serializers.CharField()
+    urgency = serializers.ChoiceField(choices=["routine", "urgent", "emergency"], default="routine")
+    diagnosis = serializers.CharField(required=False, allow_blank=True)
+    reasonForReferral = serializers.CharField(required=False, allow_blank=True)
+
+    # Workflow
+    status = serializers.ChoiceField(
+        choices=["pending", "in_progress", "completed", "closed"], default="pending"
+    )
+    consultantRemarks = serializers.CharField(required=False, allow_blank=True)
+    consultantReview = serializers.CharField(required=False, allow_blank=True)
+    reviewNotes = serializers.CharField(required=False, allow_blank=True)
+
+    # Date fields
+    createdAt = serializers.DateTimeField(read_only=True)
+    updatedAt = serializers.DateTimeField(read_only=True)
+    consultationDateTime = serializers.DateTimeField(required=False, allow_null=True)
+    closedAt = serializers.DateTimeField(required=False, allow_null=True)
+
+    # Scoping
+    locationId = serializers.CharField(required=False, allow_blank=True)
+    organizationId = serializers.CharField(required=False, allow_blank=True)
+    unitId = serializers.CharField(required=False, allow_blank=True)
+
+    def create(self, validated_data):
+        return Consultation.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.updatedAt = datetime.datetime.utcnow()
+        instance.save()
+        return instance

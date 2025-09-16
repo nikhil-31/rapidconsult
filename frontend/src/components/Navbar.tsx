@@ -70,11 +70,7 @@ export function Navbar() {
                                     {orgs.map((org) =>
                                         org.allowed_locations.map((loc) => (
                                             <Option key={loc.id} value={loc.id} label={loc.name}>
-                                                <div
-                                                    style={{
-                                                        padding: '4px 8px',
-                                                    }}
-                                                >
+                                                <div style={{padding: '4px 8px',}}>
                                                     <div style={{fontWeight: 500}}>{loc.name}</div>
                                                     <div style={{fontSize: '12px', color: '#999'}}>
                                                         {org.organization.name}
@@ -91,6 +87,18 @@ export function Navbar() {
                             <ul className="flex flex-col items-center mt-4 md:flex-row md:justify-center md:space-x-8 md:mt-0 md:text-sm md:font-medium">
                                 {user && (
                                     <>
+                                        <li>
+                                            <Link
+                                                to="/consults"
+                                                className={`block py-2 pr-4 pl-3 md:p-0 ${
+                                                    isActive("/consults")
+                                                        ? "text-red-700 font-semibold"
+                                                        : "text-black"
+                                                }`}
+                                            >
+                                                Consults
+                                            </Link>
+                                        </li>
                                         <li>
                                             <Link
                                                 to="/schedules"

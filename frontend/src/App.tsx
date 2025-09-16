@@ -14,6 +14,7 @@ import OnCall from "./components/OnCall";
 import {LocationProvider} from "./contexts/LocationContext";
 import Vox from "./components/Vox";
 import NotFound from "./components/NotFound";
+import Consults from "./components/Consults";
 
 export default function App() {
     return (
@@ -50,6 +51,11 @@ export default function App() {
                             <Route path="/schedules" element={
                                 <ProtectedRoute>
                                     <CalendarView/>
+                                </ProtectedRoute>
+                            }/>
+                            <Route path="/consults" element={
+                                <ProtectedRoute>
+                                    <Consults/>
                                 </ProtectedRoute>
                             }/>
                             <Route path="/admin" element={

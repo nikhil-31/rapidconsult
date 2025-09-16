@@ -198,3 +198,37 @@ class UserConversation(Document):
             {"fields": ["userId", "organizationId", "locationId", "-updatedAt"]}
         ]
     }
+
+
+class Consultation(Document):
+    # Patient Info
+    patientName = StringField(required=True)
+    patientAge = IntField(null=True)
+    patientSex = StringField(choices=["male", "female", "other"])
+    department = StringField()
+    ward = StringField()
+
+    referredByDoctorId = IntField(required=True)
+    referredToDoctorId = IntField(required=True)
+    urgency = StringField(choices=["routine", "urgent", "emergency"], default="routine")
+    diagnosis = StringField()
+    reasonForReferral = StringField()
+
+    # Workflow
+    status = StringField(choices=["pending", "in_progress", "completed", "closed"], default="pending")
+    consultantRemarks = StringField()
+    consultantReview = StringField()
+    reviewNotes = StringField()
+
+    # Dates
+    createdAt = DateTimeField(default=datetime.datetime.utcnow)
+    updatedAt = DateTimeField(default=datetime.datetime.utcnow)
+    consultationDateTime = DateTimeField()
+    closedAt = DateTimeField()
+
+    # Scoping
+    locationId = StringField()
+    organizationId = StringField()
+    unitId = StringField()
+
+    meta = {"collection": "consultations"}

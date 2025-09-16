@@ -29,7 +29,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     const wsUrl = process.env.REACT_APP_WS_URL;
 
     const {user} = useContext(AuthContext);
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const {selectedLocation} = useOrgLocation();
     const [conversationId, setConversationId] = useState("");
 
@@ -335,11 +334,11 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                     type: "read_messages",
                     conversationId: conversationId,
                 });
-            }, 10000); // 10 seconds delay
+            }, 5000);
         }
 
         return () => {
-            if (timer) clearTimeout(timer); // cleanup on unmount or dep change
+            if (timer) clearTimeout(timer);
         };
     }, [conversationId, readyState]);
 
