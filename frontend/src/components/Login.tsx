@@ -17,19 +17,23 @@ export function Login() {
             password: '',
         },
         onSubmit: async (values, {setSubmitting}) => {
+            setError(null); // reset previous error
             setSubmitting(true);
-            const {username, password} = values;
-            const res = await login(username, password);
-            if (res.error || res.data) {
-                if (res.data?.detail) {
-                    setError(res.data.detail);
+            try {
+                const {username, password} = values;
+                const res = await login(username, password);
+
+                if (res?.error || res?.data?.detail) {
+                    setError(res.data?.detail || 'Invalid username or password');
                 } else {
-                    setError('Login failed');
+                    navigate('/');
                 }
-            } else {
-                navigate('/');
+            } catch (err) {
+                console.error('Login error:', err);
+                setError('Something went wrong. Please try again later.');
+            } finally {
+                setSubmitting(false);
             }
-            setSubmitting(false);
         },
     });
 
@@ -58,21 +62,31 @@ export function Login() {
                     )}
 
                     <Form layout="vertical" onFinish={formik.handleSubmit}>
-                        <Form.Item label="Username" required>
+                        <Form.Item
+                            label="Username"
+                            required
+                            validateStatus={error ? 'error' : ''}
+                        >
                             <Input
                                 name="username"
                                 value={formik.values.username}
                                 onChange={formik.handleChange}
                                 placeholder="Enter your username"
+                                disabled={formik.isSubmitting}
                             />
                         </Form.Item>
 
-                        <Form.Item label="Password" required>
+                        <Form.Item
+                            label="Password"
+                            required
+                            validateStatus={error ? 'error' : ''}
+                        >
                             <Input.Password
                                 name="password"
                                 value={formik.values.password}
                                 onChange={formik.handleChange}
                                 placeholder="Enter your password"
+                                disabled={formik.isSubmitting}
                             />
                         </Form.Item>
 
