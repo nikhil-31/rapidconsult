@@ -378,8 +378,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     // Format a date into "Today", "Yesterday", or short date
     const formatDateHeader = (date: string) => {
         const msgDate = new Date(date);
-        const today = new Date();
-
         const isToday = msgDate.toDateString() === new Date().toDateString();
         const isYesterday =
             msgDate.toDateString() === new Date(Date.now() - 86400000).toDateString();
