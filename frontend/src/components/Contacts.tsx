@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
                 style={{
                     background: '#fff',
                     borderRight: '1px solid #f0f0f0',
-                    padding: '24px',
+                    padding: '16px',
                     overflowY: 'auto',
                     height: '100vh',
                     marginBottom: '24px'

@@ -100,7 +100,7 @@ const OnCall: React.FC = () => {
                 }}
             >
                 <div style={{padding: 16}}>
-                    <Title level={5} style={{marginBottom: 10}}>Departments</Title>
+                    <Title level={5}>Departments</Title>
                 </div>
 
                 {/* Scrollable container */}

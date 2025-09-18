@@ -4,23 +4,8 @@ import {AuthContext} from "../contexts/AuthContext";
 import {NotificationContext} from "../contexts/NotificationContext";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {OrgLocation} from "../models/OrgLocation";
-import {
-    Layout,
-    Menu,
-    Select,
-    Dropdown,
-    Avatar,
-    Badge,
-    Typography,
-    Space,
-    ConfigProvider,
-} from "antd";
-import {
-    UserOutlined,
-    LogoutOutlined,
-    ProfileOutlined,
-    SettingOutlined,
-} from "@ant-design/icons";
+import {Layout, Menu, Select, Dropdown, Avatar, Badge, Typography, Space, ConfigProvider} from "antd";
+import {UserOutlined, LogoutOutlined, ProfileOutlined, SettingOutlined} from "@ant-design/icons";
 import type {MenuProps} from "antd";
 
 const {Header, Content} = Layout;
@@ -83,10 +68,10 @@ export function Navbar() {
             theme={{
                 components: {
                     Menu: {
-                        itemSelectedColor: "red",              // selected text color
-                        horizontalItemSelectedColor: "red",    // for horizontal menus
-                        itemSelectedBg: "transparent",         // no background highlight
-                        itemHoverColor: "red",                 // hover turns red
+                        itemSelectedColor: "red",
+                        horizontalItemSelectedColor: "red",
+                        itemSelectedBg: "transparent",
+                        itemHoverColor: "red",
                     },
                 },
             }}
