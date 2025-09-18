@@ -1,9 +1,7 @@
 import axios from "axios";
 import React, {useState, useEffect, useContext, useRef} from "react";
 import {Input, Button, Upload, List, Tooltip, Typography, Spin} from "antd";
-import {
-    UploadOutlined, SendOutlined, SmileOutlined, RollbackOutlined, CloseOutlined,
-} from "@ant-design/icons";
+import {UploadOutlined, SendOutlined, SmileOutlined, RollbackOutlined, CloseOutlined,} from "@ant-design/icons";
 import type {UploadFile} from "antd/es/upload/interface";
 import Picker from "emoji-picker-react";
 import {Conversation} from "../models/ActiveConversation";
@@ -12,6 +10,8 @@ import {AuthContext} from "../contexts/AuthContext";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {deserializeMessage, Message} from "../models/Message";
 import InfiniteScroll from "react-infinite-scroll-component";
+import {ChatBubble} from "./ChatBubble";
+import {ChatDivider} from "./ChatDivider";
 
 const {Text} = Typography;
 
@@ -91,9 +91,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 const list = listRef.current;
                 if (!list) return;
 
-                if (!list) return;
-
-                // ✅ Load older messages → preserve position
                 const prevScrollHeight = list.scrollHeight;
 
                 const reversed = newMsgs.reverse()
@@ -334,7 +331,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                     type: "read_messages",
                     conversationId: conversationId,
                 });
-            }, 5000);
+            }, 3000);
         }
 
         return () => {
@@ -518,139 +515,17 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
                                 if (item.type === "divider") {
                                     return (
-                                        <div
-                                            key={item.id}
-                                            id={item.id} // 👈 gives us a target for scrolling
-                                            className={`flex items-center my-3 ${
-                                                item.style === "unread" ? "text-red-500" : "text-gray-500"
-                                            }`}
-                                        >
-                                            <div className="flex-grow border-t border-gray-300"/>
-                                            <span
-                                                className={`px-3 text-xs font-medium ${
-                                                    item.style === "unread"
-                                                        ? "bg-red-50 border border-red-300 rounded-full"
-                                                        : ""
-                                                }`}
-                                            >
-                                                {item.dateLabel}
-                                            </span>
-                                            <div className="flex-grow border-t border-gray-300"/>
-                                        </div>
+                                        <ChatDivider
+                                            id={item.id}
+                                            style={item.style}
+                                            dateLabel={item.dateLabel}
+                                        />
                                     );
                                 }
 
                                 const msg: Message = item.data;
-                                const mine = Number(msg.senderId) === Number(user?.id);
-
                                 return (
-                                    <List.Item
-                                        key={msg.id}
-                                        id={`message-${msg.id}`}
-                                        style={{padding: 0, border: "none", background: "transparent"}}
-                                    >
-                                        {/* Full-width row that controls left/right placement */}
-                                        <div className={`w-full flex ${mine ? "justify-end" : "justify-start"} my-1`}>
-                                            <div className="flex flex-col max-w-[75%] sm:max-w-[65%] md:max-w-[55%]">
-                                                {msg.replyTo && (
-                                                    <div
-                                                        className="text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500 pl-2 pr-3 py-1 rounded mb-1 max-w-xs cursor-pointer hover:bg-gray-200 transition"
-                                                        onClick={() => {
-                                                            const el = document.getElementById(`message-${msg.replyTo?.id}`);
-                                                            if (el) {
-                                                                el.scrollIntoView({
-                                                                    behavior: "smooth",
-                                                                    block: "center"
-                                                                });
-                                                                const originalBg = el.style.backgroundColor;
-                                                                el.style.backgroundColor = "#FEF3C7";
-                                                                setTimeout(() => {
-                                                                    el.style.backgroundColor = originalBg;
-                                                                }, 2000);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <div className="italic text-gray-500">Replying to:</div>
-                                                        <div>
-                                                            <div
-                                                                className="font-semibold">{msg.replyTo.senderName}</div>
-                                                            <div className="text-gray-700">{msg.replyTo.content}</div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* The bubble */}
-                                                <div
-                                                    className={`p-2 rounded-2xl shadow max-w-xs break-words ${
-                                                        mine
-                                                            ? "bg-white text-gray-900 rounded-br-sm text-right"
-                                                            : "bg-white text-gray-900 rounded-bl-sm text-left"
-                                                    }`}
-                                                >
-                                                    <div className="font-semibold text-[11px] opacity-80 mb-1">
-                                                        {msg.senderName}
-                                                    </div>
-
-                                                    {msg.media?.url ? (
-                                                        msg.media.mimeType?.startsWith("image/") ? (
-                                                            <a href={msg.media.url} target="_blank"
-                                                               rel="noopener noreferrer">
-                                                                <img
-                                                                    src={msg.media.url}
-                                                                    alt={msg.media.filename || "image"}
-                                                                    className="max-w-full mt-2 rounded-lg"
-                                                                />
-                                                            </a>
-                                                        ) : (
-                                                            <a
-                                                                href={msg.media.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-blue-500 underline mt-2 block"
-                                                            >
-                                                                {msg.media.filename || "Download file"}
-                                                            </a>
-                                                        )
-                                                    ) : msg.fileUrl ? (
-                                                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                                                            <img
-                                                                src={msg.fileUrl}
-                                                                alt="file"
-                                                                className="max-w-full mt-2 rounded-lg"
-                                                            />
-                                                        </a>
-                                                    ) : null}
-
-                                                    {msg.content && (
-                                                        <div
-                                                            className="whitespace-pre-wrap break-words">{msg.content}</div>
-                                                    )}
-
-                                                    {msg.timestamp && (
-                                                        <div className="text-[10px] text-gray-400 mt-1 text-right">
-                                                            {new Date(msg.timestamp).toLocaleString([], {
-                                                                month: "short",
-                                                                day: "numeric",
-                                                                hour: "2-digit",
-                                                                minute: "2-digit",
-                                                            })}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className={`mt-1 ${mine ? "self-end" : "self-start"}`}>
-                                                    <Tooltip title="Reply">
-                                                        <Button
-                                                            size="small"
-                                                            type="text"
-                                                            icon={<RollbackOutlined/>}
-                                                            onClick={() => setReplyTo(msg)}
-                                                        />
-                                                    </Tooltip>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </List.Item>
+                                    <ChatBubble msg={msg} userId={user?.id} setReplyTo={setReplyTo}/>
                                 );
                             }}
                         />
@@ -729,9 +604,9 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                             (file as any).preview = URL.createObjectURL(file);
                         }
                         setFiles((prev) => [...prev, file]);
-                        return false; // prevent auto-upload
+                        return false;
                     }}
-                    showUploadList={false} // 👈 disable AntD’s default preview
+                    showUploadList={false}
                 >
                     <Button icon={<UploadOutlined/>}/>
                 </Upload>
