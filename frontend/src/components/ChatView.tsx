@@ -527,7 +527,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                                 );
                             }}
                         />
-
                     </InfiniteScroll>
                 </div>
             </div>
@@ -545,7 +544,8 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
             {/* Reply Context */}
             {replyTo && (
                 <div
-                    className="w-full text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500 pl-2 pr-3 py-3 rounded mb-1 flex justify-between items-start"
+                    className="w-full text-xs text-gray-600 bg-gray-100 border-l-2 border-red-500
+                    pl-2 pr-3 py-3 rounded mb-1 flex justify-between items-start"
                 >
                     <div>
                         <div className="italic text-gray-500">Replying to:</div>

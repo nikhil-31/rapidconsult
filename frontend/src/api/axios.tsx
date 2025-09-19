@@ -19,18 +19,18 @@ api.interceptors.request.use(
     }
 );
 
-// // Response interceptor (e.g., handle errors, refresh tokens, logging)
-// api.interceptors.response.use(
-//     (response) => response,
-//     (error) => {
-//         if (error.response?.status === 401) {
-//             // Handle unauthorized, maybe redirect to log in
-//             console.error("Unauthorized, logging out...");
-//             localStorage.removeItem("token");
-//             window.location.href = "/login";
-//         }
-//         return Promise.reject(error);
-//     }
-// );
+// Response interceptor (e.g., handle errors, refresh tokens, logging)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Handle unauthorized, maybe redirect to log in
+            console.error("Unauthorized, logging out...");
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default api;

@@ -1,12 +1,13 @@
 import React, {useContext, useEffect, useRef, useState, UIEvent} from "react";
 import {AuthContext} from "../contexts/AuthContext";
-import {Layout, Typography, List, Skeleton, Input} from "antd";
+import {Layout, Typography, List, Skeleton, Input, Button} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {Conversation} from "../models/ActiveConversation";
 import ChatView from "./ChatView";
 import {useLocation} from "react-router-dom";
 import {getActiveConversations} from "../api/services";
 import ConversationListItem from "./ConversationListItem";
+import {SearchOutlined} from "@ant-design/icons";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -44,9 +45,9 @@ const Vox: React.FC = () => {
             );
             setHasMore(
                 data.results.length > 0 &&
-                    (append
-                        ? [...conversations, ...data.results].length < data.count
-                        : data.results.length < data.count)
+                (append
+                    ? [...conversations, ...data.results].length < data.count
+                    : data.results.length < data.count)
             );
 
             // handle ?conversation= param only on first load
@@ -95,8 +96,18 @@ const Vox: React.FC = () => {
                     <Input.Search
                         placeholder="Search conversations"
                         allowClear
+                        enterButton={
+                            <Button
+                                type="default"
+                                icon={<SearchOutlined style={{color: "red"}}/>}
+                                style={{borderColor: "red"}}
+                            />
+                        }
                         onSearch={(value) => setSearchTerm(value)}
-                        style={{marginBottom: 12}}
+                        style={{
+                            marginBottom: 12,
+                        }}
+                        className="custom-search"
                     />
 
                     <div
@@ -138,17 +149,17 @@ const Vox: React.FC = () => {
                                     const updated = prev.map((conv) =>
                                         conv.conversationId === convId
                                             ? {
-                                                  ...conv,
-                                                  lastMessage: {
-                                                      messageId: message.id,
-                                                      content: message.content,
-                                                      senderId: message.senderId,
-                                                      senderName: message.senderName,
-                                                      timestamp: message.timestamp,
-                                                      type: message.type,
-                                                  },
-                                                  updatedAt: message.timestamp,
-                                              }
+                                                ...conv,
+                                                lastMessage: {
+                                                    messageId: message.id,
+                                                    content: message.content,
+                                                    senderId: message.senderId,
+                                                    senderName: message.senderName,
+                                                    timestamp: message.timestamp,
+                                                    type: message.type,
+                                                },
+                                                updatedAt: message.timestamp,
+                                            }
                                             : conv
                                     );
 

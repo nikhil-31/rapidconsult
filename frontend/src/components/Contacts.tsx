@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from 'react';
-import {Layout, Avatar, Typography, List, Skeleton} from 'antd';
-import {UserOutlined} from '@ant-design/icons';
+import {Layout, Avatar, Typography, List, Skeleton, Input, Button} from 'antd';
+import {SearchOutlined, UserOutlined} from '@ant-design/icons';
 import axios, {AxiosResponse} from 'axios';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
@@ -8,9 +8,7 @@ import {UserModel} from "../models/UserModel";
 import {ProfileData} from "../models/ProfileData";
 import ProfileDetails from "./ProfileDetails";
 import {PaginatedResponse} from "../models/PaginatedResponse";
-import {Input} from "antd";
 
-const {Search} = Input;
 const {Sider} = Layout;
 const {Title, Text} = Typography;
 
@@ -43,7 +41,6 @@ const Dashboard: React.FC = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
-
 
     const fetchUserData = async (pageNum = 1) => {
         if (!selectedLocation?.location?.id) return;
@@ -143,10 +140,16 @@ const Dashboard: React.FC = () => {
                     <Title level={5} style={{marginBottom: 10}}>
                         Users - {totalUsers}
                     </Title>
-                    <Search
+                    <Input.Search
                         placeholder="Search users by name"
                         allowClear
-                        enterButton
+                        enterButton={
+                            <Button
+                                type="default"
+                                icon={<SearchOutlined style={{color: "red"}}/>}
+                                style={{borderColor: "red"}}
+                            />
+                        }
                         onSearch={(value) => {
                             if (!value) {
                                 fetchUserData(1);
