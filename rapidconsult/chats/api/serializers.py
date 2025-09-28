@@ -2,7 +2,7 @@ import datetime
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from chats.mongo.models import Consultation
+from rapidconsult.chats.mongo.models import Consultation
 from rapidconsult.chats.models import Message, Conversation
 from rapidconsult.users.api.serializers import UserSerializer
 
