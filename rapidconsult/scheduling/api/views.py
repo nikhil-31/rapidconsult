@@ -174,7 +174,7 @@ class UnitViewSet(viewsets.ModelViewSet):
             description=f"Group chat for unit {unit.name}",
             member_ids=[str(mid) for mid in member_ids],
             location_id=str(department.location_id),
-            organization_id=str(department.location_id.organization_id),
+            organization_id=str(department.location.organization_id),
             unit_id=str(unit.id),
         )
 
