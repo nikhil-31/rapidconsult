@@ -6,6 +6,8 @@ const endpoints = {
     departments: "departments/org/",
     users: "users/all/",
     units: "units/",
+    messages: "messages/",
+    saveMessage: "save-message/",
 };
 
 export default endpoints;

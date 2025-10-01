@@ -1,7 +1,6 @@
-import axios from "axios";
 import React, {useState, useEffect, useContext, useRef} from "react";
 import {Input, Button, Upload, List, Tooltip, Typography, Spin} from "antd";
-import {UploadOutlined, SendOutlined, SmileOutlined, RollbackOutlined, CloseOutlined,} from "@ant-design/icons";
+import {UploadOutlined, SendOutlined, SmileOutlined, CloseOutlined,} from "@ant-design/icons";
 import type {UploadFile} from "antd/es/upload/interface";
 import Picker from "emoji-picker-react";
 import {Conversation} from "../models/ActiveConversation";
@@ -12,6 +11,7 @@ import {deserializeMessage, Message} from "../models/Message";
 import InfiniteScroll from "react-infinite-scroll-component";
 import {ChatBubble} from "./ChatBubble";
 import {ChatDivider} from "./ChatDivider";
+import {getMessages, sendMessage} from "../api/services";
 
 const {Text} = Typography;
 
@@ -25,7 +25,6 @@ interface ChatViewProps {
 }
 
 const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
-    const apiUrl = process.env.REACT_APP_API_URL;
     const wsUrl = process.env.REACT_APP_WS_URL;
 
     const {user} = useContext(AuthContext);
@@ -57,7 +56,6 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
     // unread messages
     const [lastReadAt, setLastReadAt] = useState<string | null>(null);
 
-
     // Reset messages when conversation changes
     useEffect(() => {
         if (conversation) {
@@ -69,21 +67,17 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
     // Fetch messages via REST (paginated)
     const fetchMessages = async (pageNum: number) => {
-        try {
-            const res = await axios.get(`${apiUrl}/api/messages/`, {
-                params: {
-                    conversation_id: conversationId,
-                    page: pageNum,
-                    page_size: 50,
-                    organization_id: selectedLocation?.organization.id,
-                    location_id: selectedLocation?.location.id,
-                },
-                headers: {Authorization: `Token ${user?.token}`},
-            });
+        if (!user?.token || !conversationId || !selectedLocation) return;
 
-            const newMsgs: Message[] = res.data.results.map((m: any) =>
-                deserializeMessage(m)
+        try {
+            const res = await getMessages(
+                conversationId,
+                selectedLocation.organization.id,
+                selectedLocation.location.id,
+                pageNum
             );
+
+            const newMsgs: Message[] = res.results.map(deserializeMessage);
 
             if (pageNum === 1) {
                 setMessages(newMsgs.reverse());
@@ -93,7 +87,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
                 const prevScrollHeight = list.scrollHeight;
 
-                const reversed = newMsgs.reverse()
+                const reversed = newMsgs.reverse();
                 setMessages((prev) => [...reversed, ...prev]);
 
                 requestAnimationFrame(() => {
@@ -104,7 +98,7 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 });
             }
 
-            setHasMore(!!res.data.next);
+            setHasMore(!!res.next);
             setPage(pageNum);
             setLoadError(false);
         } catch (err) {
@@ -352,28 +346,22 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
                 formData.append("file", files[0] as any);
             }
 
-            // send via REST API
-            const response = await axios.post(
-                `${apiUrl}/api/save-message/`,
-                formData,
-                {
-                    headers: {
-                        "Authorization": `Token ${user?.token}`,
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
-            );
-
-            const savedMessage: Message = deserializeMessage(response.data);
+            const response = await sendMessage(
+                conversationId,
+                String(selectedLocation?.organization.id ?? ""),
+                String(selectedLocation?.location.id ?? ""),
+                input,
+                files[0] as any
+            )
 
             setInput("");
             setFiles([]);
             setReplyTo(null);
-
         } catch (error) {
             console.error("Failed to send message:", error);
         }
     };
+
 
     // Format a date into "Today", "Yesterday", or short date
     const formatDateHeader = (date: string) => {

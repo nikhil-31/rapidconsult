@@ -7,6 +7,7 @@ import {Department} from "../models/Department";
 import {Location} from "../models/Location";
 import {UserModel} from "../models/UserModel";
 import {Unit} from "../models/Unit";
+import {Message} from "../models/Message";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -95,6 +96,51 @@ export const getUnits = async (
                 page_size: pageSize,
             },
         });
+    return res.data;
+};
+
+// Get messages
+export const getMessages = async (
+    conversationId: string,
+    organizationId: number,
+    locationId: number,
+    page: number,
+    pageSize: number = 50,
+): Promise<PaginatedResponse<Message>> => {
+    const res = await api.get<PaginatedResponse<Message>>(endpoints.messages, {
+        params: {
+            conversation_id: conversationId,
+            page,
+            page_size: pageSize,
+            organization_id: organizationId,
+            location_id: locationId,
+        }
+    });
+    return res.data;
+};
+
+// Create a Text/ Image message
+export const sendMessage = async (
+    conversationId: string,
+    organizationId: string,
+    locationId: string,
+    content: string,
+    file?: File
+): Promise<Message> => {
+    const formData = new FormData();
+    formData.append("conversationId", conversationId);
+    formData.append("content", content);
+    formData.append("organization_id", String(organizationId));
+    formData.append("location_id", String(locationId));
+
+    if (file) {
+        formData.append("file", file);
+    }
+
+    const res = await api.post<Message>(
+        endpoints.saveMessage, formData
+    );
+
     return res.data;
 };
 
