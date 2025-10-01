@@ -9,6 +9,7 @@ import {UserModel} from "../models/UserModel";
 import {Unit} from "../models/Unit";
 import {Message} from "../models/Message";
 import {ProfileData} from "../models/ProfileData";
+import {Contact} from "../models/Contact";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -153,7 +154,7 @@ export const getUserProfile = async (userId: string): Promise<ProfileData> => {
 
 export const searchUsers = async (query: string): Promise<UserModel[]> => {
     const res = await api.get(endpoints.userSearch, {
-        params: { q: query },
+        params: {q: query},
     });
 
     // Normalize response to always be an array
@@ -182,6 +183,36 @@ export const updateDepartment = async (departmentId: number, formData: FormData)
     return res.data;
 };
 
+export const getProfile = async (): Promise<ProfileData> => {
+    const res = await api.get<ProfileData>(endpoints.profileMe);
+    return res.data;
+};
+
+// Update profile (with FormData for file upload)
+export const updateProfile = async (formData: FormData) => {
+    const res = await api.patch(endpoints.profileMe, formData, {
+        headers: {"Content-Type": "multipart/form-data"},
+    });
+    return res.data;
+};
+
+// Add contact
+export const addContact = async (contact: Partial<Contact>) => {
+    const res = await api.post(endpoints.contacts, contact);
+    return res.data;
+};
+
+// Update contact
+export const updateContact = async (contactId: number, contact: Partial<Contact>) => {
+    const res = await api.put(`${endpoints.contacts}${contactId}/`, contact);
+    return res.data;
+};
+
+// Delete contact
+export const deleteContact = async (contactId: number) => {
+    const res = await api.delete(`${endpoints.contacts}${contactId}/`);
+    return res.data;
+};
 
 // Create a new consultation
 // export const createConsultation = async (

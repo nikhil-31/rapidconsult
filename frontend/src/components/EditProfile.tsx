@@ -1,18 +1,17 @@
 // pages/EditProfile.tsx
 import React, {useContext, useEffect, useState} from 'react';
-import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {useNavigate} from 'react-router-dom';
 import {ProfileData} from '../models/ProfileData';
 import {Contact} from '../models/Contact';
 import {UploadOutlined, PlusOutlined} from '@ant-design/icons';
 import {Card, Form, Input, Button, Avatar, Upload, Table, Modal, Checkbox, Typography, Space, Skeleton,} from 'antd';
+import {addContact, deleteContact, getProfile, updateContact, updateProfile} from "../api/services";
 
 const {Title, Text} = Typography;
 
 const EditProfile: React.FC = () => {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const {user} = useContext(AuthContext);
+
     const navigate = useNavigate();
     const [profile, setProfile] = useState<ProfileData>({
         id: 0,
@@ -33,10 +32,7 @@ const EditProfile: React.FC = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/profile/me/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            const profileData = res.data;
+            const profileData = await getProfile();
             setProfile({
                 id: profileData.id,
                 name: profileData.name || '',
@@ -75,17 +71,11 @@ const EditProfile: React.FC = () => {
             const formData = new FormData();
             formData.append('name', values.name);
             formData.append('email', values.email);
-
             if (selectedFile) formData.append('profile_picture', selectedFile);
 
-            await axios.patch(`${apiUrl}/api/profile/me/`, formData, {
-                headers: {
-                    Authorization: `Token ${user?.token}`,
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            await updateProfile(formData);
             navigate('/profile');
-        } catch (err: any) {
+        } catch (err) {
             console.error(err);
         } finally {
             setSaving(false);
@@ -112,15 +102,13 @@ const EditProfile: React.FC = () => {
                 number: values.number,
                 primary: values.primary,
             };
+
             if (editingContact) {
-                await axios.put(`${apiUrl}/api/contacts/${editingContact.id}/`, contactData, {
-                    headers: {Authorization: `Token ${user?.token}`},
-                });
+                await updateContact(editingContact.id, contactData);
             } else {
-                await axios.post(`${apiUrl}/api/contacts/`, contactData, {
-                    headers: {Authorization: `Token ${user?.token}`},
-                });
+                await addContact(contactData);
             }
+
             fetchProfile();
             setContactModalVisible(false);
         } catch (err) {
@@ -130,11 +118,8 @@ const EditProfile: React.FC = () => {
 
     const handleDelete = async () => {
         if (!editingContact) return;
-
         try {
-            await axios.delete(`${apiUrl}/api/contacts/${editingContact.id}/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
+            await deleteContact(editingContact.id);
             fetchProfile();
             setContactModalVisible(false);
             setConfirmDelete(false);
@@ -223,7 +208,6 @@ const EditProfile: React.FC = () => {
                 </Card>
             </div>
         );
-
 
     return (
         <div style={{maxWidth: 960, margin: '0 auto', padding: 24}}>

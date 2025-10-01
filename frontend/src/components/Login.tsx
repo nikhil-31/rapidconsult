@@ -17,7 +17,7 @@ export function Login() {
             password: '',
         },
         onSubmit: async (values, {setSubmitting}) => {
-            setError(null); // reset previous error
+            setError(null);
             setSubmitting(true);
             try {
                 const {username, password} = values;

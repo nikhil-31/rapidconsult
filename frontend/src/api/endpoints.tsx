@@ -11,6 +11,8 @@ const endpoints = {
     saveMessage: "save-message/",
     userProfile: "profile/",
     userSearch: "users/search/",
+    profileMe: "profile/me/",
+    contacts: "contacts/",
 };
 
 export default endpoints;
