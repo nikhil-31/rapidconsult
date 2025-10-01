@@ -1,34 +1,24 @@
 import React, {useEffect, useState, useContext} from 'react';
-import axios, {AxiosResponse} from 'axios';
-import {
-    Table,
-    Button,
-    Avatar,
-    Typography,
-    Space,
-    Spin,
-    Tooltip,
-    message,
-} from 'antd';
+import {Table, Button, Avatar, Typography, Space, Spin, Tooltip, message} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
-import {PaginatedResponse} from "../models/PaginatedResponse";
+import {getDepartments} from "../api/services";
 
 const {Title} = Typography;
 
 interface DepartmentTableProps {
     selectedOrgId: string;
     onEdit: (department: Department) => void;
-    onReload: () => void;
     onCreate: () => void;
+    refresh: number;
 }
 
 export default function DepartmentTable({
                                             selectedOrgId,
                                             onEdit,
-                                            onReload,
                                             onCreate,
+                                            refresh,
                                         }: DepartmentTableProps) {
 
     const {user} = useContext(AuthContext);
@@ -40,35 +30,22 @@ export default function DepartmentTable({
         total: 0,
     });
 
-    const apiUrl = process.env.REACT_APP_API_URL;
-
-    const fetchDepartments = async (page = 1, pageSize = 10) => {
+    const fetchDepartments = async (page = 1, pageSize = 20) => {
         if (!selectedOrgId) return;
 
         setLoading(true);
         try {
-            const response: AxiosResponse<PaginatedResponse<Department>> = await axios.get(
-                `${apiUrl}/api/departments/org`,
-                {
-                    headers: {
-                        Authorization: `Token ${user?.token}`,
-                    },
-                    params: {
-                        organization_id: selectedOrgId,
-                        page,
-                        page_size: pageSize,
-                    },
-                }
-            );
-            setDepartments(response.data.results);
+            const res = await getDepartments(selectedOrgId, page, pageSize);
+
+            setDepartments(res.results);
             setPagination(prev => ({
                 ...prev,
                 current: page,
                 pageSize,
-                total: response.data.count, // DRF pagination provides `count`
+                total: res.count,
             }));
         } catch (error) {
-            console.error('Failed to fetch departments:', error);
+            console.error("Failed to fetch departments:", error);
         } finally {
             setLoading(false);
         }
@@ -78,8 +55,7 @@ export default function DepartmentTable({
         if (selectedOrgId) {
             fetchDepartments(pagination.current, pagination.pageSize);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedOrgId, onReload]);
+    }, [selectedOrgId, refresh]);
 
     const handleDelete = async (deptId: number) => {
         message.warning('Delete is not supported.');

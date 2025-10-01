@@ -1,10 +1,8 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Table, Button, Avatar, Space, Typography, Tooltip, Row, Col} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {UserModel} from '../models/UserModel';
-import axios, {AxiosResponse} from "axios";
-import {PaginatedResponse} from "../models/PaginatedResponse";
-import {AuthContext} from "../contexts/AuthContext";
+import {getUsers} from "../api/services";
 
 const {Title} = Typography;
 
@@ -13,6 +11,7 @@ interface UserTableSectionProps {
     onCreateUser: () => void;
     onEditUser: (user: UserModel) => void;
     onDeleteUser: (user: UserModel) => void;
+    refresh: number;
 }
 
 export default function UserTableSection({
@@ -20,45 +19,29 @@ export default function UserTableSection({
                                              onCreateUser,
                                              onEditUser,
                                              onDeleteUser,
+                                             refresh
                                          }: UserTableSectionProps) {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const [users, setUsers] = useState<UserModel[]>([]);
-    const {user} = useContext(AuthContext);
 
-    // pagination state
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 20,
-        total: 0,
-    });
+    const [users, setUsers] = useState<UserModel[]>([]);
+    const [pagination, setPagination] = useState({current: 1, pageSize: 20, total: 0,});
     const [loading, setLoading] = useState(false);
 
-    const fetchUsers = async (page = 1, pageSize = 10) => {
+    const fetchUsers = async (page = 1, pageSize = 20) => {
         if (!selectedOrgId) return;
 
         setLoading(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(
-                `${apiUrl}/api/users/all`,
-                {
-                    headers: {Authorization: `Token ${user?.token}`},
-                    params: {
-                        organization: selectedOrgId,
-                        page,
-                        page_size: pageSize,
-                    },
-                }
-            );
+            const res = await getUsers(selectedOrgId, page, pageSize);
 
-            setUsers(res.data.results);
+            setUsers(res.results);
             setPagination((prev) => ({
                 ...prev,
                 current: page,
                 pageSize,
-                total: res.data.count, // DRF returns `count` in paginated responses
+                total: res.count,
             }));
         } catch (error) {
-            console.error('Error fetching users', error);
+            console.error("Error fetching users", error);
         } finally {
             setLoading(false);
         }
@@ -66,7 +49,7 @@ export default function UserTableSection({
 
     useEffect(() => {
         fetchUsers(pagination.current, pagination.pageSize);
-    }, [selectedOrgId]);
+    }, [selectedOrgId, refresh]);
 
     const handleTableChange = (newPagination: any) => {
         fetchUsers(newPagination.current, newPagination.pageSize);

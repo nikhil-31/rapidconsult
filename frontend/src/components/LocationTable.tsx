@@ -1,21 +1,8 @@
-import {
-    Table,
-    Button,
-    Popconfirm,
-    Space,
-    Image,
-    Typography,
-    Row,
-    Col,
-    Tooltip,
-    message
-} from 'antd';
+import {Table, Button, Popconfirm, Space, Image, Typography, Row, Col, Tooltip, message} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
 import {Location} from '../models/Location';
-import axios, {AxiosResponse} from "axios";
-import {PaginatedResponse} from "../models/PaginatedResponse";
-import {useContext, useEffect, useState} from "react";
-import {AuthContext} from "../contexts/AuthContext";
+import {useEffect, useState} from "react";
+import {getLocations} from "../api/services";
 
 const {Title} = Typography;
 
@@ -24,6 +11,7 @@ interface LocationTableProps {
     onCreateLocation: () => void;
     onEditLocation: (location: Location) => void;
     onDeleteLocation: (location: Location) => void;
+    refreshKey: number;
 }
 
 export default function LocationTable({
@@ -31,10 +19,8 @@ export default function LocationTable({
                                           onCreateLocation,
                                           onEditLocation,
                                           onDeleteLocation,
+                                          refreshKey,
                                       }: LocationTableProps) {
-
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const {user} = useContext(AuthContext);
 
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(false);
@@ -50,27 +36,17 @@ export default function LocationTable({
 
         setLoading(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Location>> = await axios.get(
-                `${apiUrl}/api/locations/`,
-                {
-                    headers: {Authorization: `Token ${user?.token}`},
-                    params: {
-                        organization_id: selectedOrgId,
-                        page,
-                        page_size: pageSize,
-                    },
-                }
-            );
+            const res = await getLocations(selectedOrgId, page, pageSize);
 
-            setLocations(res.data.results);
+            setLocations(res.results);
             setPagination((prev) => ({
                 ...prev,
                 current: page,
                 pageSize,
-                total: res.data.count, // DRF pagination response includes `count`
+                total: res.count,
             }));
         } catch (error) {
-            console.error('Error fetching locations', error);
+            console.error("Error fetching locations", error);
         } finally {
             setLoading(false);
         }
@@ -80,8 +56,7 @@ export default function LocationTable({
         if (selectedOrgId) {
             fetchLocations(pagination.current, pagination.pageSize);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedOrgId]);
+    }, [selectedOrgId, refreshKey]);
 
     const handleTableChange = (newPagination: any) => {
         fetchLocations(newPagination.current, newPagination.pageSize);

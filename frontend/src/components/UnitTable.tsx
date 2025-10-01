@@ -1,22 +1,25 @@
-import axios, { AxiosResponse } from 'axios';
-import React, { useEffect, useState, useContext } from 'react';
-import { Table, Button, Avatar, Space, Typography, message, Tooltip, Row, Col } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { AuthContext } from '../contexts/AuthContext';
-import { Unit } from '../models/Unit';
-import { PaginatedResponse } from "../models/PaginatedResponse";
+import React, {useEffect, useState} from 'react';
+import {Table, Button, Avatar, Space, Typography, message, Tooltip, Row, Col} from 'antd';
+import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
+import {Unit} from '../models/Unit';
+import {getUnits} from "../api/services";
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 interface UnitTableProps {
     selectedOrgId: string;
     onCreate: () => void;
     onEdit: (unit: Unit) => void;
-    onReload: () => void;
+    refresh: number;
 }
 
-export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }: UnitTableProps) {
-    const { user } = useContext(AuthContext);
+export default function UnitTable({
+                                      selectedOrgId,
+                                      onCreate,
+                                      onEdit,
+                                      refresh,
+                                  }: UnitTableProps) {
+
     const [units, setUnits] = useState<Unit[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({
@@ -25,33 +28,23 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
         total: 0,
     });
 
-    const apiUrl = process.env.REACT_APP_API_URL;
-
-    const fetchUnits = async (page = 1, pageSize = 10) => {
+    const fetchUnits = async (page = 1, pageSize = 20) => {
         if (!selectedOrgId) return;
+
         setLoading(true);
         try {
-            const response: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(
-                `${apiUrl}/api/units/?organization_id=${selectedOrgId}&page=${page}&page_size=${pageSize}`,
-                {
-                    headers: {
-                        Authorization: `Token ${user?.token}`,
-                    },
-                }
-            );
+            const res = await getUnits(selectedOrgId, page, pageSize);
 
-            const { results, count } = response.data;
-
-            setUnits(results);
+            setUnits(res.results);
             setPagination(prev => ({
                 ...prev,
                 current: page,
                 pageSize,
-                total: count,
+                total: res.count,
             }));
         } catch (error) {
-            console.error('Failed to fetch units:', error);
-            message.error('Failed to load units');
+            console.error("Failed to fetch units:", error);
+            message.error("Failed to load units");
         } finally {
             setLoading(false);
         }
@@ -59,8 +52,7 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
 
     useEffect(() => {
         fetchUnits(1, pagination.pageSize);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedOrgId, onReload]);
+    }, [selectedOrgId, refresh]);
 
     const handleTableChange = (newPagination: any) => {
         fetchUnits(newPagination.current, newPagination.pageSize);
@@ -102,7 +94,7 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
             align: 'center' as const,
             render: (_: any, record: Unit) =>
                 record.display_picture ? (
-                    <Avatar src={record.display_picture} shape="circle" size={40} />
+                    <Avatar src={record.display_picture} shape="circle" size={40}/>
                 ) : (
                     '—'
                 ),
@@ -116,7 +108,7 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
                     <Tooltip title="Edit">
                         <Button
                             type="text"
-                            icon={<EditOutlined />}
+                            icon={<EditOutlined/>}
                             onClick={() => onEdit(record)}
                         />
                     </Tooltip>
@@ -124,7 +116,7 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
                         <Button
                             type="text"
                             danger
-                            icon={<DeleteOutlined />}
+                            icon={<DeleteOutlined/>}
                             onClick={() => handleDelete(record.id)}
                         />
                     </Tooltip>
@@ -134,19 +126,19 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
     ];
 
     if (!selectedOrgId) {
-        return <p style={{ color: '#999' }}>Please select an organization.</p>;
+        return <p style={{color: '#999'}}>Please select an organization.</p>;
     }
 
     return (
-        <div style={{ marginTop: 24 }}>
-            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <div style={{marginTop: 24}}>
+            <Row justify="space-between" align="middle" style={{marginBottom: 16}}>
                 <Col>
-                    <Title level={4} style={{ margin: 0 }}>
+                    <Title level={4} style={{margin: 0}}>
                         Units
                     </Title>
                 </Col>
                 <Col>
-                    <Button type="primary" danger icon={<PlusOutlined />} onClick={onCreate}>
+                    <Button type="primary" danger icon={<PlusOutlined/>} onClick={onCreate}>
                         Create Unit
                     </Button>
                 </Col>
@@ -160,12 +152,12 @@ export default function UnitTable({ selectedOrgId, onCreate, onEdit, onReload }:
                 bordered
                 size="middle"
                 pagination={{
-                        current: pagination.current,
-                        pageSize: pagination.pageSize,
-                        total: pagination.total,
-                        showSizeChanger: true,
-                        showTotal: (total) => `Total ${total} units`,
-                    }}
+                    current: pagination.current,
+                    pageSize: pagination.pageSize,
+                    total: pagination.total,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Total ${total} units`,
+                }}
                 onChange={handleTableChange}
             />
         </div>

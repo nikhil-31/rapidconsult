@@ -1,21 +1,18 @@
 import React, {useState, useEffect, ChangeEvent, useContext} from 'react';
-import {
-    Modal, Form, Input, Select, Button, Upload, Checkbox, List, Typography, message, Tooltip, Space,
-} from 'antd';
+import {Modal, Form, Input, Select, Button, Upload, Checkbox, List, Typography, message, Tooltip, Space,} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
 import {Unit} from '../models/Unit';
 import {UserModel} from '../models/UserModel';
-import {DeleteOutlined, CrownOutlined} from '@ant-design/icons';
+import {DeleteOutlined} from '@ant-design/icons';
+import {getDepartments, getUsers} from "../api/services";
 
 const {Option} = Select;
 
 interface UnitModalProps {
     selectedOrgId: string;
-    departments: Department[];
-    users: UserModel[];
     unitToEdit?: Unit | null;
     onClose: () => void;
     onSuccess: () => void;
@@ -23,8 +20,6 @@ interface UnitModalProps {
 
 export default function UnitModal({
                                       selectedOrgId,
-                                      departments,
-                                      users,
                                       unitToEdit,
                                       onClose,
                                       onSuccess,
@@ -40,6 +35,36 @@ export default function UnitModal({
     const [selectedOrgUserId, setSelectedOrgUserId] = useState<string>('');
 
     const isEditMode = !!unitToEdit;
+
+    const [users, setUsers] = useState<UserModel[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+
+    // 🔹 Fetch Departments
+    const fetchDepartments = async () => {
+        try {
+            const res = await getDepartments(selectedOrgId);
+            setDepartments(res.results);
+        } catch (error) {
+            console.error("Error fetching departments", error);
+        }
+    };
+
+    // 🔹 Fetch Users
+    const fetchUsers = async () => {
+        try {
+            const res = await getUsers(selectedOrgId);
+            setUsers(res.results);
+        } catch (error) {
+            console.error("Error fetching users", error);
+        }
+    };
+
+    // 🔹 Preload users, departments, and unit data
+    useEffect(() => {
+        fetchDepartments();
+        fetchUsers();
+    }, [selectedOrgId]);
+
 
     useEffect(() => {
         if (unitToEdit) {

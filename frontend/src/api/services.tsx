@@ -3,6 +3,10 @@ import api from "./axios";
 import endpoints from "./endpoints";
 import {PaginatedResponse} from "../models/PaginatedResponse";
 import {Conversation} from "../models/ActiveConversation";
+import {Department} from "../models/Department";
+import {Location} from "../models/Location";
+import {UserModel} from "../models/UserModel";
+import {Unit} from "../models/Unit";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -26,3 +30,82 @@ export const getActiveConversations = async (
     );
     return res.data;
 };
+
+export const getLocations = async (
+    organizationId: string,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<PaginatedResponse<Location>> => {
+    const res = await api.get<PaginatedResponse<Location>>(endpoints.locations, {
+        params: {
+            organization_id: organizationId,
+            page: page,
+            page_size: pageSize,
+        },
+    });
+    return res.data;
+};
+
+// Get departments
+export const getDepartments = async (
+    organizationId: string,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<PaginatedResponse<Department>> => {
+    const res = await api.get<PaginatedResponse<Department>>(endpoints.departments, {
+        params: {
+            organization_id: organizationId,
+            page,
+            page_size: pageSize,
+        },
+    });
+    return res.data;
+};
+
+// Get Users
+export const getUsers = async (
+    organizationId: string,
+    page: number = 1,
+    pageSize: number = 20,
+): Promise<PaginatedResponse<UserModel>> => {
+    const res = await api.get<PaginatedResponse<UserModel>>(
+        endpoints.users,
+        {
+            params: {
+                organization: organizationId,
+                page: page,
+                page_size: pageSize,
+            },
+        });
+    return res.data;
+};
+
+// Get units with pagination
+export const getUnits = async (
+    organizationId: string,
+    page: number = 1,
+    pageSize: number = 20,
+): Promise<PaginatedResponse<Unit>> => {
+    const res = await api.get<PaginatedResponse<Unit>>(
+        endpoints.units,
+        {
+            params: {
+                organization_id: organizationId,
+                page,
+                page_size: pageSize,
+            },
+        });
+    return res.data;
+};
+
+// Create a new consultation
+// export const createConsultation = async (
+//     payload: ConsultationPayload
+// ): Promise<any> => {
+//     const res = await api.post("/api/consultations/", payload, {
+//         headers: {
+//             Authorization: `Token ${localStorage.getItem("token")}`,
+//         },
+//     });
+//     return res.data;
+// };

@@ -1,5 +1,4 @@
 import {useContext, useEffect, useState} from 'react';
-import axios, {AxiosResponse} from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import UserModal from './UserModal';
 import UserTableSection from './UserTable';
@@ -15,7 +14,6 @@ import UnitModal from './UnitModal';
 import {Unit} from '../models/Unit';
 
 import {Select, Typography, Divider, Layout, message, Row, Col} from 'antd';
-import {PaginatedResponse} from "../models/PaginatedResponse";
 
 const {Option} = Select;
 const {Title, Text} = Typography;
@@ -24,82 +22,30 @@ const {Content} = Layout;
 export default function Admin() {
     const {user} = useContext(AuthContext);
     const orgs = user?.organizations || [];
-    const apiUrl = process.env.REACT_APP_API_URL;
 
-    const [users, setUsers] = useState<UserModel[]>([]);
-    const [locations, setLocations] = useState<Location[]>([]);
-    const [departments, setDepartments] = useState<Department[]>([]);
     const [selectedOrgId, setSelectedOrgId] = useState<string>('');
 
     const [showUserModal, setShowUserModal] = useState(false);
     const [editingUser, setEditingUser] = useState<UserModel | null>(null);
+    const [refreshUserKey, setRefreshUserKey] = useState(0);
 
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+    const [refreshLocationKey, setRefreshLocationKey] = useState(0);
 
     const [showDepartmentModal, setShowDepartmentModal] = useState(false);
     const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
+    const [refreshDepartmentKey, setRefreshDepartmentKey] = useState(0);
 
     const [showUnitModal, setShowUnitModal] = useState(false);
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
-
-    const fetchUsers = async () => {
-        try {
-            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(
-                `${apiUrl}/api/users/all`,
-                {
-                    headers: {Authorization: `Token ${user?.token}`},
-                    params: {organization: selectedOrgId},
-                }
-            );
-
-            // Access the actual user list from `results`
-            const data= res.data.results;
-            setUsers(data);
-        } catch (error) {
-            console.error('Error fetching users', error);
-        }
-    };
-
-    const fetchLocations = async () => {
-        try {
-            const res: AxiosResponse<PaginatedResponse<Location>> = await axios.get(`${apiUrl}/api/locations/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-                params: {organization_id: selectedOrgId},
-            });
-            const data = res.data.results
-            setLocations(data);
-        } catch (error) {
-            console.error('Error fetching locations', error);
-        }
-    };
-
-    const fetchDepartments = async () => {
-        try {
-            const res: AxiosResponse<PaginatedResponse<Department>> = await axios.get(`${apiUrl}/api/departments/org`, {
-                headers: {Authorization: `Token ${user?.token}`},
-                params: {organization_id: selectedOrgId},
-            });
-            const data = res.data.results
-            setDepartments(data);
-        } catch (error) {
-            console.error('Error fetching departments', error);
-        }
-    };
+    const [refreshUnitKey, setRefreshUnitKey] = useState(0);
 
     useEffect(() => {
         if (orgs.length > 0) {
             setSelectedOrgId(orgs[0].organization.id.toString())
         }
     }, [orgs]);
-
-    useEffect(() => {
-        if (selectedOrgId) {
-            fetchUsers();
-            fetchLocations();
-            fetchDepartments();
-        }
-    }, [selectedOrgId]);
 
     return (
         <Content style={{padding: '2rem', maxWidth: '1000px', margin: '0 auto'}}>
@@ -142,6 +88,7 @@ export default function Admin() {
                 onDeleteUser={() => {
                     message.warning('Deleting users is not supported.');
                 }}
+                refresh={refreshUserKey}
             />
             {showUserModal && (
                 <UserModal
@@ -151,7 +98,9 @@ export default function Admin() {
                         setEditingUser(null);
                         setShowUserModal(false);
                     }}
-                    onSuccess={() => fetchUsers()}
+                    onSuccess={() => {
+                        setRefreshUserKey(prev => prev + 1)
+                    }}
                     editingUser={editingUser}
                 />
             )}
@@ -169,6 +118,7 @@ export default function Admin() {
                 onDeleteLocation={() => {
                     message.warning('Deleting locations is not supported.');
                 }}
+                refreshKey={refreshLocationKey}
             />
             {showLocationModal && (
                 <LocationModal
@@ -178,7 +128,9 @@ export default function Admin() {
                         setEditingLocation(null);
                         setShowLocationModal(false);
                     }}
-                    onSuccess={() => fetchLocations()}
+                    onSuccess={() => {
+                        setRefreshLocationKey(prev => prev + 1);
+                    }}
                     editingLocation={editingLocation}
                 />
             )}
@@ -192,13 +144,12 @@ export default function Admin() {
                     setEditingDepartment(dept);
                     setShowDepartmentModal(true);
                 }}
-                onReload={() => fetchDepartments()}
                 onCreate={() => setShowDepartmentModal(true)}
+                refresh={refreshDepartmentKey}
             />
             {showDepartmentModal && (
                 <DepartmentModal
                     selectedOrgId={selectedOrgId}
-                    locations={locations}
                     onClose={() => {
                         setEditingDepartment(null);
                         setShowDepartmentModal(false);
@@ -206,7 +157,7 @@ export default function Admin() {
                     onSuccess={() => {
                         setEditingDepartment(null);
                         setShowDepartmentModal(false);
-                        fetchDepartments();
+                        setRefreshDepartmentKey(prev => prev + 1)
                     }}
                     editingDepartment={editingDepartment}
                 />
@@ -222,14 +173,11 @@ export default function Admin() {
                     setEditingUnit(unit);
                     setShowUnitModal(true);
                 }}
-                onReload={() => {
-                }}
+                refresh={refreshUnitKey}
             />
             {showUnitModal && (
                 <UnitModal
                     selectedOrgId={selectedOrgId}
-                    departments={departments}
-                    users={users}
                     onClose={() => {
                         setEditingUnit(null);
                         setShowUnitModal(false);
@@ -237,6 +185,7 @@ export default function Admin() {
                     onSuccess={() => {
                         setEditingUnit(null);
                         setShowUnitModal(false);
+                        setRefreshUnitKey(prev => prev + 1)
                     }}
                     unitToEdit={editingUnit}
                 />

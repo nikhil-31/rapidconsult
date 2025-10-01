@@ -5,12 +5,12 @@ import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
 import {Location} from '../models/Location';
+import {getLocations} from "../api/services";
 
 interface DepartmentModalProps {
     onClose: () => void;
     onSuccess: () => void;
     editingDepartment?: Department | null;
-    locations: Location[];
     selectedOrgId: string;
 }
 
@@ -18,7 +18,6 @@ export default function DepartmentModal({
                                             onClose,
                                             onSuccess,
                                             editingDepartment = null,
-                                            locations,
                                             selectedOrgId,
                                         }: DepartmentModalProps) {
     const {user} = useContext(AuthContext);
@@ -28,6 +27,7 @@ export default function DepartmentModal({
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [fileList, setFileList] = useState<any[]>([]);
+    const [locations, setLocations] = useState<Location[]>([]);
 
     useEffect(() => {
         if (editingDepartment) {
@@ -48,6 +48,21 @@ export default function DepartmentModal({
             }
         }
     }, [editingDepartment, form]);
+
+    useEffect(() => {
+        if (!selectedOrgId) return;
+
+        const fetchLocations = async () => {
+            try {
+                const res = await getLocations(selectedOrgId, 1, 20);
+                setLocations(res.results);
+            } catch (error) {
+                console.error("Error fetching locations:", error);
+            }
+        };
+
+        fetchLocations();
+    }, [selectedOrgId]);
 
     const handleSubmit = async (values: any) => {
         setLoading(true);

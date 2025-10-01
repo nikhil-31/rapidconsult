@@ -1,11 +1,11 @@
 // src/api/endpoints.ts
 const endpoints = {
-    users: "/users/",
-    profile: "/profile/",
-    locations: "/locations/",
-    departments: "/departments/",
-    shifts: "/shifts/",
-    activeConversations: "/api/active-conversations/",
+    activeConversations: "active-conversations/",
+    consultations: "consultations/",
+    locations: "locations/",
+    departments: "departments/org/",
+    users: "users/all/",
+    units: "units/",
 };
 
 export default endpoints;
