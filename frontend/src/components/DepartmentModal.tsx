@@ -1,8 +1,6 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Modal, Form, Input, Select, Upload, Button} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
-import axios from 'axios';
-import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
 import {Location} from '../models/Location';
 import {createDepartment, getLocations, updateDepartment} from "../api/services";
@@ -20,9 +18,7 @@ export default function DepartmentModal({
                                             editingDepartment = null,
                                             selectedOrgId,
                                         }: DepartmentModalProps) {
-    const {user} = useContext(AuthContext);
     const isEditMode = Boolean(editingDepartment);
-    const apiUrl = process.env.REACT_APP_API_URL;
 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
