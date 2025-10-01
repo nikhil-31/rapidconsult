@@ -1,14 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {
-    Modal,
-    Form,
-    Input,
-    Select,
-    Upload,
-    Button,
-    Typography,
-    message,
-} from 'antd';
+import {Modal, Form, Input, Upload, Button, Typography, message} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
@@ -16,7 +7,6 @@ import {Location} from '../models/Location';
 import {OrgProfile} from "../models/OrgProfile";
 
 const {Title} = Typography;
-const {Option} = Select;
 
 interface CreateLocationModalProps {
     selectedOrgId: string;

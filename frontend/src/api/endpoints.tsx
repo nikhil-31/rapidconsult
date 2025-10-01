@@ -8,6 +8,8 @@ const endpoints = {
     units: "units/",
     messages: "messages/",
     saveMessage: "save-message/",
+    userProfile: "profile/",
+    userSearch: "users/search/",
 };
 
 export default endpoints;

@@ -1,13 +1,12 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {Layout, Avatar, Typography, List, Skeleton, Input, Button} from 'antd';
 import {SearchOutlined, UserOutlined} from '@ant-design/icons';
-import axios, {AxiosResponse} from 'axios';
 import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
 import {UserModel} from "../models/UserModel";
 import {ProfileData} from "../models/ProfileData";
 import ProfileDetails from "./ProfileDetails";
-import {PaginatedResponse} from "../models/PaginatedResponse";
+import {getUserProfile, getUsers, searchUsers} from "../api/services";
 
 const {Sider} = Layout;
 const {Title, Text} = Typography;
@@ -29,7 +28,6 @@ const getColorForUser = (userId: string) => {
 
 const Dashboard: React.FC = () => {
     const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL as string;
     const {selectedLocation} = useOrgLocation();
 
     const [loading, setLoading] = useState(true);
@@ -43,41 +41,35 @@ const Dashboard: React.FC = () => {
     const [loadingMore, setLoadingMore] = useState(false);
 
     const fetchUserData = async (pageNum = 1) => {
-        if (!selectedLocation?.location?.id) return;
+        if (!selectedLocation?.organization?.id) return;
 
         try {
             if (pageNum === 1) setLoading(true);
             else setLoadingMore(true);
 
-            const res: AxiosResponse<PaginatedResponse<UserModel>> = await axios.get(
-                `${apiUrl}/api/users/all/`,
-                {
-                    params: {
-                        location_id: selectedLocation?.location.id,
-                        page: pageNum,
-                    },
-                    headers: {Authorization: `Token ${user?.token}`},
-                }
+            // call your service function
+            const res = await getUsers(
+                String(selectedLocation.organization.id),
+                pageNum,
+                20
             );
 
-            const data = res.data.results.filter((u: UserModel) => u.id !== user?.id);
-            const totalUsers = res.data.count
-            if (totalUsers > 0) {
-                const users = totalUsers - 1
-                setTotalUsers(users.toString())
-            } else {
-                setTotalUsers(totalUsers.toString())
-            }
+            const data = res.results.filter((u: UserModel) => u.id !== user?.id);
+
+            // adjust total users count (subtract current user)
+            const totalUsers = res.count;
+            setTotalUsers(totalUsers > 0 ? (totalUsers - 1).toString() : totalUsers.toString());
+
             if (pageNum === 1) {
                 setUsers(data);
             } else {
                 setUsers(prev => [...prev, ...data]);
             }
 
-            setHasMore(!!res.data.next);
+            setHasMore(!!res.next);
             setPage(pageNum);
         } catch (error) {
-            console.error('Error fetching user data:', error);
+            console.error("Error fetching user data:", error);
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -91,10 +83,8 @@ const Dashboard: React.FC = () => {
 
     const handleUserClick = async (clickedUser: UserModel) => {
         try {
-            const res = await axios.get(`${apiUrl}/api/profile/${clickedUser.id}/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            setProfile(res.data);
+            const profile = await getUserProfile(String(clickedUser.id));
+            setProfile(profile);
         } catch (error) {
             console.error("Error fetching profile details:", error);
         } finally {
@@ -109,16 +99,14 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    function search(query: string) {
-        axios.get(`${apiUrl}/api/users/search/`, {
-            params: {q: query},
-            headers: {Authorization: `Token ${user?.token}`},
-        }).then(res => {
-            setUsers(res.data.results || res.data);
+    async function search(query: string) {
+        try {
+            const data = await searchUsers(query);
+            setUsers(data);
             setHasMore(false);
-        }).catch(err => {
+        } catch (err) {
             console.error("Search error:", err);
-        });
+        }
     }
 
     return (

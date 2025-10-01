@@ -8,6 +8,7 @@ import {Location} from "../models/Location";
 import {UserModel} from "../models/UserModel";
 import {Unit} from "../models/Unit";
 import {Message} from "../models/Message";
+import {ProfileData} from "../models/ProfileData";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -144,6 +145,26 @@ export const sendMessage = async (
     return res.data;
 };
 
+
+export const getUserProfile = async (userId: string): Promise<ProfileData> => {
+    const res = await api.get<ProfileData>(`${endpoints.userProfile}${userId}/`);
+    return res.data;
+};
+
+export const searchUsers = async (query: string): Promise<UserModel[]> => {
+    const res = await api.get(endpoints.userSearch, {
+        params: { q: query },
+    });
+
+    // Normalize response to always be an array
+    if (Array.isArray(res.data)) {
+        return res.data;
+    } else if (Array.isArray(res.data.results)) {
+        return res.data.results;
+    } else {
+        return [];
+    }
+};
 // Create a new consultation
 // export const createConsultation = async (
 //     payload: ConsultationPayload

@@ -1,7 +1,6 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Table, Button, Avatar, Typography, Space, Spin, Tooltip, message} from 'antd';
 import {EditOutlined, DeleteOutlined, PlusOutlined} from '@ant-design/icons';
-import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
 import {getDepartments} from "../api/services";
 
@@ -21,7 +20,6 @@ export default function DepartmentTable({
                                             refresh,
                                         }: DepartmentTableProps) {
 
-    const {user} = useContext(AuthContext);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [loading, setLoading] = useState(true);
     const [pagination, setPagination] = useState({
