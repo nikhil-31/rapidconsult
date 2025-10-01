@@ -1,10 +1,9 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Modal, Form, Input, Upload, Button, Typography, message} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
-import axios from 'axios';
-import {AuthContext} from '../contexts/AuthContext';
 import {Location} from '../models/Location';
 import {OrgProfile} from "../models/OrgProfile";
+import {createLocation, updateLocation} from "../api/services";
 
 const {Title} = Typography;
 
@@ -23,13 +22,11 @@ export default function LocationModal({
                                           onClose,
                                           editingLocation = null,
                                       }: CreateLocationModalProps) {
-    const {user} = useContext(AuthContext);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [fileList, setFileList] = useState<any[]>([]);
 
     const isEditMode = !!editingLocation;
-    const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
         if (editingLocation) {
@@ -65,42 +62,33 @@ export default function LocationModal({
             setLoading(true);
 
             const formData = new FormData();
-            formData.append('name', values.name);
-            formData.append('organization', selectedOrgId);
-            formData.append('address.address_1', values.address_1);
-            formData.append('address.address_2', values.address_2);
-            formData.append('address.city', values.city);
-            formData.append('address.state', values.state);
-            formData.append('address.zip_code', values.zip_code);
-            formData.append('address.lat', values.lat);
-            formData.append('address.lon', values.lon);
-            formData.append('address.label', values.label);
+            formData.append("name", values.name);
+            formData.append("organization", selectedOrgId);
+            formData.append("address.address_1", values.address_1);
+            formData.append("address.address_2", values.address_2);
+            formData.append("address.city", values.city);
+            formData.append("address.state", values.state);
+            formData.append("address.zip_code", values.zip_code);
+            formData.append("address.lat", values.lat);
+            formData.append("address.lon", values.lon);
+            formData.append("address.label", values.label);
 
             const file = fileList?.[0]?.originFileObj;
             if (file) {
-                formData.append('display_picture', file);
+                formData.append("display_picture", file);
             }
 
-            const request = isEditMode
-                ? axios.patch(`${apiUrl}/api/locations/${editingLocation?.id}/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                })
-                : axios.post(`${apiUrl}/api/locations/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                });
+            if (isEditMode && editingLocation) {
+                await updateLocation(editingLocation.id, formData);
+            } else {
+                await createLocation(formData);
+            }
 
-            await request;
             onSuccess();
             onClose();
         } catch (error) {
-            console.error('Error saving location', error);
-            message.error('Failed to save location');
+            console.error("Error saving location", error);
+            message.error("Failed to save location");
         } finally {
             setLoading(false);
         }
@@ -154,31 +142,59 @@ export default function LocationModal({
 
                 <Title level={5}>Address</Title>
 
-                <Form.Item name="address_1" label="Address Line 1">
+                <Form.Item
+                    name="address_1"
+                    label="Address Line 1"
+                    rules={[{required: true, message: "Address Line 1 is required"}]}
+                >
                     <Input placeholder="Address Line 1"/>
                 </Form.Item>
 
-                <Form.Item name="address_2" label="Address Line 2">
+                <Form.Item
+                    name="address_2"
+                    label="Address Line 2"
+                    rules={[{required: true, message: "Address Line 2 is required"}]}
+                >
                     <Input placeholder="Address Line 2"/>
                 </Form.Item>
 
-                <Form.Item name="city" label="City">
+                <Form.Item
+                    name="city"
+                    label="City"
+                    rules={[{required: true, message: "City is required"}]}
+                >
                     <Input placeholder="City"/>
                 </Form.Item>
 
-                <Form.Item name="state" label="State">
+                <Form.Item
+                    name="state"
+                    label="State"
+                    rules={[{required: true, message: "State is required"}]}
+                >
                     <Input placeholder="State"/>
                 </Form.Item>
 
-                <Form.Item name="zip_code" label="Zip Code">
+                <Form.Item
+                    name="zip_code"
+                    label="Zip Code"
+                    rules={[{required: true, message: "Zip Code is required"}]}
+                >
                     <Input placeholder="Zip Code"/>
                 </Form.Item>
 
-                <Form.Item name="lat" label="Latitude">
+                <Form.Item
+                    name="lat"
+                    label="Latitude"
+                    rules={[{required: true, message: "Latitude is required"}]}
+                >
                     <Input placeholder="Latitude"/>
                 </Form.Item>
 
-                <Form.Item name="lon" label="Longitude">
+                <Form.Item
+                    name="lon"
+                    label="Longitude"
+                    rules={[{required: true, message: "Longitude is required"}]}
+                >
                     <Input placeholder="Longitude"/>
                 </Form.Item>
 

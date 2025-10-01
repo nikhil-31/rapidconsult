@@ -34,6 +34,7 @@ export const getActiveConversations = async (
     return res.data;
 };
 
+// Get Locations
 export const getLocations = async (
     organizationId: string,
     page: number = 1,
@@ -146,12 +147,13 @@ export const sendMessage = async (
     return res.data;
 };
 
-
+// Get user profile
 export const getUserProfile = async (userId: string): Promise<ProfileData> => {
     const res = await api.get<ProfileData>(`${endpoints.userProfile}${userId}/`);
     return res.data;
 };
 
+// Search users
 export const searchUsers = async (query: string): Promise<UserModel[]> => {
     const res = await api.get(endpoints.userSearch, {
         params: {q: query},
@@ -183,6 +185,7 @@ export const updateDepartment = async (departmentId: number, formData: FormData)
     return res.data;
 };
 
+// Get profile
 export const getProfile = async (): Promise<ProfileData> => {
     const res = await api.get<ProfileData>(endpoints.profileMe);
     return res.data;
@@ -214,6 +217,7 @@ export const deleteContact = async (contactId: number) => {
     return res.data;
 };
 
+// update shift
 export const updateShift = async (
     shiftId: number,
     start_time: string,
@@ -226,9 +230,29 @@ export const updateShift = async (
     return res.data;
 };
 
+// Delete shift
 export const deleteShift = async (shiftId: number) => {
     const res = await api.delete(`${endpoints.shifts}${shiftId}/`);
     return res.data;
+};
+
+// Create location
+export const createLocation = async (formData: FormData): Promise<Location> => {
+  const res = await api.post<Location>(endpoints.locations, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// update location
+export const updateLocation = async (
+  id: string | number,
+  formData: FormData
+): Promise<Location> => {
+  const res = await api.patch<Location>(`${endpoints.locations}${id}/`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
 };
 
 // Create a new consultation
