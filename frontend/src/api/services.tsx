@@ -214,6 +214,23 @@ export const deleteContact = async (contactId: number) => {
     return res.data;
 };
 
+export const updateShift = async (
+    shiftId: number,
+    start_time: string,
+    end_time: string
+) => {
+    const res = await api.patch(`${endpoints.shifts}${shiftId}/`, {
+        start_time,
+        end_time,
+    });
+    return res.data;
+};
+
+export const deleteShift = async (shiftId: number) => {
+    const res = await api.delete(`${endpoints.shifts}${shiftId}/`);
+    return res.data;
+};
+
 // Create a new consultation
 // export const createConsultation = async (
 //     payload: ConsultationPayload

@@ -13,6 +13,7 @@ const endpoints = {
     userSearch: "users/search/",
     profileMe: "profile/me/",
     contacts: "contacts/",
+    shifts: "shifts/",
 };
 
 export default endpoints;

@@ -1,9 +1,8 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect} from 'react';
 import dayjs, {Dayjs} from 'dayjs';
 import {Modal, Descriptions, Typography, Space, Avatar, Button, Popconfirm, DatePicker} from 'antd';
-import axios from 'axios';
 import {EventData} from "../models/EventData";
-import {AuthContext} from "../contexts/AuthContext";
+import {updateShift} from "../api/services";
 
 const {Title} = Typography;
 
@@ -16,8 +15,6 @@ type ShiftDetailModalProps = {
 };
 
 const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, onDelete, event, onUpdated}) => {
-    const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL;
 
     const [isEditing, setIsEditing] = useState(false);
     const [startTime, setStartTime] = useState<Dayjs | null>(null);
@@ -41,19 +38,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({visible, onClose, on
 
         try {
             setLoading(true);
-            await axios.patch(
-                `${apiUrl}/api/shifts/${event.id}/`,
-                {
-                    start_time: startTime.toISOString(),
-                    end_time: endTime.toISOString()
-                },
-                {
-                    headers: {
-                        "Authorization": `Token ${user?.token}`,
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
+            const res = await updateShift(event.id, startTime.toISOString(), endTime.toISOString());
             setIsEditing(false);
             onClose();
             if (onUpdated) onUpdated();
