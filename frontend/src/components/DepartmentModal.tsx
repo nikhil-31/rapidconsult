@@ -5,7 +5,7 @@ import axios from 'axios';
 import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
 import {Location} from '../models/Location';
-import {getLocations} from "../api/services";
+import {createDepartment, getLocations, updateDepartment} from "../api/services";
 
 interface DepartmentModalProps {
     onClose: () => void;
@@ -68,35 +68,23 @@ export default function DepartmentModal({
         setLoading(true);
 
         const formData = new FormData();
-        formData.append('name', values.name);
-        formData.append('location', values.location);
+        formData.append("name", values.name);
+        formData.append("location", values.location);
 
         const file = fileList?.[0]?.originFileObj;
-        if (file) {
-            formData.append('display_picture', file);
-        }
+        if (file) formData.append("display_picture", file);
 
         try {
             if (isEditMode && editingDepartment) {
-                await axios.patch(`${apiUrl}/api/departments/${editingDepartment.id}/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                });
+                const res = await updateDepartment(editingDepartment.id, formData);
             } else {
-                await axios.post(`${apiUrl}/api/departments/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                });
+                const res = await createDepartment(formData);
             }
 
             onSuccess();
             onClose();
         } catch (error) {
-            console.error('Error saving department:', error);
+            console.error("Error saving department:", error);
         } finally {
             setLoading(false);
         }

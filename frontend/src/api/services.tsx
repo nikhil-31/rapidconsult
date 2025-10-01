@@ -54,7 +54,7 @@ export const getDepartments = async (
     page: number = 1,
     pageSize: number = 20
 ): Promise<PaginatedResponse<Department>> => {
-    const res = await api.get<PaginatedResponse<Department>>(endpoints.departments, {
+    const res = await api.get<PaginatedResponse<Department>>(endpoints.departmentsOrg, {
         params: {
             organization_id: organizationId,
             page,
@@ -165,6 +165,24 @@ export const searchUsers = async (query: string): Promise<UserModel[]> => {
         return [];
     }
 };
+
+// Create department
+export const createDepartment = async (formData: FormData) => {
+    const res = await api.post(endpoints.departments, formData, {
+        headers: {"Content-Type": "multipart/form-data"},
+    });
+    return res.data;
+};
+
+// Update department
+export const updateDepartment = async (departmentId: number, formData: FormData) => {
+    const res = await api.patch(`${endpoints.departments}${departmentId}/`, formData, {
+        headers: {"Content-Type": "multipart/form-data"},
+    });
+    return res.data;
+};
+
+
 // Create a new consultation
 // export const createConsultation = async (
 //     payload: ConsultationPayload
