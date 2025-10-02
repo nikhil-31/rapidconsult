@@ -32,7 +32,6 @@ export default function UserTableSection({
         setLoading(true);
         try {
             const res = await getUsers(selectedOrgId, page, pageSize);
-
             setUsers(res.results);
             setPagination((prev) => ({
                 ...prev,

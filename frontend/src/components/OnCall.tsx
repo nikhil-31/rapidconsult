@@ -1,20 +1,16 @@
-import axios, {AxiosResponse} from 'axios';
-import React, {useContext, useEffect, useState} from 'react';
-import {AuthContext} from '../contexts/AuthContext';
+import React, {useEffect, useState} from 'react';
 import {Layout, Menu, Typography, Card, Skeleton} from 'antd';
 import {Department} from "../models/Department";
 import {Unit} from "../models/Unit";
 import {useOrgLocation} from "../contexts/LocationContext";
 import ChatView from "./ChatView";
 import {Conversation} from "../models/ActiveConversation";
-import {PaginatedResponse} from "../models/PaginatedResponse";
+import {getDepartmentsByLocation, getUnitsByDepartment} from "../api/services";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
 
 const OnCall: React.FC = () => {
-    const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL as string;
 
     const [departments, setDepartments] = useState<Record<number, Department[]>>({});
     const [units, setUnits] = useState<Record<number, Unit[]>>({});
@@ -31,16 +27,11 @@ const OnCall: React.FC = () => {
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Department>> =
-                await axios.get(`${apiUrl}/api/departments/`,
-                    {
-                        params: {location_id: locationId},
-                        headers: {Authorization: `Token ${user?.token}`},
-                    }
-                );
+            const res = await getDepartmentsByLocation(locationId);
+            const departments = res.results;
 
-            const departments = res.data.results;
             setDepartments(prev => ({...prev, [locationId]: departments}));
+
             departments.forEach(dep => fetchUnits(dep.id));
         } catch (err) {
             console.error("Failed to fetch departments:", err);
@@ -52,15 +43,9 @@ const OnCall: React.FC = () => {
     const fetchUnits = async (departmentId: number): Promise<void> => {
         setLoadingUnits(prev => ({...prev, [departmentId]: true}));
         try {
-            const res: AxiosResponse<PaginatedResponse<Unit>> = await axios.get(
-                `${apiUrl}/api/units/`,
-                {
-                    params: {department_id: departmentId},
-                    headers: {Authorization: `Token ${user?.token}`},
-                }
-            );
+            const res = await getUnitsByDepartment(departmentId);
+            const units = res.results;
 
-            const units = res.data.results;
             setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
             console.error("Failed to fetch units:", err);

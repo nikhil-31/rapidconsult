@@ -1,10 +1,9 @@
-import React, {useContext, useEffect, useState} from 'react';
-import axios from 'axios';
-import {AuthContext} from '../contexts/AuthContext';
+import React, {useEffect, useState} from 'react';
 import {Address} from "../models/Address";
 import ProfileDetails from './ProfileDetails';
 import {ProfileData} from "../models/ProfileData";
 import {Card, Col, Row, Skeleton} from 'antd';
+import {getProfile} from "../api/services";
 
 interface AllowedLocation {
     name: string;
@@ -14,15 +13,11 @@ interface AllowedLocation {
 
 const Profile = () => {
     const [profile, setProfile] = useState<ProfileData | null>(null);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const {user} = useContext(AuthContext);
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get(`${apiUrl}/api/profile/me/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-            setProfile(res.data);
+            const profileData = await getProfile();
+            setProfile(profileData);
         } catch (err) {
             console.error('Failed to load profile', err);
         }

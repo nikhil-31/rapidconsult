@@ -238,21 +238,53 @@ export const deleteShift = async (shiftId: number) => {
 
 // Create location
 export const createLocation = async (formData: FormData): Promise<Location> => {
-  const res = await api.post<Location>(endpoints.locations, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return res.data;
+    const res = await api.post<Location>(endpoints.locations, formData, {
+        headers: {"Content-Type": "multipart/form-data"},
+    });
+    return res.data;
 };
 
 // update location
 export const updateLocation = async (
-  id: string | number,
-  formData: FormData
+    id: string | number,
+    formData: FormData
 ): Promise<Location> => {
-  const res = await api.patch<Location>(`${endpoints.locations}${id}/`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return res.data;
+    const res = await api.patch<Location>(`${endpoints.locations}${id}/`, formData, {
+        headers: {"Content-Type": "multipart/form-data"},
+    });
+    return res.data;
+};
+
+// Get departments by location
+export const getDepartmentsByLocation = async (
+    locationId: number,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<PaginatedResponse<Department>> => {
+    const res = await api.get<PaginatedResponse<Department>>(endpoints.departments, {
+        params: {
+            location_id: locationId,
+            page,
+            page_size: pageSize,
+        },
+    });
+    return res.data;
+};
+
+// Get units by department
+export const getUnitsByDepartment = async (
+    departmentId: number,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<PaginatedResponse<Unit>> => {
+    const res = await api.get<PaginatedResponse<Unit>>(endpoints.units, {
+        params: {
+            department_id: departmentId,
+            page,
+            page_size: pageSize,
+        },
+    });
+    return res.data;
 };
 
 // Create a new consultation
