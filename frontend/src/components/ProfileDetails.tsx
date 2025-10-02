@@ -5,8 +5,8 @@ import {Contact} from '../models/Contact';
 import {Address} from '../models/Address';
 import {ProfileData} from "../models/ProfileData";
 import {useOrgLocation} from "../contexts/LocationContext";
-import axios from "axios";
 import {AuthContext} from "../contexts/AuthContext";
+import {startDirectConversation} from "../api/services";
 
 const {Title, Text} = Typography;
 
@@ -39,7 +39,6 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
                                                            startConversation,
                                                            profile
                                                        }) => {
-    const apiUrl = process.env.REACT_APP_API_URL;
     const navigate = useNavigate();
     const {selectedLocation} = useOrgLocation();
     const {user} = useContext(AuthContext);
@@ -73,28 +72,18 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
     }
 
     async function handleStartChat() {
-        console.log("start chat click");
-
         try {
-            const response =
-                await axios.post(`${apiUrl}/api/active-conversations/`,
-                    {
-                        type: "direct",
-                        user1_id: user?.id,
-                        user2_id: id,
-                        organization_id: selectedLocation?.organization.id.toString(),
-                        location_id: selectedLocation?.location.id.toString(),
-                    },
-                    {
-                        headers: {
-                            Authorization: `Token ${user?.token}`,
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-            const conversationId = response.data.conversation_id
+            const response = await startDirectConversation(
+                user?.id,
+                id,
+                selectedLocation?.organization.id.toString(),
+                selectedLocation?.location.id.toString()
+            );
+
+            const conversationId = response.conversation_id;
             navigate(`/?conversation=${conversationId}`);
-            console.log("Conversation created:", response.data);
+
+            console.log("Conversation created:", response);
         } catch (error: any) {
             if (error.response) {
                 console.error("Error response:", error.response.data);

@@ -287,6 +287,23 @@ export const getUnitsByDepartment = async (
     return res.data;
 };
 
+// Create or get a direct conversation
+export const startDirectConversation = async (
+    user1Id: string | undefined,
+    user2Id: string | number | undefined,
+    organizationId: string | number | undefined,
+    locationId: string | number | undefined
+): Promise<{ conversation_id: string }> => {
+    const res = await api.post(endpoints.activeConversations, {
+        type: "direct",
+        user1_id: user1Id,
+        user2_id: user2Id,
+        organization_id: organizationId,
+        location_id: locationId,
+    });
+    return res.data;
+};
+
 // Create a new consultation
 // export const createConsultation = async (
 //     payload: ConsultationPayload
