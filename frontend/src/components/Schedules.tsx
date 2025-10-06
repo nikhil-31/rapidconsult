@@ -16,6 +16,8 @@ import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
 import {EventData} from "../models/EventData";
 import {UserModel} from "../models/UserModel";
+import {Department} from "../models/Department";
+import {Unit} from "../models/Unit";
 import {
     fetchDepartmentsByLocation,
     fetchUnitsByDepartment,
@@ -23,8 +25,7 @@ import {
     getShiftsByUnit,
     removeShift
 } from "../api/services";
-import {Department} from "../models/Department";
-import {Unit} from "../models/Unit";
+
 
 const locales: Record<string, Locale> = {'en-US': require('date-fns/locale/en-US'),};
 const {Sider, Content} = Layout;
