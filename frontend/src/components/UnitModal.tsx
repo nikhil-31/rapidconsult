@@ -1,4 +1,4 @@
-import React, {useState, useEffect, ChangeEvent, useContext} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {Modal, Form, Input, Select, Button, Upload, Checkbox, List, Typography, message, Tooltip, Space,} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
@@ -248,7 +248,7 @@ export default function UnitModal({
                             if (newFileList.length > 1) newFileList = [newFileList[newFileList.length - 1]];
                             setFileList(newFileList);
                         }}
-                        beforeUpload={() => false}  // prevent auto-upload
+                        beforeUpload={() => false}
                         listType="picture"
                         maxCount={1}
                         accept="image/*"

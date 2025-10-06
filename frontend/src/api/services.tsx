@@ -304,6 +304,39 @@ export const startDirectConversation = async (
     return res.data;
 };
 
+export const fetchDepartmentsByLocation = async (
+    locationId: number,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<Department[]> => {
+    const res = await api.get<PaginatedResponse<Department>>(endpoints.departments, {
+        params: {
+            location_id: locationId,
+            page,
+            page_size: pageSize,
+        },
+    });
+    return res.data.results;
+};
+
+// Get units by department (with results array)
+export const fetchUnitsByDepartment = async (
+    departmentId: number,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<Unit[]> => {
+    const res = await api.get<PaginatedResponse<Unit>>(endpoints.units, {
+        params: {
+            department_id: departmentId,
+            page,
+            page_size: pageSize,
+        },
+    });
+    return res.data.results;
+};
+
+
+
 // Create a new consultation
 // export const createConsultation = async (
 //     payload: ConsultationPayload

@@ -18,21 +18,14 @@ import {Shift} from "../models/Shift";
 import {EventData} from "../models/EventData";
 import {UserModel} from "../models/UserModel";
 import {PaginatedResponse} from "../models/PaginatedResponse";
+import {fetchDepartmentsByLocation, fetchUnitsByDepartment} from "../api/services";
 
-const locales: Record<string, Locale> = {
-    'en-US': require('date-fns/locale/en-US'),
-};
+const locales: Record<string, Locale> = {'en-US': require('date-fns/locale/en-US'),};
 const {Sider, Content} = Layout;
 const {Title} = Typography;
 const {Option} = Select;
 
-const localizer = dateFnsLocalizer({
-    format,
-    parse,
-    startOfWeek,
-    getDay,
-    locales,
-});
+const localizer = dateFnsLocalizer({format, parse, startOfWeek, getDay, locales,});
 
 type Department = { id: number; name: string };
 type Unit = { id: number; name: string };
@@ -100,18 +93,13 @@ const CalendarView: React.FC = () => {
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
-            const res: AxiosResponse<PaginatedResponse<Department>> =
-                await axios.get(`${apiUrl}/api/departments/`, {
-                    params: {location_id: locationId},
-                    headers: {Authorization: `Token ${user?.token}`},
-                });
-            const deps = res.data.results;
+            const deps = await fetchDepartmentsByLocation(locationId);
             setDepartments(prev => ({...prev, [locationId]: deps}));
             deps.forEach((dep: Department) => {
                 fetchUnits(dep.id);
             });
         } catch (err) {
-            console.error('Failed to fetch departments:', err);
+            console.error("Failed to fetch departments:", err);
         } finally {
             setLoadingDepartments(false);
         }
@@ -120,55 +108,12 @@ const CalendarView: React.FC = () => {
     const fetchUnits = async (departmentId: number): Promise<void> => {
         setLoadingUnits(prev => ({...prev, [departmentId]: true}));
         try {
-            const res: AxiosResponse<PaginatedResponse<Unit>> =
-                await axios.get(`${apiUrl}/api/units/`, {
-                    params: {department_id: departmentId},
-                    headers: {Authorization: `Token ${user?.token}`},
-                });
-            const units = res.data.results
+            const units = await fetchUnitsByDepartment(departmentId);
             setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
-            console.error('Failed to fetch units:', err);
+            console.error("Failed to fetch units:", err);
         } finally {
             setLoadingUnits(prev => ({...prev, [departmentId]: false}));
-        }
-    };
-
-    const handleUnitClick = async (unitId: number): Promise<void> => {
-        setLoadingEvents(true);
-        try {
-            const data = await fetchAllPages<Shift>(
-                `${apiUrl}/api/shifts/`,
-                {
-                    unit: unitId,
-                    shift_type: shiftType,
-                },
-                user?.token!
-            );
-
-            const formatted: EventData[] = data.map((shift: Shift) => ({
-                id: shift.id,
-                title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
-                start: new Date(shift.start_time),
-                end: new Date(shift.end_time),
-                user: shift.user_details.id,
-                job_title: shift.user_details.job_title,
-                role: shift.user_details.role.id,
-                username: shift.user_details.user.username,
-                role_name: shift.user_details.role.name,
-                profile_picture: shift.user_details.user.profile_picture,
-                unit_id: shift.unit_details.id,
-                unit_name: shift.unit_details.name,
-                dept_name: shift.unit_details.department.name,
-            }));
-
-            setSelectedKey(`unit-${unitId}`);
-            setMenuSelectedKeys([`unit-${unitId}`]);
-            setEvents(formatted);
-        } catch (err) {
-            console.error("Failed to fetch shifts for unit:", err);
-        } finally {
-            setLoadingEvents(false);
         }
     };
 
@@ -239,6 +184,44 @@ const CalendarView: React.FC = () => {
         }
         return null;
     }
+
+    const handleUnitClick = async (unitId: number): Promise<void> => {
+        setLoadingEvents(true);
+        try {
+            const data = await fetchAllPages<Shift>(
+                `${apiUrl}/api/shifts/`,
+                {
+                    unit: unitId,
+                    shift_type: shiftType,
+                },
+                user?.token!
+            );
+
+            const formatted: EventData[] = data.map((shift: Shift) => ({
+                id: shift.id,
+                title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
+                start: new Date(shift.start_time),
+                end: new Date(shift.end_time),
+                user: shift.user_details.id,
+                job_title: shift.user_details.job_title,
+                role: shift.user_details.role.id,
+                username: shift.user_details.user.username,
+                role_name: shift.user_details.role.name,
+                profile_picture: shift.user_details.user.profile_picture,
+                unit_id: shift.unit_details.id,
+                unit_name: shift.unit_details.name,
+                dept_name: shift.unit_details.department.name,
+            }));
+
+            setSelectedKey(`unit-${unitId}`);
+            setMenuSelectedKeys([`unit-${unitId}`]);
+            setEvents(formatted);
+        } catch (err) {
+            console.error("Failed to fetch shifts for unit:", err);
+        } finally {
+            setLoadingEvents(false);
+        }
+    };
 
     const handleMyShiftsClick = async () => {
         setLoadingEvents(true);
