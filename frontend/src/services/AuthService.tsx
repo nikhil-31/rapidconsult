@@ -1,17 +1,8 @@
-import axios from "axios";
-
 import {UserModel} from "../models/UserModel";
 import {OrgLocation} from "../models/OrgLocation";
+import {loginRequest} from "../api/services";
 
 class AuthService {
-
-    private readonly apiUrl: string | undefined;
-    private readonly wsUrl: string | undefined;
-
-    constructor() {
-        this.apiUrl = process.env.REACT_APP_API_URL;
-        this.wsUrl = process.env.REACT_APP_WS_URL;
-    }
 
     setUserInLocalStorage(data: UserModel) {
         localStorage.setItem("user", JSON.stringify(data));
@@ -37,12 +28,14 @@ class AuthService {
     }
 
     async login(username: string, password: string): Promise<UserModel> {
-        const response = await axios.post(`${this.apiUrl}/api/auth-token/`, {username, password});
-        if (!response.data.token) {
-            return response.data;
+        const data = await loginRequest(username, password);
+
+        if (!data.token) {
+            return data;
         }
-        this.setUserInLocalStorage(response.data);
-        return response.data;
+
+        this.setUserInLocalStorage(data);
+        return data;
     }
 
     logout() {

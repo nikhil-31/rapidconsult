@@ -335,6 +335,11 @@ export const fetchUnitsByDepartment = async (
     return res.data.results;
 };
 
+// Login request
+export const loginRequest = async (username: string, password: string): Promise<UserModel> => {
+    const response = await api.post(endpoints.authToken, { username, password });
+    return response.data;
+};
 
 
 // Create a new consultation

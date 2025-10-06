@@ -14,6 +14,7 @@ const endpoints = {
     profileMe: "profile/me/",
     contacts: "contacts/",
     shifts: "shifts/",
+    authToken: "auth-token/",
 };
 
 export default endpoints;
