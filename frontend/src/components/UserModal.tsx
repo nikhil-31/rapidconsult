@@ -34,15 +34,14 @@ export default function UserModal({
     const apiUrl = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
-        axios
-            .get(`${apiUrl}/api/roles/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            })
-            .then((res: AxiosResponse<PaginatedResponse<Role>>) => {
-                const data = res.data.results
-                setRoles(data)
-            })
-            .catch((err) => console.error('Failed to fetch roles', err));
+
+        axios.get(`${apiUrl}/api/roles/`, {
+            headers: {Authorization: `Token ${user?.token}`},
+        }).then((res: AxiosResponse<PaginatedResponse<Role>>) => {
+            const data = res.data.results
+            setRoles(data)
+        }).catch((err) => console.error('Failed to fetch roles', err));
+
     }, []);
 
     useEffect(() => {
