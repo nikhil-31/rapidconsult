@@ -5,7 +5,7 @@ import {Unit} from "../models/Unit";
 import {useOrgLocation} from "../contexts/LocationContext";
 import ChatView from "./ChatView";
 import {Conversation} from "../models/ActiveConversation";
-import {getDepartmentsByLocation, getUnitsByDepartment} from "../api/services";
+import {fetchDepartmentsByLocation, fetchUnitsByDepartment} from "../api/services";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -27,9 +27,7 @@ const OnCall: React.FC = () => {
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
-            const res = await getDepartmentsByLocation(locationId);
-            const departments = res.results;
-
+            const departments = await fetchDepartmentsByLocation(locationId);
             setDepartments(prev => ({...prev, [locationId]: departments}));
 
             departments.forEach(dep => fetchUnits(dep.id));
@@ -43,9 +41,7 @@ const OnCall: React.FC = () => {
     const fetchUnits = async (departmentId: number): Promise<void> => {
         setLoadingUnits(prev => ({...prev, [departmentId]: true}));
         try {
-            const res = await getUnitsByDepartment(departmentId);
-            const units = res.results;
-
+            const units = await fetchUnitsByDepartment(departmentId);
             setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
             console.error("Failed to fetch units:", err);

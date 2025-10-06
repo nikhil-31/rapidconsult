@@ -29,7 +29,6 @@ export default function UnitModal({
 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
-    const [displayPicture, setDisplayPicture] = useState<File | null>(null);
     const [fileList, setFileList] = useState<any[]>([]);
     const [members, setMembers] = useState<{ id: number; user: number; is_admin: boolean }[]>([]);
     const [selectedOrgUserId, setSelectedOrgUserId] = useState<string>('');

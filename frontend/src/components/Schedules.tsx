@@ -26,7 +26,6 @@ import {
     removeShift
 } from "../api/services";
 
-
 const locales: Record<string, Locale> = {'en-US': require('date-fns/locale/en-US'),};
 const {Sider, Content} = Layout;
 const {Title} = Typography;

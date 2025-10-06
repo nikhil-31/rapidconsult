@@ -220,23 +220,6 @@ export const deleteContact = async (contactId: number) => {
 };
 
 // update shift
-export const updateShift = async (
-    shiftId: number,
-    start_time: string,
-    end_time: string
-) => {
-    const res = await api.patch(`${endpoints.shifts}${shiftId}/`, {
-        start_time,
-        end_time,
-    });
-    return res.data;
-};
-
-// Delete shift
-export const deleteShift = async (shiftId: number) => {
-    const res = await api.delete(`${endpoints.shifts}${shiftId}/`);
-    return res.data;
-};
 
 // Create location
 export const createLocation = async (formData: FormData): Promise<Location> => {
@@ -253,38 +236,6 @@ export const updateLocation = async (
 ): Promise<Location> => {
     const res = await api.patch<Location>(`${endpoints.locations}${id}/`, formData, {
         headers: {"Content-Type": "multipart/form-data"},
-    });
-    return res.data;
-};
-
-// Get departments by location
-export const getDepartmentsByLocation = async (
-    locationId: number,
-    page: number = 1,
-    pageSize: number = 20
-): Promise<PaginatedResponse<Department>> => {
-    const res = await api.get<PaginatedResponse<Department>>(endpoints.departments, {
-        params: {
-            location_id: locationId,
-            page,
-            page_size: pageSize,
-        },
-    });
-    return res.data;
-};
-
-// Get units by department
-export const getUnitsByDepartment = async (
-    departmentId: number,
-    page: number = 1,
-    pageSize: number = 20
-): Promise<PaginatedResponse<Unit>> => {
-    const res = await api.get<PaginatedResponse<Unit>>(endpoints.units, {
-        params: {
-            department_id: departmentId,
-            page,
-            page_size: pageSize,
-        },
     });
     return res.data;
 };
@@ -321,7 +272,7 @@ export const fetchDepartmentsByLocation = async (
     return res.data.results;
 };
 
-// Get units by department (with results array)
+// Get units by department
 export const fetchUnitsByDepartment = async (
     departmentId: number,
     page: number = 1,
@@ -376,7 +327,7 @@ const fetchAllPages = async <T, >(
 ): Promise<T[]> => {
     let results: T[] = [];
     let nextUrl: string | null = endpoint;
-    let currentParams = { ...params };
+    let currentParams = {...params};
 
     while (nextUrl) {
         const res: AxiosResponse<PaginatedResponse<T>> = await api.get(nextUrl, {
@@ -394,6 +345,40 @@ const fetchAllPages = async <T, >(
 export const removeShift = async (id: number): Promise<void> => {
     const url = `${endpoints.shifts}${id}/`;
     return await api.delete(url);
+};
+
+export const updateShift = async (
+    shiftId: number,
+    start_time: string,
+    end_time: string
+) => {
+    const res = await api.patch(`${endpoints.shifts}${shiftId}/`, {
+        start_time,
+        end_time
+    });
+    return res.data;
+};
+
+export const createShift = async (payload: {
+    user: number;
+    unit: number;
+    start_time: string;
+    end_time: string;
+    shift_type: string;
+}): Promise<Shift> => {
+    const res = await api.post<Shift>(endpoints.shifts, payload);
+    return res.data;
+};
+
+export const getUnitById = async (unitId: number): Promise<Unit> => {
+    const res = await api.get<Unit>(`${endpoints.units}${unitId}/`);
+    return res.data;
+};
+
+
+export const getUnitDetails = async (unitId: number): Promise<Unit & { members: any[] }> => {
+    const res = await api.get<Unit & { members: any[] }>(`${endpoints.units}${unitId}/`);
+    return res.data;
 };
 
 // Create a new consultation

@@ -13,20 +13,11 @@ interface UnitTableProps {
     refresh: number;
 }
 
-export default function UnitTable({
-                                      selectedOrgId,
-                                      onCreate,
-                                      onEdit,
-                                      refresh,
-                                  }: UnitTableProps) {
+export default function UnitTable({selectedOrgId, onCreate, onEdit, refresh,}: UnitTableProps) {
 
     const [units, setUnits] = useState<Unit[]>([]);
     const [loading, setLoading] = useState(true);
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 20,
-        total: 0,
-    });
+    const [pagination, setPagination] = useState({current: 1, pageSize: 20, total: 0});
 
     const fetchUnits = async (page = 1, pageSize = 20) => {
         if (!selectedOrgId) return;

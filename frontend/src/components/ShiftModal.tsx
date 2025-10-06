@@ -1,8 +1,14 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Modal, Form, Select, DatePicker, Button, message} from 'antd';
-import axios from 'axios';
-import {AuthContext} from '../contexts/AuthContext';
 import {useOrgLocation} from "../contexts/LocationContext";
+import {
+    createShift,
+    fetchDepartmentsByLocation,
+    fetchUnitsByDepartment,
+    getUnitById
+} from "../api/services";
+import {Department} from '../models/Department';
+import {Unit} from '../models/Unit';
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
@@ -13,14 +19,17 @@ interface Props {
     onShiftCreated: () => void;
 }
 
-const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) => {
-    const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL;
+interface Member {
+    id: number;
+    name: string;
+}
 
+const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) => {
     const [form] = Form.useForm();
-    const [departments, setDepartments] = useState([]);
-    const [units, setUnits] = useState([]);
-    const [members, setMembers] = useState([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [units, setUnits] = useState<Unit[]>([]);
+
+    const [members, setMembers] = useState<Member[]>([]);
 
     const {selectedLocation} = useOrgLocation();
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
@@ -33,37 +42,49 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
 
     useEffect(() => {
         if (!selectedLocationId) return;
-
-        axios.get(`${apiUrl}/api/departments/?location_id=${selectedLocationId}`, {
-            headers: {Authorization: `Token ${user?.token}`},
-        }).then(res => {
-            setDepartments(res.data.results);
-        });
+        const loadDepartments = async () => {
+            try {
+                const departments = await fetchDepartmentsByLocation(selectedLocationId);
+                setDepartments(departments);
+            } catch (err) {
+                console.error("Failed to fetch departments:", err);
+            }
+        };
+        loadDepartments();
     }, [selectedLocationId]);
 
     useEffect(() => {
         if (!selectedDepartment) return;
 
-        axios.get(`${apiUrl}/api/units?department_id=${selectedDepartment}`, {
-            headers: {Authorization: `Token ${user?.token}`},
-        }).then(res => {
-            setUnits(res.data.results);
-        });
+        const loadUnits = async () => {
+            try {
+                const units = await fetchUnitsByDepartment(selectedDepartment);
+                setUnits(units);
+            } catch (err) {
+                console.error("Failed to fetch units:", err);
+            }
+        };
+
+        loadUnits();
     }, [selectedDepartment]);
 
     useEffect(() => {
         if (!selectedUnit) return;
 
-        axios.get(`${apiUrl}/api/units/${selectedUnit}`, {
-            headers: {Authorization: `Token ${user?.token}`},
-        }).then(res => {
-            const unitData = res.data;
-            const formattedMembers = (unitData.members || []).map((member: any) => ({
-                id: member.user_details.id,
-                name: `${member.user_details.user.name || 'User'} (${member.user_details.role.name})`
-            }));
-            setMembers(formattedMembers);
-        }).catch(err => console.error('Failed to fetch unit members', err));
+        const loadUnitMembers = async () => {
+            try {
+                const unitData = await getUnitById(selectedUnit);
+                const formattedMembers: Member[] = (unitData.members || []).map((member: any) => ({
+                    id: member.user_details.id,
+                    name: `${member.user_details.user.name || 'User'} (${member.user_details.role.name})`
+                }));
+                setMembers(formattedMembers);
+            } catch (err) {
+                console.error('Failed to fetch unit members', err);
+            }
+        };
+
+        loadUnitMembers();
     }, [selectedUnit]);
 
     const handleSubmit = async () => {
@@ -71,19 +92,12 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
             const values = await form.validateFields();
             const [start, end] = values.time_range;
 
-            const payload = {
+            const res = await createShift({
                 user: values.user,
                 unit: values.unit,
                 start_time: start.toISOString(),
                 end_time: end.toISOString(),
-                shift_type: values.shift_type, // ✅ added shift_type
-            };
-
-            await axios.post(`${apiUrl}/api/shifts/`, payload, {
-                headers: {
-                    Authorization: `Token ${user?.token}`,
-                    'Content-Type': 'application/json',
-                },
+                shift_type: values.shift_type,
             });
 
             message.success('Shift created successfully!');

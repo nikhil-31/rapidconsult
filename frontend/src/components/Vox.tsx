@@ -2,12 +2,12 @@ import React, {useContext, useEffect, useRef, useState, UIEvent} from "react";
 import {AuthContext} from "../contexts/AuthContext";
 import {Layout, Typography, List, Skeleton, Input, Button} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
-import {Conversation} from "../models/ActiveConversation";
-import ChatView from "./ChatView";
 import {useLocation} from "react-router-dom";
 import {getActiveConversations} from "../api/services";
-import ConversationListItem from "./ConversationListItem";
 import {SearchOutlined} from "@ant-design/icons";
+import {Conversation} from "../models/ActiveConversation";
+import ConversationListItem from "./ConversationListItem";
+import ChatView from "./ChatView";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
