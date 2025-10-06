@@ -1,4 +1,3 @@
-import axios, {AxiosResponse} from 'axios';
 import {Layout, Menu, Button, Typography, Space, Skeleton, Select} from 'antd';
 import dayjs from 'dayjs';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -17,8 +16,15 @@ import ShiftDetailModal from "./EventDetailModal";
 import {Shift} from "../models/Shift";
 import {EventData} from "../models/EventData";
 import {UserModel} from "../models/UserModel";
-import {PaginatedResponse} from "../models/PaginatedResponse";
-import {fetchDepartmentsByLocation, fetchUnitsByDepartment} from "../api/services";
+import {
+    fetchDepartmentsByLocation,
+    fetchUnitsByDepartment,
+    getMyShifts,
+    getShiftsByUnit,
+    removeShift
+} from "../api/services";
+import {Department} from "../models/Department";
+import {Unit} from "../models/Unit";
 
 const locales: Record<string, Locale> = {'en-US': require('date-fns/locale/en-US'),};
 const {Sider, Content} = Layout;
@@ -27,12 +33,8 @@ const {Option} = Select;
 
 const localizer = dateFnsLocalizer({format, parse, startOfWeek, getDay, locales,});
 
-type Department = { id: number; name: string };
-type Unit = { id: number; name: string };
-
 const CalendarView: React.FC = () => {
     const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL as string;
 
     const [events, setEvents] = useState<EventData[]>([]);
     const [view, setView] = useState<View>(Views.MONTH);
@@ -64,30 +66,6 @@ const CalendarView: React.FC = () => {
         }
         const hue = Math.abs(hash) % 360;
         return `hsl(${hue}, 70%, 80%)`;
-    };
-
-    // Fetch all pages until `next` is null
-    const fetchAllPages = async <T, >(
-        url: string,
-        params: Record<string, any>,
-        token: string,
-    ): Promise<T[]> => {
-        let results: T[] = [];
-        let nextUrl: string | null = url;
-        let currentParams = {...params};
-
-        while (nextUrl) {
-            const res: AxiosResponse<PaginatedResponse<T>> = await axios.get(nextUrl, {
-                params: currentParams,
-                headers: {Authorization: `Token ${token}`},
-            });
-
-            results = [...results, ...res.data.results];
-
-            nextUrl = res.data.next;
-            currentParams = {};
-        }
-        return results;
     };
 
     const fetchDepartments = async (locationId: number): Promise<void> => {
@@ -137,7 +115,6 @@ const CalendarView: React.FC = () => {
     }, [selectedLocationId]);
 
     useEffect(() => {
-        // Trigger click behavior when page loads
         if (selectedLocationId !== null && user !== null) {
             handleMyShiftsClick();
         } else if (selectedKey.startsWith("unit-")) {
@@ -153,10 +130,7 @@ const CalendarView: React.FC = () => {
 
     const handleDeleteShift = async (id: number) => {
         try {
-            await axios.delete(`${apiUrl}/api/shifts/${id}/`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            });
-
+            const data = await removeShift(id)
             setEvents(prev => prev.filter(event => event.id !== id));
             setDetailModalOpen(false);
             setSelectedEvent(null);
@@ -185,33 +159,29 @@ const CalendarView: React.FC = () => {
         return null;
     }
 
+    const formatShiftsToEvents = (shifts: Shift[]): EventData[] => {
+        return shifts.map((shift) => ({
+            id: shift.id,
+            title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
+            start: new Date(shift.start_time),
+            end: new Date(shift.end_time),
+            user: shift.user_details.id,
+            job_title: shift.user_details.job_title,
+            role: shift.user_details.role.id,
+            username: shift.user_details.user.username,
+            role_name: shift.user_details.role.name,
+            profile_picture: shift.user_details.user.profile_picture,
+            unit_id: shift.unit_details.id,
+            unit_name: shift.unit_details.name,
+            dept_name: shift.unit_details.department.name,
+        }));
+    };
+
     const handleUnitClick = async (unitId: number): Promise<void> => {
         setLoadingEvents(true);
         try {
-            const data = await fetchAllPages<Shift>(
-                `${apiUrl}/api/shifts/`,
-                {
-                    unit: unitId,
-                    shift_type: shiftType,
-                },
-                user?.token!
-            );
-
-            const formatted: EventData[] = data.map((shift: Shift) => ({
-                id: shift.id,
-                title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
-                start: new Date(shift.start_time),
-                end: new Date(shift.end_time),
-                user: shift.user_details.id,
-                job_title: shift.user_details.job_title,
-                role: shift.user_details.role.id,
-                username: shift.user_details.user.username,
-                role_name: shift.user_details.role.name,
-                profile_picture: shift.user_details.user.profile_picture,
-                unit_id: shift.unit_details.id,
-                unit_name: shift.unit_details.name,
-                dept_name: shift.unit_details.department.name,
-            }));
+            const data = await getShiftsByUnit(unitId, shiftType)
+            const formatted = formatShiftsToEvents(data);
 
             setSelectedKey(`unit-${unitId}`);
             setMenuSelectedKeys([`unit-${unitId}`]);
@@ -226,30 +196,8 @@ const CalendarView: React.FC = () => {
     const handleMyShiftsClick = async () => {
         setLoadingEvents(true);
         try {
-            const data = await fetchAllPages<Shift>(
-                `${apiUrl}/api/shifts/`,
-                {
-                    user: getOrgProfileId(user),
-                    location: selectedLocationId,
-                    shift_type: shiftType
-                },
-                user?.token!
-            );
-            const formatted: EventData[] = data.map((shift: Shift) => ({
-                id: shift.id,
-                title: `${shift.user_details.user.username} (${shift.user_details.role.name})`,
-                start: new Date(shift.start_time),
-                end: new Date(shift.end_time),
-                user: shift.user_details.id,
-                job_title: shift.user_details.job_title,
-                role: shift.user_details.role.id,
-                username: shift.user_details.user.username,
-                role_name: shift.user_details.role.name,
-                profile_picture: shift.user_details.user.profile_picture,
-                unit_id: shift.unit_details.id,
-                unit_name: shift.unit_details.name,
-                dept_name: shift.unit_details.department.name,
-            }));
+            const data = await getMyShifts(getOrgProfileId(user), selectedLocationId, shiftType)
+            const formatted = formatShiftsToEvents(data);
 
             setSelectedKey("my-shifts");
             setMenuSelectedKeys([]);

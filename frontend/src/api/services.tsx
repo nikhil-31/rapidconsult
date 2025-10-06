@@ -1,6 +1,7 @@
 // src/api/services.ts
 import api from "./axios";
 import endpoints from "./endpoints";
+import {AxiosResponse} from "axios";
 import {PaginatedResponse} from "../models/PaginatedResponse";
 import {Conversation} from "../models/ActiveConversation";
 import {Department} from "../models/Department";
@@ -10,6 +11,7 @@ import {Unit} from "../models/Unit";
 import {Message} from "../models/Message";
 import {ProfileData} from "../models/ProfileData";
 import {Contact} from "../models/Contact";
+import {Shift} from "../models/Shift";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -337,10 +339,62 @@ export const fetchUnitsByDepartment = async (
 
 // Login request
 export const loginRequest = async (username: string, password: string): Promise<UserModel> => {
-    const response = await api.post(endpoints.authToken, { username, password });
+    const response = await api.post(endpoints.authToken, {username, password});
     return response.data;
 };
 
+// Get shifts by unit
+export const getShiftsByUnit = async (
+    unitId: number,
+    shiftType: string | undefined,
+): Promise<Shift[]> => {
+    const params = {
+        unit: unitId,
+        shift_type: shiftType
+    };
+    return await fetchAllPages<Shift>(endpoints.shifts, params);
+};
+
+// Get my shifts
+export const getMyShifts = async (
+    userOrgProfileId: string | null,
+    selectedLocationId: number | null,
+    shiftType: string | undefined,
+): Promise<Shift[]> => {
+    const params = {
+        user: userOrgProfileId,
+        location: selectedLocationId,
+        shift_type: shiftType
+    };
+    return await fetchAllPages<Shift>(endpoints.shifts, params);
+};
+
+// Get all pages
+const fetchAllPages = async <T, >(
+    endpoint: string,
+    params: Record<string, any> = {}
+): Promise<T[]> => {
+    let results: T[] = [];
+    let nextUrl: string | null = endpoint;
+    let currentParams = { ...params };
+
+    while (nextUrl) {
+        const res: AxiosResponse<PaginatedResponse<T>> = await api.get(nextUrl, {
+            params: currentParams,
+        });
+
+        results = [...results, ...res.data.results];
+        nextUrl = res.data.next ? res.data.next.replace(api.defaults.baseURL!, "") : null;
+        currentParams = {};
+    }
+
+    return results;
+};
+
+export const removeShift = async (id: number): Promise<void> => {
+    const url = `${endpoints.shifts}${id}/`;
+    return await api.delete(url);
+};
 
 // Create a new consultation
 // export const createConsultation = async (
