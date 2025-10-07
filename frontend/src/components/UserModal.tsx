@@ -111,8 +111,6 @@ export default function UserModal({
                     resData = await updateUser(editingUser.username, formData);
                 } else {
                     resData = await createUser(formData);
-
-                    // Extract org profile ID from response
                     orgProfileId = resData.organizations?.find(
                         (o: OrgProfile) => o.organization.id === Number(selectedOrgId)
                     )?.id;

@@ -19,11 +19,11 @@ import {UserModel} from "../models/UserModel";
 import {Department} from "../models/Department";
 import {Unit} from "../models/Unit";
 import {
-    fetchDepartmentsByLocation,
-    fetchUnitsByDepartment,
+    getDepartmentsByLocation,
+    getUnitsByDepartment,
     getMyShifts,
     getShiftsByUnit,
-    removeShift
+    deleteShift
 } from "../api/services";
 
 const locales: Record<string, Locale> = {'en-US': require('date-fns/locale/en-US'),};
@@ -40,7 +40,7 @@ const CalendarView: React.FC = () => {
     const [view, setView] = useState<View>(Views.MONTH);
     const [date, setDate] = useState<Date>(new Date());
 
-    const {selectedLocation, setSelectedLocation} = useOrgLocation();
+    const {selectedLocation} = useOrgLocation();
     const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
 
     const [departments, setDepartments] = useState<Record<number, Department[]>>({});
@@ -71,7 +71,7 @@ const CalendarView: React.FC = () => {
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
-            const deps = await fetchDepartmentsByLocation(locationId);
+            const deps = await getDepartmentsByLocation(locationId);
             setDepartments(prev => ({...prev, [locationId]: deps}));
             deps.forEach((dep: Department) => {
                 fetchUnits(dep.id);
@@ -86,7 +86,7 @@ const CalendarView: React.FC = () => {
     const fetchUnits = async (departmentId: number): Promise<void> => {
         setLoadingUnits(prev => ({...prev, [departmentId]: true}));
         try {
-            const units = await fetchUnitsByDepartment(departmentId);
+            const units = await getUnitsByDepartment(departmentId);
             setUnits(prev => ({...prev, [departmentId]: units}));
         } catch (err) {
             console.error("Failed to fetch units:", err);
@@ -130,7 +130,7 @@ const CalendarView: React.FC = () => {
 
     const handleDeleteShift = async (id: number) => {
         try {
-            const data = await removeShift(id)
+            const data = await deleteShift(id)
             setEvents(prev => prev.filter(event => event.id !== id));
             setDetailModalOpen(false);
             setSelectedEvent(null);

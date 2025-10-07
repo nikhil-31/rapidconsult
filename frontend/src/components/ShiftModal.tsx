@@ -5,8 +5,8 @@ import {Department} from '../models/Department';
 import {Unit} from '../models/Unit';
 import {
     createShift,
-    fetchDepartmentsByLocation,
-    fetchUnitsByDepartment,
+    getDepartmentsByLocation,
+    getUnitsByDepartment,
     getUnitById
 } from "../api/services";
 
@@ -44,7 +44,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
         if (!selectedLocationId) return;
         const loadDepartments = async () => {
             try {
-                const departments = await fetchDepartmentsByLocation(selectedLocationId);
+                const departments = await getDepartmentsByLocation(selectedLocationId);
                 setDepartments(departments);
             } catch (err) {
                 console.error("Failed to fetch departments:", err);
@@ -58,7 +58,7 @@ const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) =
 
         const loadUnits = async () => {
             try {
-                const units = await fetchUnitsByDepartment(selectedDepartment);
+                const units = await getUnitsByDepartment(selectedDepartment);
                 setUnits(units);
             } catch (err) {
                 console.error("Failed to fetch units:", err);

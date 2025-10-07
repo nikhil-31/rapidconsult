@@ -14,6 +14,28 @@ import {Contact} from "../models/Contact";
 import {Shift} from "../models/Shift";
 import {UnitMembership} from "../models/UnitMembership";
 import {Role} from "../models/Role";
+import {Consultation} from "../models/Consultation";
+
+// Get all pages
+const fetchAllPages = async <T, >(
+    endpoint: string,
+    params: Record<string, any> = {}
+): Promise<T[]> => {
+    let results: T[] = [];
+    let nextUrl: string | null = endpoint;
+    let currentParams = {...params};
+
+    while (nextUrl) {
+        const res: AxiosResponse<PaginatedResponse<T>> = await api.get(nextUrl, {
+            params: currentParams,
+        });
+
+        results = [...results, ...res.data.results];
+        nextUrl = res.data.next ? res.data.next.replace(api.defaults.baseURL!, "") : null;
+        currentParams = {};
+    }
+    return results;
+};
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -259,7 +281,8 @@ export const startDirectConversation = async (
     return res.data;
 };
 
-export const fetchDepartmentsByLocation = async (
+// Get departments by location
+export const getDepartmentsByLocation = async (
     locationId: number,
     page: number = 1,
     pageSize: number = 20
@@ -275,7 +298,7 @@ export const fetchDepartmentsByLocation = async (
 };
 
 // Get units by department
-export const fetchUnitsByDepartment = async (
+export const getUnitsByDepartment = async (
     departmentId: number,
     page: number = 1,
     pageSize: number = 20
@@ -322,33 +345,13 @@ export const getMyShifts = async (
     return await fetchAllPages<Shift>(endpoints.shifts, params);
 };
 
-// Get all pages
-const fetchAllPages = async <T, >(
-    endpoint: string,
-    params: Record<string, any> = {}
-): Promise<T[]> => {
-    let results: T[] = [];
-    let nextUrl: string | null = endpoint;
-    let currentParams = {...params};
-
-    while (nextUrl) {
-        const res: AxiosResponse<PaginatedResponse<T>> = await api.get(nextUrl, {
-            params: currentParams,
-        });
-
-        results = [...results, ...res.data.results];
-        nextUrl = res.data.next ? res.data.next.replace(api.defaults.baseURL!, "") : null;
-        currentParams = {};
-    }
-
-    return results;
-};
-
-export const removeShift = async (id: number): Promise<void> => {
+// Delete shift
+export const deleteShift = async (id: number): Promise<void> => {
     const url = `${endpoints.shifts}${id}/`;
     return await api.delete(url);
 };
 
+// Update shift
 export const updateShift = async (
     shiftId: number,
     start_time: string,
@@ -361,6 +364,7 @@ export const updateShift = async (
     return res.data;
 };
 
+// Create shift
 export const createShift = async (payload: {
     user: number;
     unit: number;
@@ -372,11 +376,13 @@ export const createShift = async (payload: {
     return res.data;
 };
 
+// Get unit details by id
 export const getUnitById = async (unitId: number): Promise<Unit> => {
     const res = await api.get<Unit>(`${endpoints.units}${unitId}/`);
     return res.data;
 };
 
+// Add a user as a member to unit
 export const addUnitMember = async (
     unitId: number,
     orgUserId: number,
@@ -390,11 +396,12 @@ export const addUnitMember = async (
     return res.data;
 };
 
+// Remove unit members for a user
 export const deleteUnitMember = async (id: number): Promise<void> => {
     return await api.delete(`${endpoints.unitMemberships}${id}/`);
 };
 
-
+// Add or remove admin status for unit members
 export const updateUnitMemberAdminStatus = async (
     id: number,
     isAdmin: boolean
@@ -473,8 +480,7 @@ export const updateAllowedLocations = async (
     orgProfileId: number,
     allowedLocations: number[]
 ): Promise<void> => {
-    // `${apiUrl}/api/allowed-location/${orgProfileId}/update-locations/`,
-    await api.patch(
+    return await api.patch(
         `${endpoints.allowedLocations}${orgProfileId}/update-locations/`,
         {allowed_locations: allowedLocations},
         {
@@ -485,14 +491,10 @@ export const updateAllowedLocations = async (
     );
 };
 
-// Create a new consultation
-// export const createConsultation = async (
-//     payload: ConsultationPayload
-// ): Promise<any> => {
-//     const res = await api.post("/api/consultations/", payload, {
-//         headers: {
-//             Authorization: `Token ${localStorage.getItem("token")}`,
-//         },
-//     });
-//     return res.data;
-// };
+// Create consultation
+export const createConsultation = async (
+    values: Partial<Consultation>
+): Promise<Consultation> => {
+    const res = await api.post<Consultation>(`${endpoints.consultations}`, values);
+    return res.data;
+};
