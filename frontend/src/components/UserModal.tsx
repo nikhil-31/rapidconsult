@@ -1,12 +1,10 @@
-import React, {useContext, useEffect, useState} from 'react';
-import axios, {AxiosResponse} from 'axios';
-import {Modal, Form, Input, Select, Upload, Button, Typography, message} from 'antd';
+import React, {useEffect, useState} from 'react';
+import {Modal, Form, Input, Select, Upload, Button, Typography} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import {Role} from '../models/Role';
-import {AuthContext} from '../contexts/AuthContext';
 import {UserModel} from '../models/UserModel';
 import {OrgProfile} from '../models/OrgProfile';
-import {PaginatedResponse} from "../models/PaginatedResponse";
+import {createUser, fetchRoles, getLocations, updateAllowedLocations, updateUser} from "../api/services";
 
 const {Title} = Typography;
 
@@ -25,34 +23,35 @@ export default function UserModal({
                                       onSuccess,
                                       editingUser = null,
                                   }: CreateUserModalProps) {
-    const {user} = useContext(AuthContext);
+
     const [roles, setRoles] = useState<Role[]>([]);
     const [locations, setLocations] = useState<any[]>([]);
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState<any[]>([]);
     const isEditMode = Boolean(editingUser);
-    const apiUrl = process.env.REACT_APP_API_URL;
 
-    useEffect(() => {
-
-        axios.get(`${apiUrl}/api/roles/`, {
-            headers: {Authorization: `Token ${user?.token}`},
-        }).then((res: AxiosResponse<PaginatedResponse<Role>>) => {
-            const data = res.data.results
-            setRoles(data)
-        }).catch((err) => console.error('Failed to fetch roles', err));
-
-    }, []);
-
-    useEffect(() => {
-        if (selectedOrgId) {
-            axios.get(`${apiUrl}/api/locations?organization_id=${selectedOrgId}`, {
-                headers: {Authorization: `Token ${user?.token}`},
-            }).then((res: AxiosResponse<PaginatedResponse<Location>>) => {
-                const data = res.data.results
-                setLocations(data)
-            }).catch((err) => console.error('Failed to fetch locations', err));
+    const loadRoles = async () => {
+        try {
+            const data = await fetchRoles();
+            setRoles(data);
+        } catch (error) {
+            console.error('Failed to fetch roles:', error);
         }
+    };
+
+    const loadLocations = async () => {
+        if (!selectedOrgId) return;
+        try {
+            const res = await getLocations(selectedOrgId);
+            setLocations(res.results);
+        } catch (error) {
+            console.error('Failed to fetch locations:', error);
+        }
+    };
+
+    useEffect(() => {
+        loadRoles();
+        loadLocations();
     }, [selectedOrgId]);
 
     useEffect(() => {
@@ -106,54 +105,32 @@ export default function UserModal({
                 (o) => o.organization.id.toString() === selectedOrgId.toString()
             )?.id;
 
-            let res;
-            if (isEditMode && editingUser) {
-                res = await
-                    axios.patch(
-                        `${apiUrl}/api/users/${editingUser.username}/`,
-                        formData,
-                        {
-                            headers: {
-                                'Content-Type': 'multipart/form-data',
-                                Authorization: `Token ${user?.token}`,
-                            },
-                        }
-                    );
-            } else {
-                res = await axios.post(`${apiUrl}/api/users/register/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                });
+            let resData;
+            try {
+                if (isEditMode && editingUser) {
+                    resData = await updateUser(editingUser.username, formData);
+                } else {
+                    resData = await createUser(formData);
 
-                // Get org profile ID from response
-                orgProfileId = res.data?.organizations?.find(
-                    (o: OrgProfile) => o.organization.id === Number(selectedOrgId)
-                )?.id;
+                    // Extract org profile ID from response
+                    orgProfileId = resData.organizations?.find(
+                        (o: OrgProfile) => o.organization.id === Number(selectedOrgId)
+                    )?.id;
+                }
+
+                if (resData && orgProfileId) {
+                    await updateAllowedLocations(orgProfileId, values.allowed_locations);
+                } else {
+                    console.warn(`Failed: Missing orgProfileId or invalid response`, resData);
+                }
+            } catch (error) {
+                console.error('Failed to save user or update locations:', error);
             }
 
-            if (res.status >= 200 && res.status < 300 && orgProfileId) {
-                await axios.patch(
-                    `${apiUrl}/api/allowed-location/${orgProfileId}/update-locations/`,
-                    {allowed_locations: values.allowed_locations},
-                    {
-                        headers: {
-                            Authorization: `Token ${user?.token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-            } else {
-                console.log(`Failure Status ${res.status} - orgprofileid - ${orgProfileId}`)
-            }
-
-            message.success(`User ${isEditMode ? 'updated' : 'created'} successfully`);
             onSuccess();
             onClose();
         } catch (error) {
             console.error('Error saving user:', error);
-            message.error('Failed to save user');
         }
     };
 

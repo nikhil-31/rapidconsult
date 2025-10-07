@@ -13,6 +13,7 @@ import {ProfileData} from "../models/ProfileData";
 import {Contact} from "../models/Contact";
 import {Shift} from "../models/Shift";
 import {UnitMembership} from "../models/UnitMembership";
+import {Role} from "../models/Role";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -76,7 +77,7 @@ export const getUsers = async (
     pageSize: number = 20,
 ): Promise<PaginatedResponse<UserModel>> => {
     const res = await api.get<PaginatedResponse<UserModel>>(
-        endpoints.users,
+        endpoints.usersAll,
         {
             params: {
                 organization: organizationId,
@@ -432,6 +433,57 @@ export const updateUnit = async (
     return res.data;
 };
 
+// Fetch roles
+export const fetchRoles = async (): Promise<Role[]> => {
+    const res = await api.get<PaginatedResponse<Role>>(`${endpoints.roles}`);
+    return res.data.results;
+};
+
+// Create user
+export const createUser = async (
+    formData: FormData
+): Promise<UserModel> => {
+    const res = await api.post<UserModel>(`${endpoints.userRegister}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return res.data;
+};
+
+// Update user
+export const updateUser = async (
+    username: string,
+    formData: FormData
+): Promise<UserModel> => {
+    const res = await api.patch<UserModel>(
+        `${endpoints.users}${username}/`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    );
+    return res.data;
+};
+
+// Allowed locations
+export const updateAllowedLocations = async (
+    orgProfileId: number,
+    allowedLocations: number[]
+): Promise<void> => {
+    // `${apiUrl}/api/allowed-location/${orgProfileId}/update-locations/`,
+    await api.patch(
+        `${endpoints.allowedLocations}${orgProfileId}/update-locations/`,
+        {allowed_locations: allowedLocations},
+        {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }
+    );
+};
 
 // Create a new consultation
 // export const createConsultation = async (

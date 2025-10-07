@@ -5,7 +5,8 @@ const endpoints = {
     locations: "locations/",
     departmentsOrg: "departments/org/",
     departments: "departments/",
-    users: "users/all/",
+    users: "users/",
+    usersAll: "users/all/",
     units: "units/",
     messages: "messages/",
     saveMessage: "save-message/",
@@ -16,6 +17,9 @@ const endpoints = {
     shifts: "shifts/",
     authToken: "auth-token/",
     unitMemberships: "unit-memberships/",
+    roles: "roles/",
+    userRegister: "users/register/",
+    allowedLocations: "allowed-location/",
 };
 
 export default endpoints;
