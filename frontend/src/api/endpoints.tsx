@@ -15,6 +15,7 @@ const endpoints = {
     contacts: "contacts/",
     shifts: "shifts/",
     authToken: "auth-token/",
+    unitMemberships: "unit-memberships/",
 };
 
 export default endpoints;

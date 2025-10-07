@@ -1,13 +1,19 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Modal, Form, Input, Select, Button, Upload, Checkbox, List, Typography, message, Tooltip, Space,} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
-import axios from 'axios';
-import {AuthContext} from '../contexts/AuthContext';
 import {Department} from '../models/Department';
 import {Unit} from '../models/Unit';
 import {UserModel} from '../models/UserModel';
 import {DeleteOutlined} from '@ant-design/icons';
-import {getDepartments, getUsers} from "../api/services";
+import {
+    addUnitMember,
+    createUnit,
+    deleteUnitMember,
+    getDepartments,
+    getUsers,
+    updateUnit,
+    updateUnitMemberAdminStatus
+} from "../api/services";
 
 const {Option} = Select;
 
@@ -24,8 +30,6 @@ export default function UnitModal({
                                       onClose,
                                       onSuccess,
                                   }: UnitModalProps) {
-    const {user} = useContext(AuthContext);
-    const apiUrl = process.env.REACT_APP_API_URL;
 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -63,7 +67,6 @@ export default function UnitModal({
         fetchDepartments();
         fetchUsers();
     }, [selectedOrgId]);
-
 
     useEffect(() => {
         if (unitToEdit) {
@@ -109,21 +112,8 @@ export default function UnitModal({
         if (!orgUserId || members.find((m) => m.user === orgUserId)) return;
 
         try {
-            const response = await axios.post(
-                `${apiUrl}/api/unit-memberships/`,
-                {
-                    unit: unitToEdit?.id,
-                    user: orgUserId,
-                    is_admin: false,
-                },
-                {
-                    headers: {
-                        Authorization: `Token ${user?.token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-            setMembers((prev) => [...prev, response.data]);
+            const response = await addUnitMember(unitToEdit!.id, orgUserId, false);
+            setMembers((prev) => [...prev, response]);
             setSelectedOrgUserId('');
         } catch (error) {
             console.error('Failed to add member:', error);
@@ -133,11 +123,7 @@ export default function UnitModal({
 
     const handleRemoveMember = async (orgUserId: number, id: number) => {
         try {
-            await axios.delete(`${apiUrl}/api/unit-memberships/${id}/`, {
-                headers: {
-                    Authorization: `Token ${user?.token}`,
-                },
-            });
+            const res = await deleteUnitMember(id);
             setMembers((prev) => prev.filter((m) => m.user !== orgUserId));
         } catch (error) {
             console.error('Failed to remove member:', error);
@@ -147,18 +133,9 @@ export default function UnitModal({
 
     const toggleAdmin = async (orgUserId: number, id: number, is_admin: boolean) => {
         try {
-            const response = await axios.patch(
-                `${apiUrl}/api/unit-memberships/${id}/`,
-                {is_admin: !is_admin},
-                {
-                    headers: {
-                        Authorization: `Token ${user?.token}`,
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
+            const response = await updateUnitMemberAdminStatus(id, !is_admin);
             setMembers((prev) =>
-                prev.map((m) => (m.user === orgUserId ? response.data : m))
+                prev.map((m) => (m.user === orgUserId ? response : m))
             );
         } catch (error) {
             console.error('Failed to update admin status:', error);
@@ -179,21 +156,10 @@ export default function UnitModal({
                 formData.append('display_picture', file);
             }
 
-            const request = isEditMode
-                ? axios.patch(`${apiUrl}/api/units/${unitToEdit?.id}/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                })
-                : axios.post(`${apiUrl}/api/units/`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Token ${user?.token}`,
-                    },
-                });
+            const response = isEditMode
+                ? await updateUnit(unitToEdit!.id, formData)
+                : await createUnit(formData);
 
-            await request;
             onSuccess();
             onClose();
         } catch (error) {

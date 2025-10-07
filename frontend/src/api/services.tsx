@@ -12,6 +12,7 @@ import {Message} from "../models/Message";
 import {ProfileData} from "../models/ProfileData";
 import {Contact} from "../models/Contact";
 import {Shift} from "../models/Shift";
+import {UnitMembership} from "../models/UnitMembership";
 
 // Get active conversations
 export const getActiveConversations = async (
@@ -375,11 +376,62 @@ export const getUnitById = async (unitId: number): Promise<Unit> => {
     return res.data;
 };
 
-
-export const getUnitDetails = async (unitId: number): Promise<Unit & { members: any[] }> => {
-    const res = await api.get<Unit & { members: any[] }>(`${endpoints.units}${unitId}/`);
+export const addUnitMember = async (
+    unitId: number,
+    orgUserId: number,
+    isAdmin: boolean = false
+): Promise<UnitMembership> => {
+    const res = await api.post<UnitMembership>(`${endpoints.unitMemberships}`, {
+        unit: unitId,
+        user: orgUserId,
+        is_admin: isAdmin,
+    });
     return res.data;
 };
+
+export const deleteUnitMember = async (id: number): Promise<void> => {
+    return await api.delete(`${endpoints.unitMemberships}${id}/`);
+};
+
+
+export const updateUnitMemberAdminStatus = async (
+    id: number,
+    isAdmin: boolean
+): Promise<UnitMembership> => {
+    const res = await api.patch<UnitMembership>(
+        `${endpoints.unitMemberships}${id}/`,
+        {is_admin: isAdmin}
+    );
+    return res.data;
+};
+
+// Create unit
+export const createUnit = async (formData: FormData): Promise<Unit> => {
+    const res = await api.post<Unit>(`${endpoints.units}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return res.data;
+};
+
+// Update unit
+export const updateUnit = async (
+    unitId: number,
+    formData: FormData
+): Promise<Unit> => {
+    const res = await api.patch<Unit>(
+        `${endpoints.units}${unitId}/`,
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        }
+    );
+    return res.data;
+};
+
 
 // Create a new consultation
 // export const createConsultation = async (

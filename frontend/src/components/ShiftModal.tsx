@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {Modal, Form, Select, DatePicker, Button, message} from 'antd';
 import {useOrgLocation} from "../contexts/LocationContext";
+import {Department} from '../models/Department';
+import {Unit} from '../models/Unit';
 import {
     createShift,
     fetchDepartmentsByLocation,
     fetchUnitsByDepartment,
     getUnitById
 } from "../api/services";
-import {Department} from '../models/Department';
-import {Unit} from '../models/Unit';
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
@@ -26,9 +26,9 @@ interface Member {
 
 const CreateShiftModal: React.FC<Props> = ({visible, onClose, onShiftCreated}) => {
     const [form] = Form.useForm();
+
     const [departments, setDepartments] = useState<Department[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
-
     const [members, setMembers] = useState<Member[]>([]);
 
     const {selectedLocation} = useOrgLocation();
