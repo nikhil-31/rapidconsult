@@ -498,3 +498,15 @@ export const createConsultation = async (
     const res = await api.post<Consultation>(`${endpoints.consultations}`, values);
     return res.data;
 };
+
+// Get Consultation
+export const getConsultationsByStatus = async (
+    status: "pending" | "in_progress" | "completed" | "closed"
+): Promise<Consultation> => {
+    const response = await api.get(endpoints.consultations, {
+        params: {
+            status: status
+        },
+    });
+    return response.data.results;
+};

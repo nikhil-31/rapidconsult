@@ -25,6 +25,7 @@ from .permissions import HasOrgLocationAccess
 from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer, DirectMessageSerializer, \
     GroupChatSerializer, MongoMessageSerializer, ConsultationSerializer
 from ..utils import update_user_conversation
+from rest_framework import status as drf_status
 
 
 class ConversationViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -305,8 +306,21 @@ class ConsultationViewSet(viewsets.ViewSet):
     pagination_class = ConsultationPagination
 
     def list(self, request):
-        # Use only the fields that exist on your MongoEngine Document
-        consultations = Consultation.objects.filter(status="pending").order_by("-createdAt")
+        # Allowed statuses
+        allowed_statuses = ["pending", "in_progress", "completed", "closed"]
+
+        # Get the 'status' query param (default to "pending")
+        status_param = request.query_params.get("status", "pending")
+
+        # Validate status
+        if status_param not in allowed_statuses:
+            return Response(
+                {"detail": f"Invalid status '{status_param}'. Allowed values are: {', '.join(allowed_statuses)}."},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Filter and paginate
+        consultations = Consultation.objects.filter(status=status_param).order_by("-createdAt")
 
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(consultations, request)
