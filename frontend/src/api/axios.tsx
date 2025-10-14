@@ -11,7 +11,11 @@ const user = storedUser ? JSON.parse(storedUser) : null;
 // Request interceptor (e.g., adds auth token)
 api.interceptors.request.use(
     (config) => {
-        config.headers.Authorization = `Token ${user?.token}`;
+        if (user?.token) {
+            config.headers.Authorization = `Token ${user.token}`;
+        } else {
+            delete config.headers.Authorization;
+        }
         return config;
     },
     (error) => {
