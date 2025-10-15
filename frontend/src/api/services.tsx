@@ -502,7 +502,7 @@ export const createConsultation = async (
 // Get Consultation
 export const getConsultationsByStatus = async (
     status: "pending" | "in_progress" | "completed" | "closed"
-): Promise<Consultation> => {
+): Promise<Consultation[]> => {
     const response = await api.get(endpoints.consultations, {
         params: {
             status: status

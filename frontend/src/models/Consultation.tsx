@@ -1,25 +1,25 @@
-export interface Consultation {
-    id: string;
-    patientName: string;
-    patientAge: number;
-    patientSex: 'male' | 'female' | 'other';
-    department: string;
-    ward: string;
-    referredByDoctorId: string;
-    referredToDoctorId: string;
-    urgency: 'routine' | 'urgent' | 'emergency' | string;
-    diagnosis: string;
-    reasonForReferral: string;
-    status: 'pending' | 'accepted' | 'completed' | 'rejected' | string;
-    consultantRemarks: string | null;
-    consultantReview: string | null;
-    reviewNotes: string | null;
-    createdAt: string; // ISO date string
-    updatedAt: string; // ISO date string
-    consultationDateTime: string; // ISO date string
-    closedAt: string | null; // ISO date string or null
-    locationId: string;
-    organizationId: string;
-    unitId: string;
-}
+import {OrgProfile} from "./OrgProfile";
 
+export interface Consultation {
+    id: number;
+    patient_name: string;
+    patient_age: number;
+    patient_sex: "male" | "female" | "other";
+    ward: string | null;
+    referred_by_doctor: OrgProfile;
+    referred_to_doctor: OrgProfile;
+    urgency: "routine" | "urgent" | "emergency" | string;
+    diagnosis: string;
+    reason_for_referral: string;
+    status: "pending" | "in_progress" | "completed" | "closed" | string;
+    consultant_remarks: string | null;
+    consultant_review: string | null;
+    review_notes: string | null;
+    consultation_datetime: string | null;
+    closed_at: string | null;
+    organization: number | null;
+    location: number | null;
+    unit: number | null;
+    created_at: string;
+    updated_at: string;
+}
