@@ -23,10 +23,10 @@ class HasOrgLocationAccess(BasePermission):
                 organization_id=organization_id
             )
         except UserOrgProfile.DoesNotExist:
-            raise PermissionDenied("User is not part of this organization")
+            raise PermissionDenied("User is not part of this organization_id")
 
         allowed_location_ids = [str(loc.id) for loc in org_profile.allowed_locations.all()]
         if str(location_id) not in allowed_location_ids:
-            raise PermissionDenied("User does not have access to this location")
+            raise PermissionDenied("User does not have access to this location_id")
 
         return True

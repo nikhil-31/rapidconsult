@@ -3,10 +3,8 @@ from datetime import datetime
 from asgiref.sync import async_to_sync
 from bson import ObjectId
 from channels.layers import get_channel_layer
-from django.shortcuts import get_object_or_404
 from mongoengine.errors import ValidationError
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
@@ -17,15 +15,14 @@ from rest_framework.viewsets import GenericViewSet
 from config.utils import upload_to_spaces
 from rapidconsult.chats.models import Conversation, Message, User
 from rapidconsult.chats.mongo.models import UserConversation, Message as MongoMessage, \
-    Conversation as MongoConversation, Consultation
+    Conversation as MongoConversation
 from .mongo import create_direct_message, create_group_chat
-from .paginaters import MessagePagination, ConsultationPagination
+from .paginaters import MessagePagination
 from .pagination import UserConversationPagination
 from .permissions import HasOrgLocationAccess
 from .serializers import ConversationSerializer, MessageSerializer, UserConversationSerializer, DirectMessageSerializer, \
-    GroupChatSerializer, MongoMessageSerializer, ConsultationSerializer
+    GroupChatSerializer, MongoMessageSerializer
 from ..utils import update_user_conversation
-from rest_framework import status as drf_status
 
 
 class ConversationViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
@@ -298,65 +295,68 @@ class ImageMessageViewSet(viewsets.ViewSet):
         return Response(MongoMessageSerializer(msg).data)
 
 
-class ConsultationViewSet(viewsets.ViewSet):
-    """
-    A ViewSet for listing, creating, retrieving,
-    updating and deleting consultations.
-    """
-    pagination_class = ConsultationPagination
+# class ConsultationViewSet(viewsets.ViewSet):
+#     """
+#     A ViewSet for listing, creating, retrieving,
+#     updating and deleting consultations.
+#     """
+#     pagination_class = ConsultationPagination
+#
+#     def list(self, request):
+#         # Allowed statuses
+#         allowed_statuses = ["pending", "in_progress", "completed", "closed"]
+#
+#         # Get the 'status' query param (default to "pending")
+#         status_param = request.query_params.get("status", "pending")
+#
+#         # Validate status
+#         if status_param not in allowed_statuses:
+#             return Response(
+#                 {"detail": f"Invalid status '{status_param}'. Allowed values are: {', '.join(allowed_statuses)}."},
+#                 status=drf_status.HTTP_400_BAD_REQUEST,
+#             )
+#
+#         # Filter and paginate
+#         consultations = Consultation.objects.filter(status=status_param).order_by("-createdAt")
+#
+#         paginator = self.pagination_class()
+#         page = paginator.paginate_queryset(consultations, request)
+#
+#         serializer = ConsultationSerializer(page, many=True)
+#         return paginator.get_paginated_response(serializer.data)
+#
+#     def create(self, request):
+#         serializer = ConsultationSerializer(data=request.data)
+#         if serializer.is_valid():
+#             consultation = serializer.save(
+#                 createdAt=datetime.utcnow(),
+#                 updatedAt=datetime.utcnow(),
+#             )
+#             return Response(
+#                 ConsultationSerializer(consultation).data,
+#                 status=status.HTTP_201_CREATED
+#             )
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+#     def retrieve(self, request, pk=None):
+#         consultation = get_object_or_404(Consultation, id=pk)
+#         serializer = ConsultationSerializer(consultation)
+#         return Response(serializer.data)
+#
+#     def partial_update(self, request, pk=None):
+#         consultation = get_object_or_404(Consultation, id=pk)
+#         serializer = ConsultationSerializer(
+#             consultation, data=request.data, partial=True
+#         )
+#         if serializer.is_valid():
+#             consultation = serializer.save(updatedAt=datetime.datetime.utcnow())
+#             return Response(ConsultationSerializer(consultation).data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#
+#     def destroy(self, request, pk=None):
+#         consultation = get_object_or_404(Consultation, id=pk)
+#         consultation.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def list(self, request):
-        # Allowed statuses
-        allowed_statuses = ["pending", "in_progress", "completed", "closed"]
 
-        # Get the 'status' query param (default to "pending")
-        status_param = request.query_params.get("status", "pending")
 
-        # Validate status
-        if status_param not in allowed_statuses:
-            return Response(
-                {"detail": f"Invalid status '{status_param}'. Allowed values are: {', '.join(allowed_statuses)}."},
-                status=drf_status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Filter and paginate
-        consultations = Consultation.objects.filter(status=status_param).order_by("-createdAt")
-
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(consultations, request)
-
-        serializer = ConsultationSerializer(page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-    def create(self, request):
-        serializer = ConsultationSerializer(data=request.data)
-        if serializer.is_valid():
-            consultation = serializer.save(
-                createdAt=datetime.utcnow(),
-                updatedAt=datetime.utcnow(),
-            )
-            return Response(
-                ConsultationSerializer(consultation).data,
-                status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        consultation = get_object_or_404(Consultation, id=pk)
-        serializer = ConsultationSerializer(consultation)
-        return Response(serializer.data)
-
-    def partial_update(self, request, pk=None):
-        consultation = get_object_or_404(Consultation, id=pk)
-        serializer = ConsultationSerializer(
-            consultation, data=request.data, partial=True
-        )
-        if serializer.is_valid():
-            consultation = serializer.save(updatedAt=datetime.datetime.utcnow())
-            return Response(ConsultationSerializer(consultation).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        consultation = get_object_or_404(Consultation, id=pk)
-        consultation.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)

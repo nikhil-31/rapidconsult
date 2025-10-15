@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from config.roles import get_permissions_for_role
 from rapidconsult.scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, \
-    UnitMembership, Role, OnCallShift
+    UnitMembership, Role, OnCallShift, Consultation
 from rapidconsult.users.api.serializers import ContactSerializer
 from rapidconsult.chats.api.serializers import UserConversationSerializer
 
@@ -259,3 +259,44 @@ class OnCallShiftSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnCallShift
         fields = ['id', 'user', 'unit', 'shift_type', 'start_time', 'end_time', 'user_details', 'unit_details']
+
+
+class ConsultationSerializer(serializers.ModelSerializer):
+    referred_by_doctor = UserOrgProfileSerializer(read_only=True)
+    referred_by_doctor_id = serializers.PrimaryKeyRelatedField(
+        queryset=UserOrgProfile.objects.all(), source='referred_by_doctor', write_only=True, required=False
+    )
+
+    referred_to_doctor = UserOrgProfileSerializer(read_only=True)
+    referred_to_doctor_id = serializers.PrimaryKeyRelatedField(
+        queryset=UserOrgProfile.objects.all(), source='referred_to_doctor', write_only=True, required=False
+    )
+
+    class Meta:
+        model = Consultation
+        fields = [
+            'id',
+            'patient_name',
+            'patient_age',
+            'patient_sex',
+            'ward',
+            'referred_by_doctor',
+            'referred_by_doctor_id',
+            'referred_to_doctor',
+            'referred_to_doctor_id',
+            'urgency',
+            'diagnosis',
+            'reason_for_referral',
+            'status',
+            'consultant_remarks',
+            'consultant_review',
+            'review_notes',
+            'consultation_datetime',
+            'closed_at',
+            'organization',
+            'location',
+            'unit',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['created_at', 'updated_at']

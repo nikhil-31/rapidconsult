@@ -3,11 +3,11 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
 from rapidconsult.chats.api.views import ConversationViewSet, MessageViewSet, ImageMessageUploadView, \
-    UserConversationViewSet, MongoMessageViewSet, ImageMessageViewSet, ConsultationViewSet
+    UserConversationViewSet, MongoMessageViewSet, ImageMessageViewSet
 from rapidconsult.users.api.views import UserViewSet, ContactViewSet
 from rapidconsult.scheduling.api.views import (LocationViewSet, DepartmentViewSet, UnitViewSet, OrganizationViewSet,
                                                UserProfileViewSet, RoleViewSet, UnitMembershipViewSet,
-                                               OnCallShiftViewSet, UserOrgProfileViewSet)
+                                               OnCallShiftViewSet, UserOrgProfileViewSet, ConsultationViewSet)
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 

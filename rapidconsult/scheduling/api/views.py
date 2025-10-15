@@ -1,23 +1,22 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
 
+from chats.api.permissions import HasOrgLocationAccess
 from rapidconsult.chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
 from rapidconsult.scheduling.api.permissions import check_org_admin_or_raise
 from rapidconsult.scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
-    UserOrgProfile
+    UserOrgProfile, Consultation
 from .serializers import LocationSerializer, DepartmentSerializer, UnitSerializer, OrganizationSerializer, \
     UserProfileSerializer, UnitWriteSerializer, OnCallShiftSerializer, RoleSerializer, UnitMembershipSerializer, \
-    UserOrgProfileSerializer, UserOrgProfileLocationUpdateSerializer
-from django.shortcuts import get_object_or_404
+    UserOrgProfileSerializer, UserOrgProfileLocationUpdateSerializer, ConsultationSerializer
 
 User = get_user_model()
 
@@ -326,12 +325,12 @@ class UserProfileViewSet(
         return Response(serializer.data)
 
 
-class RoleViewSet(ModelViewSet):
+class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
 
 
-class OnCallShiftViewSet(ModelViewSet):
+class OnCallShiftViewSet(viewsets.ModelViewSet):
     serializer_class = OnCallShiftSerializer
     permission_classes = [IsAuthenticated]
     queryset = OnCallShift.objects.all()
@@ -366,3 +365,80 @@ class OnCallShiftViewSet(ModelViewSet):
 
         return queryset
 
+
+class ConsultationViewSet(viewsets.ModelViewSet):
+    serializer_class = ConsultationSerializer
+    queryset = Consultation.objects.all().select_related(
+        "organization", "location", "unit",
+        "referred_by_doctor__user", "referred_to_doctor__user"
+    )
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["status", "urgency", "organization", "location", "unit"]
+    search_fields = ["patient_name", "diagnosis", "reason_for_referral"]
+    ordering_fields = ["created_at", "updated_at", "consultation_datetime"]
+    ordering = ["-created_at"]
+
+    def get_permissions(self):
+        """
+        Apply custom permissions only for write operations.
+        """
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            permission_classes = [IsAuthenticated, HasOrgLocationAccess]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        """
+        Filter consultations by organization and optional query params like ?status=pending
+        """
+        user = self.request.user
+        org_profiles = getattr(user, "organizations", None)
+        organization_ids = [p.organization_id for p in org_profiles.all()] if org_profiles else []
+        queryset = super().get_queryset()
+
+        if organization_ids:
+            queryset = queryset.filter(organization_id__in=organization_ids)
+
+        # Optional filters
+        status_param = self.request.query_params.get("status")
+        urgency_param = self.request.query_params.get("urgency")
+
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        if urgency_param:
+            queryset = queryset.filter(urgency=urgency_param)
+
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new consultation.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        print(user)
+
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Update consultation (full update via PUT or partial update via PATCH)
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete a consultation
+        """
+        instance = self.get_object()
+        instance.delete()
+        return Response({"detail": "Consultation deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
