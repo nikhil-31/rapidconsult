@@ -84,7 +84,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
         } finally {
             setDoctorLoading(false);
         }
-    }, 500); // 0.5s debounce
+    }, 500);
 
     const handleSubmit = async () => {
         try {
@@ -96,9 +96,12 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
             if (values.closedAt)
                 values.closedAt = values.closedAt.toISOString();
 
-            values.status = "pending";
+            values.location_id = selectedLocation?.location.id
+            values.organization_id = selectedLocation?.organization.id
 
-            await createConsultation(values);
+            values.status = "pending";
+            console.log(values)
+            // const res = await createConsultation(values);
 
             form.resetFields();
             onClose();
