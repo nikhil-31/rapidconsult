@@ -201,13 +201,14 @@ class Consultation(models.Model):
 
     # --- Scoping ---
     organization = models.ForeignKey(
-        Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations"
+        Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name="organizations"
     )
     location = models.ForeignKey(
-        Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations"
+        Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="locations"
     )
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name="departments")
     unit = models.ForeignKey(
-        Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations"
+        Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name="units"
     )
 
     def __str__(self):

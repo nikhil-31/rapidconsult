@@ -1,8 +1,19 @@
-import React, {useState} from "react";
-import {Modal, Form, Input, Select, Button} from "antd";
-import {createConsultation} from "../api/services";
+import React, { useEffect, useState } from "react";
+import { Modal, Form, Input, Select, Button } from "antd";
+import {
+    createConsultation,
+    getDepartmentsByLocation,
+    getUnitsByDepartment,
+    searchUsers,
+} from "../api/services";
+import { Department } from "../models/Department";
+import { Unit } from "../models/Unit";
 
-const {Option} = Select;
+import { useOrgLocation } from "../contexts/LocationContext";
+import debounce from "lodash.debounce";
+import {UserModel} from "../models/UserModel";
+
+const { Option } = Select;
 
 interface ConsultationModalProps {
     visible: boolean;
@@ -11,37 +22,88 @@ interface ConsultationModalProps {
 }
 
 const ConsultationModal: React.FC<ConsultationModalProps> = ({
-                                                                 visible,
-                                                                 onClose,
-                                                                 onCreated,
-                                                             }) => {
-
+    visible,
+    onClose,
+    onCreated,
+}) => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
+    const { selectedLocation } = useOrgLocation();
+
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [unitLoading, setUnitLoading] = useState(false);
+    const [doctorResults, setDoctorResults] = useState<UserModel[]>([]);
+    const [doctorLoading, setDoctorLoading] = useState(false);
+
+    // Fetch departments based on selected location
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            if (!selectedLocation?.location.id) return;
+            try {
+                const data = await getDepartmentsByLocation(selectedLocation?.location.id);
+                setDepartments(data);
+            } catch (err) {
+                console.error("Failed to fetch departments:", err);
+            }
+        };
+        fetchDepartments();
+    }, [selectedLocation, visible]);
+
+    // Fetch units when department changes
+    const handleDepartmentChange = async (departmentId: number) => {
+        form.setFieldsValue({ unit: undefined });
+        if (!departmentId) {
+            setUnits([]);
+            return;
+        }
+        try {
+            setUnitLoading(true);
+            const data = await getUnitsByDepartment(departmentId);
+            setUnits(data);
+        } catch (err) {
+            console.error("Failed to fetch units:", err);
+        } finally {
+            setUnitLoading(false);
+        }
+    };
+
+    // Search doctors (debounced)
+    const handleDoctorSearch = debounce(async (value: string) => {
+        if (!value || value.trim().length < 2) {
+            setDoctorResults([]);
+            return;
+        }
+        try {
+            setDoctorLoading(true);
+            const users = await searchUsers(value);
+            setDoctorResults(users);
+        } catch (err) {
+            console.error("Doctor search failed:", err);
+        } finally {
+            setDoctorLoading(false);
+        }
+    }, 500); // 0.5s debounce
+
     const handleSubmit = async () => {
         try {
+            setLoading(true);
             const values = await form.validateFields();
 
-            // Convert DatePicker to ISO string
-            if (values.consultationDateTime) {
+            if (values.consultationDateTime)
                 values.consultationDateTime = values.consultationDateTime.toISOString();
-            }
-            if (values.closedAt) {
+            if (values.closedAt)
                 values.closedAt = values.closedAt.toISOString();
-            }
 
-            setLoading(true);
+            values.status = "pending";
 
-            try {
-                const res = await createConsultation(values);
-            } catch (error) {
-                console.error('Failed to create consultation:', error);
-            }
+            await createConsultation(values);
+
             form.resetFields();
             onClose();
             onCreated?.();
-        } catch (err: any) {
+        } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
@@ -50,7 +112,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
 
     return (
         <Modal
-            visible={visible}
+            open={visible}
             title="Create Consultation"
             onCancel={onClose}
             footer={[
@@ -81,13 +143,13 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 <Form.Item
                     label="Patient Name"
                     name="patientName"
-                    rules={[{required: true, message: "Please enter patient name"}]}
+                    rules={[{ required: true, message: "Please enter patient name" }]}
                 >
-                    <Input/>
+                    <Input />
                 </Form.Item>
 
                 <Form.Item label="Patient Age" name="patientAge">
-                    <Input type="number" min="0"/>
+                    <Input type="number" min="0" />
                 </Form.Item>
 
                 <Form.Item label="Patient Sex" name="patientSex">
@@ -98,24 +160,69 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                     </Select>
                 </Form.Item>
 
-                <Form.Item label="Department" name="department">
-                    <Input/>
+                {/* Department Dropdown */}
+                <Form.Item
+                    label="Department"
+                    name="department"
+                    rules={[{ required: true, message: "Please select a department" }]}
+                >
+                    <Select
+                        placeholder="Select department"
+                        onChange={handleDepartmentChange}
+                        loading={!departments.length}
+                        disabled={!departments.length}
+                    >
+                        {departments.map((dept) => (
+                            <Option key={dept.id} value={dept.id}>
+                                {dept.name}
+                            </Option>
+                        ))}
+                    </Select>
                 </Form.Item>
 
-                <Form.Item label="Unit" name="unit">
-                    <Input/>
+                {/* Unit Dropdown */}
+                <Form.Item
+                    label="Unit"
+                    name="unit"
+                    rules={[{ required: true, message: "Please select a unit" }]}
+                >
+                    <Select
+                        placeholder="Select unit"
+                        loading={unitLoading}
+                        disabled={!units.length}
+                    >
+                        {units.map((unit) => (
+                            <Option key={unit.id} value={unit.id}>
+                                {unit.name}
+                            </Option>
+                        ))}
+                    </Select>
                 </Form.Item>
 
                 <Form.Item label="Ward" name="ward">
-                    <Input/>
+                    <Input />
                 </Form.Item>
 
+                {/* Doctor Search Dropdown */}
                 <Form.Item
-                    label="Referred To Doctor ID"
+                    label="Referred To Doctor"
                     name="referredToDoctorId"
-                    rules={[{required: true}]}
+                    rules={[{ required: true, message: "Please select a doctor" }]}
                 >
-                    <Input type="number"/>
+                    <Select
+                        showSearch
+                        placeholder="Search doctor by name or username"
+                        filterOption={false}
+                        onSearch={handleDoctorSearch}
+                        loading={doctorLoading}
+                        notFoundContent={doctorLoading ? "Searching..." : "No doctors found"}
+                    >
+                        {doctorResults.map((user) => (
+                            <Option key={user.id} value={user.id}>
+                                {user.name || user.username}
+                            </Option>
+                        ))}
+                    </Select>
                 </Form.Item>
 
                 <Form.Item label="Urgency" name="urgency">
@@ -127,21 +234,11 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 </Form.Item>
 
                 <Form.Item label="Diagnosis" name="diagnosis">
-                    <Input/>
+                    <Input />
                 </Form.Item>
 
                 <Form.Item label="Reason for Referral" name="reasonForReferral">
-                    <Input.TextArea rows={2}/>
-                </Form.Item>
-
-                {/* Workflow */}
-                <Form.Item label="Status" name="status">
-                    <Select>
-                        <Option value="pending">Pending</Option>
-                        <Option value="in_progress">In Progress</Option>
-                        <Option value="completed">Completed</Option>
-                        <Option value="closed">Closed</Option>
-                    </Select>
+                    <Input.TextArea rows={2} />
                 </Form.Item>
             </Form>
         </Modal>
