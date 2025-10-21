@@ -14,7 +14,6 @@ const OnCall: React.FC = () => {
 
     const [departments, setDepartments] = useState<Record<number, Department[]>>({});
     const [units, setUnits] = useState<Record<number, Unit[]>>({});
-    const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
     const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null);
     const {selectedLocation} = useOrgLocation();
     const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
@@ -61,14 +60,10 @@ const OnCall: React.FC = () => {
     };
 
     useEffect(() => {
-        setSelectedLocationId(selectedLocation?.location?.id ?? null);
-    }, [selectedLocation]);
-
-    useEffect(() => {
-        if (selectedLocationId !== null) {
-            fetchDepartments(selectedLocationId);
+        if (selectedLocation){
+            fetchDepartments(selectedLocation.location.id)
         }
-    }, [selectedLocationId]);
+    }, [selectedLocation]);
 
     return (
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
@@ -93,8 +88,8 @@ const OnCall: React.FC = () => {
                         </div>
                     ) : (
                         <Menu mode="inline" style={{borderInlineEnd: "none"}}>
-                            {selectedLocationId &&
-                                departments[selectedLocationId]?.map((department) => (
+                            {selectedLocation?.location.id &&
+                                departments[selectedLocation?.location.id]?.map((department) => (
                                     <Menu.SubMenu
                                         key={`dep-${department.id}`}
                                         title={
