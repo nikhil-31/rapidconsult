@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Layout, Button, Table, Tag, message, Spin} from "antd";
+import {Layout, Button, Table, Tag, Spin} from "antd";
 import Sider from "antd/es/layout/Sider";
 import Title from "antd/es/typography/Title";
 import ConsultationModal from "./ConsultationModal";
@@ -39,7 +39,6 @@ const Consults: React.FC = () => {
             setConsultations(data);
         } catch (error) {
             console.error(error);
-            message.error("Failed to load consultations");
         } finally {
             setLoading(false);
         }
@@ -68,7 +67,12 @@ const Consults: React.FC = () => {
         },
         {
             title: "Department",
-            dataIndex: "department",
+            dataIndex: ["department", "name"],
+            key: "department",
+        },
+        {
+            title: "Unit",
+            dataIndex: ["unit", "name"],
             key: "department",
         },
         {
@@ -124,7 +128,6 @@ const Consults: React.FC = () => {
     ];
 
     const handleConsultCreated = () => {
-        message.success("Consultation created!");
         loadConsultations(selectedMenuKey as any);
     };
 

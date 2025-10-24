@@ -264,12 +264,33 @@ class OnCallShiftSerializer(serializers.ModelSerializer):
 class ConsultationSerializer(serializers.ModelSerializer):
     referred_by_doctor = UserOrgProfileSerializer(read_only=True)
     referred_by_doctor_id = serializers.PrimaryKeyRelatedField(
-        queryset=UserOrgProfile.objects.all(), source='referred_by_doctor', write_only=True, required=False
+        queryset=UserOrgProfile.objects.all(),
+        source='referred_by_doctor',
+        write_only=True,
+        required=False
     )
-
     referred_to_doctor = UserOrgProfileSerializer(read_only=True)
     referred_to_doctor_id = serializers.PrimaryKeyRelatedField(
-        queryset=UserOrgProfile.objects.all(), source='referred_to_doctor', write_only=True, required=False
+        queryset=UserOrgProfile.objects.all(),
+        source='referred_to_doctor',
+        write_only=True,
+        required=False
+    )
+
+    department = DepartmentSerializer(read_only=True)
+    department_id = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all(),
+        source='department',
+        write_only=True,
+        required=False
+    )
+
+    unit = UnitSerializer(read_only=True)
+    unit_id = serializers.PrimaryKeyRelatedField(
+        queryset=Unit.objects.all(),
+        source='unit',
+        write_only=True,
+        required=False
     )
 
     class Meta:
@@ -295,7 +316,10 @@ class ConsultationSerializer(serializers.ModelSerializer):
             'closed_at',
             'organization',
             'location',
+            'department',
+            'department_id',
             'unit',
+            'unit_id',
             'created_at',
             'updated_at',
         ]

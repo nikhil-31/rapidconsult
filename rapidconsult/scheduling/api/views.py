@@ -369,8 +369,8 @@ class OnCallShiftViewSet(viewsets.ModelViewSet):
 class ConsultationViewSet(viewsets.ModelViewSet):
     serializer_class = ConsultationSerializer
     queryset = Consultation.objects.all().select_related(
-        "organization", "location", "unit",
-        "referred_by_doctor__user", "referred_to_doctor__user"
+        "organization", "location", "department", "unit",
+        "referred_by_doctor__user", "referred_to_doctor__user",
     )
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["status", "urgency", "organization", "location", "unit"]
@@ -379,9 +379,6 @@ class ConsultationViewSet(viewsets.ModelViewSet):
     ordering = ["-created_at"]
 
     def get_permissions(self):
-        """
-        Apply custom permissions only for write operations.
-        """
         if self.action in ["create", "update", "partial_update", "destroy"]:
             permission_classes = [IsAuthenticated, HasOrgLocationAccess]
         else:
@@ -389,9 +386,6 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        """
-        Filter consultations by organization and optional query params like ?status=pending
-        """
         user = self.request.user
         org_profiles = getattr(user, "organizations", None)
         organization_ids = [p.organization_id for p in org_profiles.all()] if org_profiles else []
@@ -400,7 +394,6 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         if organization_ids:
             queryset = queryset.filter(organization_id__in=organization_ids)
 
-        # Optional filters
         status_param = self.request.query_params.get("status")
         urgency_param = self.request.query_params.get("urgency")
 
@@ -411,34 +404,33 @@ class ConsultationViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def perform_create(self, serializer):
+        """
+        Handles saving related fields (like department) correctly.
+        """
+        serializer.save()
+
+    def perform_update(self, serializer):
+        """
+        Handles updating related fields correctly.
+        """
+        serializer.save()
+
     def create(self, request, *args, **kwargs):
-        """
-        Create a new consultation.
-        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        user = request.user
-        print(user)
-
-        serializer.save()
+        self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
-        """
-        Update consultation (full update via PUT or partial update via PATCH)
-        """
-        partial = kwargs.pop('partial', False)
+        partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        self.perform_update(serializer)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
-        """
-        Delete a consultation
-        """
         instance = self.get_object()
         instance.delete()
         return Response({"detail": "Consultation deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

@@ -1,19 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Select, Button } from "antd";
-import {
-    createConsultation,
-    getDepartmentsByLocation,
-    getUnitsByDepartment,
-    searchUsers,
-} from "../api/services";
-import { Department } from "../models/Department";
-import { Unit } from "../models/Unit";
-
-import { useOrgLocation } from "../contexts/LocationContext";
-import debounce from "lodash.debounce";
+import React, {useContext, useEffect, useState} from "react";
+import {Button, Form, Input, Modal, Select} from "antd";
+import {createConsultation, getDepartmentsByLocation, getUnitsByDepartment, searchUsers,} from "../api/services";
+import {Department} from "../models/Department";
+import {Unit} from "../models/Unit";
 import {UserModel} from "../models/UserModel";
+import {useOrgLocation} from "../contexts/LocationContext";
+import {AuthContext} from "../contexts/AuthContext";
+import debounce from "lodash.debounce";
 
-const { Option } = Select;
+const {Option} = Select;
 
 interface ConsultationModalProps {
     visible: boolean;
@@ -22,20 +17,29 @@ interface ConsultationModalProps {
 }
 
 const ConsultationModal: React.FC<ConsultationModalProps> = ({
-    visible,
-    onClose,
-    onCreated,
-}) => {
+                                                                 visible,
+                                                                 onClose,
+                                                                 onCreated,
+                                                             }) => {
+    const {user} = useContext(AuthContext);
+
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const { selectedLocation } = useOrgLocation();
+    const {selectedLocation} = useOrgLocation();
 
     const [departments, setDepartments] = useState<Department[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
     const [unitLoading, setUnitLoading] = useState(false);
     const [doctorResults, setDoctorResults] = useState<UserModel[]>([]);
     const [doctorLoading, setDoctorLoading] = useState(false);
+
+    const getOrgUserIdByOrgId = (organizationId: number | undefined) => {
+        const orgProfile = user?.organizations.find(
+            (o) => o.organization.id === organizationId
+        );
+        return orgProfile?.id || null;
+    };
 
     // Fetch departments based on selected location
     useEffect(() => {
@@ -53,7 +57,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
 
     // Fetch units when department changes
     const handleDepartmentChange = async (departmentId: number) => {
-        form.setFieldsValue({ unit: undefined });
+        form.setFieldsValue({unit: undefined});
         if (!departmentId) {
             setUnits([]);
             return;
@@ -96,12 +100,13 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
             if (values.closedAt)
                 values.closedAt = values.closedAt.toISOString();
 
+            const organization_id = selectedLocation?.organization.id
             values.location_id = selectedLocation?.location.id
-            values.organization_id = selectedLocation?.organization.id
-
+            values.organization_id = organization_id
             values.status = "pending";
-            console.log(values)
-            // const res = await createConsultation(values);
+            values.referred_by_doctor_id = getOrgUserIdByOrgId(organization_id)
+
+            const res = await createConsultation(values);
 
             form.resetFields();
             onClose();
@@ -145,17 +150,17 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 {/* Patient Info */}
                 <Form.Item
                     label="Patient Name"
-                    name="patientName"
-                    rules={[{ required: true, message: "Please enter patient name" }]}
+                    name="patient_name"
+                    rules={[{required: true, message: "Please enter patient name"}]}
                 >
-                    <Input />
+                    <Input/>
                 </Form.Item>
 
-                <Form.Item label="Patient Age" name="patientAge">
-                    <Input type="number" min="0" />
+                <Form.Item label="Patient Age" name="patient_age">
+                    <Input type="number" min="0"/>
                 </Form.Item>
 
-                <Form.Item label="Patient Sex" name="patientSex">
+                <Form.Item label="Patient Sex" name="patient_sex">
                     <Select>
                         <Option value="male">Male</Option>
                         <Option value="female">Female</Option>
@@ -166,8 +171,8 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 {/* Department Dropdown */}
                 <Form.Item
                     label="Department"
-                    name="department"
-                    rules={[{ required: true, message: "Please select a department" }]}
+                    name="department_id"
+                    rules={[{required: true, message: "Please select a department"}]}
                 >
                     <Select
                         placeholder="Select department"
@@ -186,8 +191,8 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 {/* Unit Dropdown */}
                 <Form.Item
                     label="Unit"
-                    name="unit"
-                    rules={[{ required: true, message: "Please select a unit" }]}
+                    name="unit_id"
+                    rules={[{required: true, message: "Please select a unit"}]}
                 >
                     <Select
                         placeholder="Select unit"
@@ -203,14 +208,14 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 </Form.Item>
 
                 <Form.Item label="Ward" name="ward">
-                    <Input />
+                    <Input/>
                 </Form.Item>
 
                 {/* Doctor Search Dropdown */}
                 <Form.Item
                     label="Referred To Doctor"
-                    name="referredToDoctorId"
-                    rules={[{ required: true, message: "Please select a doctor" }]}
+                    name="referred_to_doctor_id"
+                    rules={[{required: true, message: "Please select a doctor"}]}
                 >
                     <Select
                         showSearch
@@ -237,11 +242,11 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 </Form.Item>
 
                 <Form.Item label="Diagnosis" name="diagnosis">
-                    <Input />
+                    <Input/>
                 </Form.Item>
 
                 <Form.Item label="Reason for Referral" name="reasonForReferral">
-                    <Input.TextArea rows={2} />
+                    <Input.TextArea rows={2}/>
                 </Form.Item>
             </Form>
         </Modal>
