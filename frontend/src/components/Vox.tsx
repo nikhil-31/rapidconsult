@@ -4,7 +4,7 @@ import {Layout, Typography, List, Skeleton, Input, Button} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {useLocation} from "react-router-dom";
 import {getActiveConversations} from "../api/services";
-import {SearchOutlined} from "@ant-design/icons";
+import {PlusOutlined, SearchOutlined} from "@ant-design/icons";
 import {Conversation} from "../models/ActiveConversation";
 import ConversationListItem from "./ConversationListItem";
 import ChatView from "./ChatView";
@@ -24,6 +24,7 @@ const Vox: React.FC = () => {
     const [page, setPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [searchTerm, setSearchTerm] = useState<string>("");
+    const [modalVisible, setModalVisible] = useState(false);
 
     const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -88,9 +89,33 @@ const Vox: React.FC = () => {
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
                 <div style={{padding: 16, height: '100%', display: 'flex', flexDirection: 'column'}}>
-                    <Title level={5} style={{marginBottom: 10}}>
-                        Conversations {totalConversations ? `- ${totalConversations}` : ''}
-                    </Title>
+                    {/* Header row: Title + Button */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: 10,
+                        }}
+                    >
+                        <Title level={5} style={{margin: 0}}>
+                            Conversations {totalConversations ? `- ${totalConversations}` : ''}
+                        </Title>
+
+                        {/* ➕ Add Conversation Button */}
+                        <Button
+                            type="primary"
+                            size="middle"
+                            icon={<PlusOutlined/>}
+                            style={{
+                                backgroundColor: '#ff4d4f',
+                                borderColor: '#ff4d4f',
+                            }}
+                            onClick={() => {
+                                setModalVisible(true)
+                            }}
+                        />
+                    </div>
 
                     {/* Search Bar */}
                     <Input.Search
