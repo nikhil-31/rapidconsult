@@ -1,15 +1,16 @@
-import React, {useContext, useEffect, useState} from 'react';
-import {Layout, Avatar, Typography, List, Skeleton, Input, Button} from 'antd';
-import {SearchOutlined, UserOutlined} from '@ant-design/icons';
-import {useOrgLocation} from "../contexts/LocationContext";
-import {AuthContext} from "../contexts/AuthContext";
-import {UserModel} from "../models/UserModel";
-import {ProfileData} from "../models/ProfileData";
+import React, { useContext, useEffect, useState, useMemo } from 'react';
+import { Layout, Avatar, Typography, List, Skeleton, Input, Button } from 'antd';
+import { SearchOutlined, UserOutlined } from '@ant-design/icons';
+import debounce from 'lodash.debounce';
+import { useOrgLocation } from "../contexts/LocationContext";
+import { AuthContext } from "../contexts/AuthContext";
+import { UserModel } from "../models/UserModel";
+import { ProfileData } from "../models/ProfileData";
 import ProfileDetails from "./ProfileDetails";
-import {getUserProfile, getUsers, searchUsers} from "../api/services";
+import { getUserProfile, getUsers, searchUsers } from "../api/services";
 
-const {Sider} = Layout;
-const {Title, Text} = Typography;
+const { Sider } = Layout;
+const { Title, Text } = Typography;
 
 const COLORS = [
     '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
@@ -27,27 +28,24 @@ const getColorForUser = (userId: string) => {
 };
 
 const Dashboard: React.FC = () => {
-    const {user} = useContext(AuthContext);
-    const {selectedLocation} = useOrgLocation();
+    const { user } = useContext(AuthContext);
+    const { selectedLocation } = useOrgLocation();
 
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<UserModel[]>([]);
     const [totalUsers, setTotalUsers] = useState<string>("0");
     const [profile, setProfile] = useState<ProfileData | null>(null);
-
-    // Pagination
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
 
-    const fetchUserData = async (pageNum = 1) => {
+    const fetchUserData = async (pageNum = 1): Promise<void> => {
         if (!selectedLocation?.organization?.id) return;
 
         try {
             if (pageNum === 1) setLoading(true);
             else setLoadingMore(true);
 
-            // call your service function
             const res = await getUsers(
                 String(selectedLocation.organization.id),
                 pageNum,
@@ -55,8 +53,6 @@ const Dashboard: React.FC = () => {
             );
 
             const data = res.results.filter((u: UserModel) => u.id !== user?.id);
-
-            // adjust total users count (subtract current user)
             const totalUsers = res.count;
             setTotalUsers(totalUsers > 0 ? (totalUsers - 1).toString() : totalUsers.toString());
 
@@ -81,7 +77,7 @@ const Dashboard: React.FC = () => {
         fetchUserData();
     }, [selectedLocation]);
 
-    const handleUserClick = async (clickedUser: UserModel) => {
+    const handleUserClick = async (clickedUser: UserModel): Promise<void> => {
         try {
             const profile = await getUserProfile(String(clickedUser.id));
             setProfile(profile);
@@ -93,13 +89,18 @@ const Dashboard: React.FC = () => {
     };
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const {scrollTop, scrollHeight, clientHeight} = e.currentTarget;
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
         if (scrollHeight - scrollTop <= clientHeight + 100 && hasMore && !loadingMore) {
             fetchUserData(page + 1);
         }
     };
 
-    async function search(query: string) {
+    // 🔍 Debounced Search Function
+    const handleSearch = async (query: string): Promise<void> => {
+        if (!query) {
+            fetchUserData(1);
+            return;
+        }
         try {
             const data = await searchUsers(query);
             setUsers(data);
@@ -107,11 +108,22 @@ const Dashboard: React.FC = () => {
         } catch (err) {
             console.error("Search error:", err);
         }
-    }
+    };
+
+    // 🕒 Debounce search by 500ms using useMemo for stable reference
+    const debouncedSearch = useMemo(
+        () => debounce((query: string) => handleSearch(query), 500),
+        []
+    );
+
+    useEffect(() => {
+        return () => {
+            debouncedSearch.cancel(); // cleanup on unmount
+        };
+    }, [debouncedSearch]);
 
     return (
-        <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
-            {/* Sidebar with Users */}
+        <Layout style={{ height: 'calc(100vh - 64px)', background: '#f9f9f9' }}>
             <Sider
                 width={350}
                 style={{
@@ -124,27 +136,15 @@ const Dashboard: React.FC = () => {
                 }}
                 onScroll={handleScroll}
             >
-                <div style={{paddingBottom: 12}}>
-                    <Title level={5} style={{marginBottom: 10}}>
+                <div style={{ paddingBottom: 12 }}>
+                    <Title level={5} style={{ marginBottom: 10 }}>
                         Users - {totalUsers}
                     </Title>
-                    <Input.Search
+                    <Input
                         placeholder="Search users by name"
+                        prefix={<SearchOutlined style={{ color: 'red' }} />}
                         allowClear
-                        enterButton={
-                            <Button
-                                type="default"
-                                icon={<SearchOutlined style={{color: "red"}}/>}
-                                style={{borderColor: "red"}}
-                            />
-                        }
-                        onSearch={(value) => {
-                            if (!value) {
-                                fetchUserData(1);
-                            } else {
-                                search(value)
-                            }
-                        }}
+                        onChange={(e) => debouncedSearch(e.target.value)}
                     />
                 </div>
 
@@ -153,11 +153,11 @@ const Dashboard: React.FC = () => {
                         itemLayout="horizontal"
                         dataSource={Array.from(Array(2).keys())}
                         renderItem={() => (
-                            <List.Item style={{padding: '8px 16px'}}>
+                            <List.Item style={{ padding: '8px 16px' }}>
                                 <List.Item.Meta
-                                    avatar={<Skeleton.Avatar active size="large" shape="circle"/>}
-                                    title={<Skeleton.Input active size="small" style={{width: 150}}/>}
-                                    description={<Skeleton.Input active size="small" style={{width: 220}}/>}
+                                    avatar={<Skeleton.Avatar active size="large" shape="circle" />}
+                                    title={<Skeleton.Input active size="small" style={{ width: 150 }} />}
+                                    description={<Skeleton.Input active size="small" style={{ width: 220 }} />}
                                 />
                             </List.Item>
                         )}
@@ -175,19 +175,13 @@ const Dashboard: React.FC = () => {
                                     padding: '8px 12px'
                                 }}
                                 onClick={() => handleUserClick(item)}
-                                onMouseDown={(e) => {
-                                    e.currentTarget.style.transform = 'scale(0.98)';
-                                }}
-                                onMouseUp={(e) => {
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#f5f5f5';
-                                    e.currentTarget.style.transform = 'scale(1.02)'
+                                    e.currentTarget.style.transform = 'scale(1.02)';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.transform = 'scale(1)'
+                                    e.currentTarget.style.transform = 'scale(1)';
                                 }}
                             >
                                 <List.Item.Meta
@@ -195,7 +189,7 @@ const Dashboard: React.FC = () => {
                                         <Avatar
                                             size={40}
                                             src={item.profile_picture}
-                                            icon={!item.profile_picture && <UserOutlined/>}
+                                            icon={!item.profile_picture && <UserOutlined />}
                                             style={{
                                                 backgroundColor: !item.profile_picture
                                                     ? getColorForUser(item.name)
@@ -207,19 +201,20 @@ const Dashboard: React.FC = () => {
                                         </Avatar>
                                     }
                                     title={
-                                        <Text strong style={{fontSize: '14px', display: 'block'}}>
+                                        <Text strong style={{ fontSize: '14px', display: 'block' }}>
                                             {item.name}
                                         </Text>
                                     }
                                     description={
                                         (() => {
                                             const orgWithLocation = item.organizations?.find(org =>
-                                                org.allowed_locations?.some(loc => loc.id === selectedLocation?.location?.id)
+                                                org.allowed_locations?.some(
+                                                    loc => loc.id === selectedLocation?.location?.id
+                                                )
                                             );
-
                                             if (orgWithLocation?.job_title && orgWithLocation?.role) {
                                                 return (
-                                                    <Text type="secondary" style={{fontSize: '13px'}}>
+                                                    <Text type="secondary" style={{ fontSize: '13px' }}>
                                                         {orgWithLocation.job_title} - {orgWithLocation.role.name}
                                                     </Text>
                                                 );
@@ -232,18 +227,17 @@ const Dashboard: React.FC = () => {
                         )}
                     >
                         {loadingMore && (
-                            <div style={{textAlign: 'center', padding: 12}}>
-                                <Skeleton avatar paragraph={{rows: 1}} active/>
+                            <div style={{ textAlign: 'center', padding: 12 }}>
+                                <Skeleton avatar paragraph={{ rows: 1 }} active />
                             </div>
                         )}
                     </List>
                 )}
             </Sider>
 
-            {/* Main Layout */}
             <Layout>
                 {profile ? (
-                    <div style={{padding: 24}}>
+                    <div style={{ padding: 24 }}>
                         <ProfileDetails
                             id={profile.id}
                             name={profile.name}
@@ -257,7 +251,7 @@ const Dashboard: React.FC = () => {
                         />
                     </div>
                 ) : (
-                    <div style={{padding: 24}}>
+                    <div style={{ padding: 24 }}>
                         <Text type="secondary">Select a user to view their profile</Text>
                     </div>
                 )}
