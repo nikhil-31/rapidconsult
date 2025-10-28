@@ -293,6 +293,19 @@ class ConsultationSerializer(serializers.ModelSerializer):
         required=False
     )
 
+    organization_id = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(),
+        source='organization',
+        write_only=True,
+        required=False
+    )
+    location_id = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(),
+        source='location',
+        write_only=True,
+        required=False
+    )
+
     class Meta:
         model = Consultation
         fields = [
@@ -315,7 +328,9 @@ class ConsultationSerializer(serializers.ModelSerializer):
             'consultation_datetime',
             'closed_at',
             'organization',
+            'organization_id',
             'location',
+            'location_id',
             'department',
             'department_id',
             'unit',

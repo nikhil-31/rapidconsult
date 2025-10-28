@@ -62,7 +62,7 @@ const CloseConsultModal: React.FC<CloseConsultModalProps> = ({
         >
             <Form form={form} layout="vertical">
                 <Form.Item
-                    name="remarks"
+                    name="review"
                     label="Consultant Review"
                     rules={[{required: true, message: "Please add closing remarks"}]}
                 >
@@ -73,7 +73,7 @@ const CloseConsultModal: React.FC<CloseConsultModalProps> = ({
                 </Form.Item>
 
                 <Form.Item
-                    name="review"
+                    name="remarks"
                     label="Additional remarks"
                 >
                     <Input.TextArea

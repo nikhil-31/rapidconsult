@@ -22,11 +22,10 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                                                                  onCreated,
                                                              }) => {
     const {user} = useContext(AuthContext);
+    const {selectedLocation} = useOrgLocation();
 
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
-
-    const {selectedLocation} = useOrgLocation();
 
     const [departments, setDepartments] = useState<Department[]>([]);
     const [units, setUnits] = useState<Unit[]>([]);
@@ -245,7 +244,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                     <Input/>
                 </Form.Item>
 
-                <Form.Item label="Reason for Referral" name="reasonForReferral">
+                <Form.Item label="Reason for Referral" name="reason_for_referral">
                     <Input.TextArea rows={2}/>
                 </Form.Item>
             </Form>

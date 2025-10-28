@@ -516,6 +516,7 @@ export const getConsultationsByStatus = async (
  * @param id Consultation ID
  * @param status New status value ("in_progress", "completed", "closed", etc.)
  * @param remarks Consultant remarks
+ * @param review Consultant review
  * @param organization_id - Selected organization id
  * @param location_id - selected location id
  */
@@ -527,12 +528,19 @@ export const updateConsultationStatus = async (
     organization_id: number,
     location_id: number
 ) => {
-    const res = await api.patch(`/consultations/${id}/`, {
+    const payload: any = {
         status,
         consultant_remarks: remarks,
         consultant_review: review,
-        organization_id: organization_id,
-        location_id: location_id
-    });
+        organization_id,
+        location_id,
+    };
+
+    // Add closed_at timestamp only when status is "closed"
+    if (status === "closed" || "completed") {
+        payload.closed_at = new Date().toISOString();
+    }
+
+    const res = await api.patch(`/consultations/${id}/`, payload);
     return res.data;
 };
