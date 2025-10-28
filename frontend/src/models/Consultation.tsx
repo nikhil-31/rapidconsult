@@ -1,4 +1,6 @@
 import {OrgProfile} from "./OrgProfile";
+import {Department} from "./Department";
+import {Unit} from "./Unit";
 
 export interface Consultation {
     id: number;
@@ -19,7 +21,8 @@ export interface Consultation {
     closed_at: string | null;
     organization: number | null;
     location: number | null;
-    unit: number | null;
     created_at: string;
     updated_at: string;
+    department: Department;
+    unit: Unit;
 }

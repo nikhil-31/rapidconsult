@@ -15,20 +15,29 @@ import {
 } from "@ant-design/icons";
 import {getConsultationsByStatus} from "../api/services";
 import {Consultation} from "../models/Consultation";
+import ConsultationDetailsModal from "./ConsultationDetailModal";
+import ConsultationDetailModal from "./ConsultationDetailModal";
 
 const {Content} = Layout;
 
 const Consults: React.FC = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [closeModalVisible, setCloseModalVisible] = useState(false);
-    const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+    const [detailsVisible, setDetailsVisible] = useState(false);
 
     const [selectedMenuKey, setSelectedMenuKey] = useState<
         "pending" | "in_progress" | "completed" | "closed" | "calendar"
     >("pending");
-
     const [consultations, setConsultations] = useState<Consultation[]>([]);
+
     const [loading, setLoading] = useState(false);
+    const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+
+    const handleRowClick = (record: Consultation) => {
+        setSelectedConsultation(record);
+        setDetailsVisible(true);
+        // setDetailModalVisible(true);
+    };
 
     // Fetch consultations when menu key changes
     useEffect(() => {
@@ -42,7 +51,7 @@ const Consults: React.FC = () => {
     ) => {
         try {
             setLoading(true);
-            const data = await getConsultationsByStatus(status);
+            const data: Consultation[] = await getConsultationsByStatus(status);
             setConsultations(data);
         } catch (error) {
             console.error(error);
@@ -158,7 +167,10 @@ const Consults: React.FC = () => {
                         <Button
                             type="text"
                             icon={<EditOutlined/>}
-                            onClick={() => handleEdit(record)}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                handleEdit(record)
+                            }}
                         />
                     </Tooltip>
 
@@ -168,7 +180,10 @@ const Consults: React.FC = () => {
                                 type="text"
                                 danger
                                 icon={<StopOutlined/>}
-                                onClick={() => handleClose(record)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleClose(record)
+                                }}
                             />
                         </Tooltip>
                     )}
@@ -261,6 +276,10 @@ const Consults: React.FC = () => {
                             rowKey="id"
                             pagination={{pageSize: 8}}
                             bordered
+                            onRow={(record) => ({
+                                onClick: () => handleRowClick(record),
+                                style: {cursor: "pointer"},
+                            })}
                             style={{
                                 backgroundColor: "#fff",
                                 borderRadius: 8,
@@ -287,6 +306,12 @@ const Consults: React.FC = () => {
                 consultationId={selectedConsultation?.id ?? null}
                 onClose={() => setCloseModalVisible(false)}
                 onSuccess={handleConsultUpdated}
+            />
+
+            <ConsultationDetailModal
+                visible={detailsVisible}
+                consultation={selectedConsultation}
+                onClose={() => setDetailsVisible(false)}
             />
         </Layout>
     );
