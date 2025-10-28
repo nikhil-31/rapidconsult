@@ -149,7 +149,6 @@ class Consultation(models.Model):
         null=True
     )
     ward = models.CharField(max_length=255, blank=True, null=True)
-
     referred_by_doctor = models.ForeignKey(
         UserOrgProfile,
         on_delete=models.SET_NULL,
@@ -164,7 +163,6 @@ class Consultation(models.Model):
         null=True,
         blank=True
     )
-
     urgency = models.CharField(
         max_length=20,
         choices=[
@@ -200,16 +198,10 @@ class Consultation(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
 
     # --- Scoping ---
-    organization = models.ForeignKey(
-        Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name="organizations"
-    )
-    location = models.ForeignKey(
-        Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="locations"
-    )
+    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name="organizations")
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="locations")
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name="departments")
-    unit = models.ForeignKey(
-        Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name="units"
-    )
+    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name="units")
 
     def __str__(self):
         return f"{self.patient_name} ({self.status})"

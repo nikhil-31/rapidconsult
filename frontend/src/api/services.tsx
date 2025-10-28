@@ -510,3 +510,29 @@ export const getConsultationsByStatus = async (
     });
     return response.data.results;
 };
+
+/**
+ * Update a consultation's status and remarks.
+ * @param id Consultation ID
+ * @param status New status value ("in_progress", "completed", "closed", etc.)
+ * @param remarks Consultant remarks
+ * @param organization_id - Selected organization id
+ * @param location_id - selected location id
+ */
+export const updateConsultationStatus = async (
+    id: number,
+    status: "pending" | "in_progress" | "completed" | "closed",
+    remarks: string,
+    review: string,
+    organization_id: number,
+    location_id: number
+) => {
+    const res = await api.patch(`/consultations/${id}/`, {
+        status,
+        consultant_remarks: remarks,
+        consultant_review: review,
+        organization_id: organization_id,
+        location_id: location_id
+    });
+    return res.data;
+};

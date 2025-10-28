@@ -1,14 +1,17 @@
 import React, {useEffect, useState} from "react";
-import {Layout, Button, Table, Tag, Spin} from "antd";
+import {Layout, Button, Table, Tag, Spin, Space, Tooltip} from "antd";
 import Sider from "antd/es/layout/Sider";
 import Title from "antd/es/typography/Title";
 import ConsultationModal from "./ConsultationModal";
+import CloseConsultModal from "./CloseConsultModal";
 import {
     UserOutlined,
     PlusOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
     CloseCircleOutlined,
+    EditOutlined,
+    StopOutlined,
 } from "@ant-design/icons";
 import {getConsultationsByStatus} from "../api/services";
 import {Consultation} from "../models/Consultation";
@@ -17,9 +20,13 @@ const {Content} = Layout;
 
 const Consults: React.FC = () => {
     const [modalVisible, setModalVisible] = useState(false);
+    const [closeModalVisible, setCloseModalVisible] = useState(false);
+    const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+
     const [selectedMenuKey, setSelectedMenuKey] = useState<
         "pending" | "in_progress" | "completed" | "closed" | "calendar"
     >("pending");
+
     const [consultations, setConsultations] = useState<Consultation[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -42,6 +49,20 @@ const Consults: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleEdit = (consultation: Consultation) => {
+        setSelectedConsultation(consultation);
+        setModalVisible(true);
+    };
+
+    const handleClose = (consultation: Consultation) => {
+        setSelectedConsultation(consultation);
+        setCloseModalVisible(true);
+    };
+
+    const handleConsultUpdated = () => {
+        // loadConsultations(selectedMenuKey);
     };
 
     const columns = [
@@ -73,7 +94,7 @@ const Consults: React.FC = () => {
         {
             title: "Unit",
             dataIndex: ["unit", "name"],
-            key: "department",
+            key: "unit",
         },
         {
             title: "Referred By",
@@ -83,7 +104,7 @@ const Consults: React.FC = () => {
         {
             title: "Referred To",
             dataIndex: ["referred_to_doctor", "user", "name"],
-            key: "referredToDoctorId"
+            key: "referredToDoctorId",
         },
         {
             title: "Urgency",
@@ -125,11 +146,34 @@ const Consults: React.FC = () => {
                     })
                     : "—",
         },
-    ];
+        {
+            title: "Actions",
+            key: "actions",
+            align: "right" as const,
+            render: (_: any, record: Consultation) => (
+                <Space>
+                    <Tooltip title="Edit">
+                        <Button
+                            type="text"
+                            icon={<EditOutlined/>}
+                            onClick={() => handleEdit(record)}
+                        />
+                    </Tooltip>
 
-    const handleConsultCreated = () => {
-        loadConsultations(selectedMenuKey as any);
-    };
+                    {record.status !== "closed" && (
+                        <Tooltip title="Close Consultation">
+                            <Button
+                                type="text"
+                                danger
+                                icon={<StopOutlined/>}
+                                onClick={() => handleClose(record)}
+                            />
+                        </Tooltip>
+                    )}
+                </Space>
+            ),
+        },
+    ];
 
     const menuItems = [
         {key: "pending", label: "Pending", icon: <ClockCircleOutlined/>},
@@ -224,10 +268,19 @@ const Consults: React.FC = () => {
                 </Content>
             </Layout>
 
+            {/* Create/Edit Consultation Modal */}
             <ConsultationModal
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
-                onCreated={handleConsultCreated}
+                onCreated={handleConsultUpdated}
+            />
+
+            {/* Close Consultation Modal */}
+            <CloseConsultModal
+                visible={closeModalVisible}
+                consultationId={selectedConsultation?.id ?? null}
+                onClose={() => setCloseModalVisible(false)}
+                onSuccess={handleConsultUpdated}
             />
         </Layout>
     );
