@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useState, useMemo } from 'react';
-import { Layout, Avatar, Typography, List, Skeleton, Input, Button } from 'antd';
-import { SearchOutlined, UserOutlined } from '@ant-design/icons';
-import debounce from 'lodash.debounce';
-import { useOrgLocation } from "../contexts/LocationContext";
-import { AuthContext } from "../contexts/AuthContext";
-import { UserModel } from "../models/UserModel";
-import { ProfileData } from "../models/ProfileData";
+import React, {useContext, useEffect, useState, useMemo, useCallback} from 'react';
+import {Layout, Avatar, Typography, List, Skeleton, Input} from 'antd';
+import {SearchOutlined, UserOutlined} from '@ant-design/icons';
+import {useOrgLocation} from "../contexts/LocationContext";
+import {AuthContext} from "../contexts/AuthContext";
+import {UserModel} from "../models/UserModel";
+import {ProfileData} from "../models/ProfileData";
+import {getUserProfile, getUsersLocation, searchUsers} from "../api/services";
 import ProfileDetails from "./ProfileDetails";
-import { getUserProfile, getUsers, searchUsers } from "../api/services";
+import debounce from 'lodash.debounce';
 
-const { Sider } = Layout;
-const { Title, Text } = Typography;
+const {Sider} = Layout;
+const {Title, Text} = Typography;
 
 const COLORS = [
     '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
@@ -27,9 +27,9 @@ const getColorForUser = (userId: string) => {
     return COLORS[index];
 };
 
-const Dashboard: React.FC = () => {
-    const { user } = useContext(AuthContext);
-    const { selectedLocation } = useOrgLocation();
+const Contacts: React.FC = () => {
+    const {user} = useContext(AuthContext);
+    const {selectedLocation} = useOrgLocation();
 
     const [loading, setLoading] = useState(true);
     const [users, setUsers] = useState<UserModel[]>([]);
@@ -46,8 +46,9 @@ const Dashboard: React.FC = () => {
             if (pageNum === 1) setLoading(true);
             else setLoadingMore(true);
 
-            const res = await getUsers(
+            const res = await getUsersLocation(
                 String(selectedLocation.organization.id),
+                String(selectedLocation.location.id),
                 pageNum,
                 20
             );
@@ -89,41 +90,47 @@ const Dashboard: React.FC = () => {
     };
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        const {scrollTop, scrollHeight, clientHeight} = e.currentTarget;
         if (scrollHeight - scrollTop <= clientHeight + 100 && hasMore && !loadingMore) {
             fetchUserData(page + 1);
         }
     };
 
     // 🔍 Debounced Search Function
-    const handleSearch = async (query: string): Promise<void> => {
+    const handleSearch = useCallback(async (query: string): Promise<void> => {
         if (!query) {
             fetchUserData(1);
             return;
         }
+
+        const organization_id = selectedLocation?.organization?.id ?? 0;
+        const location_id = selectedLocation?.location?.id ?? 0;
+
+        if (!organization_id || !location_id) return;
+
         try {
-            const data = await searchUsers(query);
+            const data = await searchUsers(query, organization_id, location_id);
             setUsers(data);
             setHasMore(false);
         } catch (err) {
             console.error("Search error:", err);
         }
-    };
+    }, [selectedLocation]);
 
     // 🕒 Debounce search by 500ms using useMemo for stable reference
     const debouncedSearch = useMemo(
         () => debounce((query: string) => handleSearch(query), 500),
-        []
+        [handleSearch]
     );
 
     useEffect(() => {
         return () => {
-            debouncedSearch.cancel(); // cleanup on unmount
+            debouncedSearch.cancel();
         };
     }, [debouncedSearch]);
 
     return (
-        <Layout style={{ height: 'calc(100vh - 64px)', background: '#f9f9f9' }}>
+        <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
             <Sider
                 width={350}
                 style={{
@@ -136,13 +143,13 @@ const Dashboard: React.FC = () => {
                 }}
                 onScroll={handleScroll}
             >
-                <div style={{ paddingBottom: 12 }}>
-                    <Title level={5} style={{ marginBottom: 10 }}>
+                <div style={{paddingBottom: 12}}>
+                    <Title level={5} style={{marginBottom: 10}}>
                         Users - {totalUsers}
                     </Title>
                     <Input
                         placeholder="Search users by name"
-                        prefix={<SearchOutlined style={{ color: 'red' }} />}
+                        prefix={<SearchOutlined style={{color: 'red'}}/>}
                         allowClear
                         onChange={(e) => debouncedSearch(e.target.value)}
                     />
@@ -153,11 +160,11 @@ const Dashboard: React.FC = () => {
                         itemLayout="horizontal"
                         dataSource={Array.from(Array(2).keys())}
                         renderItem={() => (
-                            <List.Item style={{ padding: '8px 16px' }}>
+                            <List.Item style={{padding: '8px 16px'}}>
                                 <List.Item.Meta
-                                    avatar={<Skeleton.Avatar active size="large" shape="circle" />}
-                                    title={<Skeleton.Input active size="small" style={{ width: 150 }} />}
-                                    description={<Skeleton.Input active size="small" style={{ width: 220 }} />}
+                                    avatar={<Skeleton.Avatar active size="large" shape="circle"/>}
+                                    title={<Skeleton.Input active size="small" style={{width: 150}}/>}
+                                    description={<Skeleton.Input active size="small" style={{width: 220}}/>}
                                 />
                             </List.Item>
                         )}
@@ -189,7 +196,7 @@ const Dashboard: React.FC = () => {
                                         <Avatar
                                             size={40}
                                             src={item.profile_picture}
-                                            icon={!item.profile_picture && <UserOutlined />}
+                                            icon={!item.profile_picture && <UserOutlined/>}
                                             style={{
                                                 backgroundColor: !item.profile_picture
                                                     ? getColorForUser(item.name)
@@ -201,7 +208,7 @@ const Dashboard: React.FC = () => {
                                         </Avatar>
                                     }
                                     title={
-                                        <Text strong style={{ fontSize: '14px', display: 'block' }}>
+                                        <Text strong style={{fontSize: '14px', display: 'block'}}>
                                             {item.name}
                                         </Text>
                                     }
@@ -214,7 +221,7 @@ const Dashboard: React.FC = () => {
                                             );
                                             if (orgWithLocation?.job_title && orgWithLocation?.role) {
                                                 return (
-                                                    <Text type="secondary" style={{ fontSize: '13px' }}>
+                                                    <Text type="secondary" style={{fontSize: '13px'}}>
                                                         {orgWithLocation.job_title} - {orgWithLocation.role.name}
                                                     </Text>
                                                 );
@@ -227,8 +234,8 @@ const Dashboard: React.FC = () => {
                         )}
                     >
                         {loadingMore && (
-                            <div style={{ textAlign: 'center', padding: 12 }}>
-                                <Skeleton avatar paragraph={{ rows: 1 }} active />
+                            <div style={{textAlign: 'center', padding: 12}}>
+                                <Skeleton avatar paragraph={{rows: 1}} active/>
                             </div>
                         )}
                     </List>
@@ -237,7 +244,7 @@ const Dashboard: React.FC = () => {
 
             <Layout>
                 {profile ? (
-                    <div style={{ padding: 24 }}>
+                    <div style={{padding: 24}}>
                         <ProfileDetails
                             id={profile.id}
                             name={profile.name}
@@ -251,7 +258,7 @@ const Dashboard: React.FC = () => {
                         />
                     </div>
                 ) : (
-                    <div style={{ padding: 24 }}>
+                    <div style={{padding: 24}}>
                         <Text type="secondary">Select a user to view their profile</Text>
                     </div>
                 )}
@@ -260,4 +267,4 @@ const Dashboard: React.FC = () => {
     );
 };
 
-export default Dashboard;
+export default Contacts;

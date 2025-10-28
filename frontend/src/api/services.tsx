@@ -102,7 +102,27 @@ export const getUsers = async (
         endpoints.usersAll,
         {
             params: {
-                organization: organizationId,
+                organization_id: organizationId,
+                page: page,
+                page_size: pageSize,
+            },
+        });
+    return res.data;
+};
+
+// Get users location
+export const getUsersLocation = async (
+    organizationId: string,
+    locationId: string,
+    page: number = 1,
+    pageSize: number = 20,
+): Promise<PaginatedResponse<UserModel>> => {
+    const res = await api.get<PaginatedResponse<UserModel>>(
+        endpoints.usersAll,
+        {
+            params: {
+                organization_id: organizationId,
+                location_id: locationId,
                 page: page,
                 page_size: pageSize,
             },
@@ -180,9 +200,15 @@ export const getUserProfile = async (userId: string): Promise<ProfileData> => {
 };
 
 // Search users
-export const searchUsers = async (query: string): Promise<UserModel[]> => {
+export const searchUsers = async (query: string,
+                                  organization_id: number | undefined,
+                                  location_id: number | undefined): Promise<UserModel[]> => {
     const res = await api.get(endpoints.userSearch, {
-        params: {q: query},
+        params: {
+            q: query,
+            organization_id: organization_id,
+            location_id: location_id,
+        },
     });
 
     // Normalize response to always be an array

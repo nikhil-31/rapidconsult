@@ -105,9 +105,11 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
             setDoctorResults([]);
             return;
         }
+        const organization_id = selectedLocation?.organization.id ?? 0;
+        const location_id = selectedLocation?.location.id ?? 0;
         try {
             setDoctorLoading(true);
-            const users = await searchUsers(value);
+            const users = await searchUsers(value, organization_id, location_id);
             setDoctorResults(users);
         } catch (err) {
             console.error("Doctor search failed:", err);

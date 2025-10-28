@@ -15,7 +15,6 @@ import {
 } from "@ant-design/icons";
 import {getConsultationsByStatus} from "../api/services";
 import {Consultation} from "../models/Consultation";
-import ConsultationDetailsModal from "./ConsultationDetailModal";
 import ConsultationDetailModal from "./ConsultationDetailModal";
 
 const {Content} = Layout;

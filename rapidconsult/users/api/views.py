@@ -32,7 +32,7 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
 
     @action(detail=False, methods=["get"])
     def all(self, request):
-        org_id = request.query_params.get("organization")
+        org_id = request.query_params.get("organization_id")
         location_id = request.query_params.get("location_id")
         queryset = self.queryset
 
@@ -67,7 +67,17 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
             return Response({"detail": "Missing search query"}, status=status.HTTP_400_BAD_REQUEST)
 
         queryset = self.queryset.filter(Q(name__icontains=query)).distinct()
+        org_id = request.query_params.get("organization_id")
+        location_id = request.query_params.get("location_id")
+        if org_id:
+            queryset = queryset.filter(
+                org_profiles__organization_id=org_id
+            ).distinct()
 
+        if location_id:
+            queryset = queryset.filter(
+                org_profiles__allowed_locations__id=location_id
+            ).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = UserSerializer(page, many=True, context={"request": request})
