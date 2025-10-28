@@ -224,11 +224,23 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                         loading={doctorLoading}
                         notFoundContent={doctorLoading ? "Searching..." : "No doctors found"}
                     >
-                        {doctorResults.map((user) => (
-                            <Option key={user.id} value={user.id}>
-                                {user.name || user.username}
-                            </Option>
-                        ))}
+                        {doctorResults.map((user) => {
+                            const orgId = user.organizations
+                                .find((org) =>
+                                    org.allowed_locations.some(
+                                        (loc: any) => loc.id === selectedLocation?.location.id
+                                    )
+                                )?.id;
+
+                            return (
+                                <Option
+                                    key={orgId}
+                                    value={orgId}
+                                >
+                                    {user.name || user.username}
+                                </Option>
+                            );
+                        })}
                     </Select>
                 </Form.Item>
 
