@@ -233,10 +233,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                                 )?.id;
 
                             return (
-                                <Option
-                                    key={orgId}
-                                    value={orgId}
-                                >
+                                <Option key={orgId} value={orgId}>
                                     {user.name || user.username}
                                 </Option>
                             );
