@@ -62,7 +62,9 @@ const Consults: React.FC = () => {
     };
 
     const handleConsultUpdated = () => {
-        // loadConsultations(selectedMenuKey);
+        if (selectedMenuKey !== "calendar") {
+            loadConsultations(selectedMenuKey);
+        }
     };
 
     const columns = [
