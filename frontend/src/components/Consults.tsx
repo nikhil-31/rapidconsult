@@ -270,11 +270,15 @@ const Consults: React.FC = () => {
                 </Content>
             </Layout>
 
-            {/* Create/Edit Consultation Modal */}
             <ConsultationModal
                 visible={modalVisible}
-                onClose={() => setModalVisible(false)}
+                onClose={() => {
+                    setModalVisible(false);
+                    setSelectedConsultation(null);
+                }}
                 onCreated={handleConsultUpdated}
+                consultation={selectedConsultation}
+                isEdit={!!selectedConsultation}
             />
 
             {/* Close Consultation Modal */}

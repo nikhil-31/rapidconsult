@@ -1,12 +1,19 @@
 import React, {useContext, useEffect, useState} from "react";
 import {Button, Form, Input, Modal, Select} from "antd";
-import {createConsultation, getDepartmentsByLocation, getUnitsByDepartment, searchUsers,} from "../api/services";
+import debounce from "lodash.debounce";
+import {
+    createConsultation,
+    updateConsultation,
+    getDepartmentsByLocation,
+    getUnitsByDepartment,
+    searchUsers,
+} from "../api/services";
 import {Department} from "../models/Department";
 import {Unit} from "../models/Unit";
 import {UserModel} from "../models/UserModel";
+import {Consultation} from "../models/Consultation";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {AuthContext} from "../contexts/AuthContext";
-import debounce from "lodash.debounce";
 
 const {Option} = Select;
 
@@ -14,16 +21,19 @@ interface ConsultationModalProps {
     visible: boolean;
     onClose: () => void;
     onCreated?: () => void;
+    consultation?: Consultation | null;
+    isEdit?: boolean;
 }
 
 const ConsultationModal: React.FC<ConsultationModalProps> = ({
                                                                  visible,
                                                                  onClose,
                                                                  onCreated,
+                                                                 consultation,
+                                                                 isEdit = false,
                                                              }) => {
     const {user} = useContext(AuthContext);
     const {selectedLocation} = useOrgLocation();
-
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
@@ -40,23 +50,41 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
         return orgProfile?.id || null;
     };
 
-    // Fetch departments based on selected location
+    // Prefill data if editing
     useEffect(() => {
+        if (isEdit && consultation) {
+            form.setFieldsValue({
+                patient_name: consultation.patient_name,
+                patient_age: consultation.patient_age,
+                patient_sex: consultation.patient_sex,
+                ward: consultation.ward,
+                referred_to_doctor_id: consultation.referred_to_doctor?.id,
+                urgency: consultation.urgency,
+                diagnosis: consultation.diagnosis,
+                reason_for_referral: consultation.reason_for_referral,
+            });
+        } else {
+            form.resetFields();
+        }
+    }, [consultation, isEdit, visible]);
+
+    // Fetch departments when modal opens (only for create mode)
+    useEffect(() => {
+        if (isEdit) return;
         const fetchDepartments = async () => {
             if (!selectedLocation?.location.id) return;
             try {
-                const data = await getDepartmentsByLocation(selectedLocation?.location.id);
+                const data = await getDepartmentsByLocation(selectedLocation.location.id);
                 setDepartments(data);
             } catch (err) {
                 console.error("Failed to fetch departments:", err);
             }
         };
         fetchDepartments();
-    }, [selectedLocation, visible]);
+    }, [selectedLocation, visible, isEdit]);
 
-    // Fetch units when department changes
     const handleDepartmentChange = async (departmentId: number) => {
-        form.setFieldsValue({unit: undefined});
+        form.setFieldsValue({unit_id: undefined});
         if (!departmentId) {
             setUnits([]);
             return;
@@ -72,7 +100,6 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
         }
     };
 
-    // Search doctors (debounced)
     const handleDoctorSearch = debounce(async (value: string) => {
         if (!value || value.trim().length < 2) {
             setDoctorResults([]);
@@ -93,25 +120,23 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
         try {
             setLoading(true);
             const values = await form.validateFields();
+            const organization_id = selectedLocation?.organization.id;
+            values.location_id = selectedLocation?.location.id;
+            values.organization_id = organization_id;
+            values.referred_by_doctor_id = getOrgUserIdByOrgId(organization_id);
 
-            if (values.consultationDateTime)
-                values.consultationDateTime = values.consultationDateTime.toISOString();
-            if (values.closedAt)
-                values.closedAt = values.closedAt.toISOString();
-
-            const organization_id = selectedLocation?.organization.id
-            values.location_id = selectedLocation?.location.id
-            values.organization_id = organization_id
-            values.status = "pending";
-            values.referred_by_doctor_id = getOrgUserIdByOrgId(organization_id)
-
-            const res = await createConsultation(values);
+            if (!isEdit) {
+                values.status = "pending";
+                await createConsultation(values);
+            } else if (consultation?.id) {
+                await updateConsultation(consultation.id, values);
+            }
 
             form.resetFields();
             onClose();
             onCreated?.();
         } catch (err) {
-            console.error(err);
+            console.error("Error submitting consultation:", err);
         } finally {
             setLoading(false);
         }
@@ -120,7 +145,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
     return (
         <Modal
             open={visible}
-            title="Create Consultation"
+            title={isEdit ? "Edit Consultation" : "Create Consultation"}
             onCancel={onClose}
             footer={[
                 <Button key="cancel" onClick={onClose}>
@@ -132,7 +157,7 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                     loading={loading}
                     onClick={handleSubmit}
                 >
-                    Create
+                    {isEdit ? "Update" : "Create"}
                 </Button>,
             ]}
             width={800}
@@ -143,10 +168,9 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                 initialValues={{
                     urgency: "routine",
                     status: "pending",
-                    patientSex: "male",
+                    patient_sex: "male",
                 }}
             >
-                {/* Patient Info */}
                 <Form.Item
                     label="Patient Name"
                     name="patient_name"
@@ -167,50 +191,52 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                     </Select>
                 </Form.Item>
 
-                {/* Department Dropdown */}
-                <Form.Item
-                    label="Department"
-                    name="department_id"
-                    rules={[{required: true, message: "Please select a department"}]}
-                >
-                    <Select
-                        placeholder="Select department"
-                        onChange={handleDepartmentChange}
-                        loading={!departments.length}
-                        disabled={!departments.length}
-                    >
-                        {departments.map((dept) => (
-                            <Option key={dept.id} value={dept.id}>
-                                {dept.name}
-                            </Option>
-                        ))}
-                    </Select>
-                </Form.Item>
+                {/* Show only in create mode */}
+                {!isEdit && (
+                    <>
+                        <Form.Item
+                            label="Department"
+                            name="department_id"
+                            rules={[{required: true, message: "Please select a department"}]}
+                        >
+                            <Select
+                                placeholder="Select department"
+                                onChange={handleDepartmentChange}
+                                loading={!departments.length}
+                                disabled={!departments.length}
+                            >
+                                {departments.map((dept) => (
+                                    <Option key={dept.id} value={dept.id}>
+                                        {dept.name}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
 
-                {/* Unit Dropdown */}
-                <Form.Item
-                    label="Unit"
-                    name="unit_id"
-                    rules={[{required: true, message: "Please select a unit"}]}
-                >
-                    <Select
-                        placeholder="Select unit"
-                        loading={unitLoading}
-                        disabled={!units.length}
-                    >
-                        {units.map((unit) => (
-                            <Option key={unit.id} value={unit.id}>
-                                {unit.name}
-                            </Option>
-                        ))}
-                    </Select>
-                </Form.Item>
+                        <Form.Item
+                            label="Unit"
+                            name="unit_id"
+                            rules={[{required: true, message: "Please select a unit"}]}
+                        >
+                            <Select
+                                placeholder="Select unit"
+                                loading={unitLoading}
+                                disabled={!units.length}
+                            >
+                                {units.map((unit) => (
+                                    <Option key={unit.id} value={unit.id}>
+                                        {unit.name}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </>
+                )}
 
                 <Form.Item label="Ward" name="ward">
                     <Input/>
                 </Form.Item>
 
-                {/* Doctor Search Dropdown */}
                 <Form.Item
                     label="Referred To Doctor"
                     name="referred_to_doctor_id"
@@ -225,13 +251,11 @@ const ConsultationModal: React.FC<ConsultationModalProps> = ({
                         notFoundContent={doctorLoading ? "Searching..." : "No doctors found"}
                     >
                         {doctorResults.map((user) => {
-                            const orgId = user.organizations
-                                .find((org) =>
-                                    org.allowed_locations.some(
-                                        (loc: any) => loc.id === selectedLocation?.location.id
-                                    )
-                                )?.id;
-
+                            const orgId = user.organizations.find((org) =>
+                                org.allowed_locations.some(
+                                    (loc: any) => loc.id === selectedLocation?.location.id
+                                )
+                            )?.id;
                             return (
                                 <Option key={orgId} value={orgId}>
                                     {user.name || user.username}

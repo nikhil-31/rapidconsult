@@ -544,3 +544,12 @@ export const updateConsultationStatus = async (
     const res = await api.patch(`/consultations/${id}/`, payload);
     return res.data;
 };
+
+export const updateConsultation = async (
+    id: number,
+    values: Partial<Consultation>
+): Promise<Consultation> => {
+    const res = await api.put(`${endpoints.consultations}${id}/`, values);
+    return res.data;
+};
+
