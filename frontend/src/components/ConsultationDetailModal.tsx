@@ -32,7 +32,9 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
                     {consultation.patient_age} / {consultation.patient_sex}
                 </Descriptions.Item>
 
-                <Descriptions.Item label="Ward">{consultation.ward}</Descriptions.Item>
+                <Descriptions.Item label="Ward">
+                    {consultation.ward}
+                </Descriptions.Item>
 
                 <Descriptions.Item label="Department">
                     {consultation.department?.name || "-"}
@@ -55,13 +57,15 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
                 </Descriptions.Item>
 
                 <Descriptions.Item label="Urgency">
-                    <Tag color={
-                        consultation.urgency === "emergency"
-                            ? "red"
-                            : consultation.urgency === "urgent"
-                                ? "orange"
-                                : "blue"
-                    }>
+                    <Tag
+                        color={
+                            consultation.urgency === "emergency"
+                                ? "red"
+                                : consultation.urgency === "urgent"
+                                    ? "orange"
+                                    : "blue"
+                        }
+                    >
                         {consultation.urgency?.toUpperCase()}
                     </Tag>
                 </Descriptions.Item>
@@ -86,6 +90,14 @@ const ConsultationDetailsModal: React.FC<ConsultationDetailsModalProps> = ({
                     >
                         {consultation.status?.toUpperCase()}
                     </Tag>
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Consultant Review">
+                    {consultation.consultant_review || "-"}
+                </Descriptions.Item>
+
+                <Descriptions.Item label="Consultant Remarks">
+                    {consultation.consultant_remarks || "-"}
                 </Descriptions.Item>
             </Descriptions>
         </Modal>
