@@ -60,6 +60,25 @@ export const getActiveConversations = async (
     return res.data;
 };
 
+export const getActiveConversationDetail = async (
+    userId: string,
+    conversationId: string,
+    locationId: number,
+    organizationId: number
+): Promise<Conversation> => {
+    const res = await api.get<Conversation>(
+        `${endpoints.activeConversations}${conversationId}`,
+        {
+            params: {
+                user_id: userId,
+                location_id: locationId,
+                organization_id: organizationId,
+            },
+        }
+    );
+    return res.data;
+};
+
 // Get Locations
 export const getLocations = async (
     organizationId: string,

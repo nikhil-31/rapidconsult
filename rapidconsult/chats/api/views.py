@@ -176,6 +176,25 @@ class UserConversationViewSet(viewsets.ViewSet):
         serializer = UserConversationSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    def retrieve(self, request, pk=None):
+        """
+        Retrieve details of a single userconversation conversation by _id.
+        Example:
+            GET /api/active-conversations/{conversation_id}/
+        """
+        user_id = request.query_params.get("user_id")
+
+        try:
+            conversation = UserConversation.objects.get(conversationId=pk, userId=user_id)
+        except UserConversation.DoesNotExist:
+            return Response(
+                {"error": f"Conversation '{pk}' not found or not accessible."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = UserConversationSerializer(conversation)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class MongoMessageViewSet(viewsets.ViewSet):
     """
@@ -294,7 +313,6 @@ class ImageMessageViewSet(viewsets.ViewSet):
 
         return Response(MongoMessageSerializer(msg).data)
 
-
 # class ConsultationViewSet(viewsets.ViewSet):
 #     """
 #     A ViewSet for listing, creating, retrieving,
@@ -357,6 +375,3 @@ class ImageMessageViewSet(viewsets.ViewSet):
 #         consultation = get_object_or_404(Consultation, id=pk)
 #         consultation.delete()
 #         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-

@@ -3,7 +3,7 @@ import {AuthContext} from "../contexts/AuthContext";
 import {Layout, Typography, List, Skeleton, Input, Button} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {useLocation} from "react-router-dom";
-import {getActiveConversations} from "../api/services";
+import {getActiveConversationDetail, getActiveConversations} from "../api/services";
 import {SearchOutlined, MessageOutlined} from "@ant-design/icons";
 import {Conversation} from "../models/ActiveConversation";
 import ConversationListItem from "./ConversationListItem";
@@ -27,6 +27,7 @@ const Vox: React.FC = () => {
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [searchTerm, setSearchTerm] = useState<string>("");
     const [modalOpen, setModalOpen] = useState(false);
+    const hasFetchedDetailRef = useRef(false);
 
     const listRef = useRef<HTMLDivElement | null>(null);
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -44,9 +45,14 @@ const Vox: React.FC = () => {
             );
 
             setTotalConversations(data.count);
-            setConversations((prev) =>
-                append ? [...prev, ...data.results] : data.results
-            );
+            setConversations((prev) => {
+                const merged = append ? [...prev, ...data.results] : data.results;
+                const unique = merged.filter(
+                    (c, index, self) =>
+                        index === self.findIndex((x) => x.conversationId === c.conversationId)
+                );
+                return unique;
+            });
             setHasMore(
                 data.results.length > 0 &&
                 (append
@@ -55,16 +61,46 @@ const Vox: React.FC = () => {
             );
 
             // handle ?conversation= param only on first load
-            if (pageNum === 1) {
+            if (pageNum === 1 && !hasFetchedDetailRef.current) {
                 const params = new URLSearchParams(routerLocation.search);
                 const conversationId = params.get("conversation");
+
                 if (conversationId) {
                     const found = data.results.find(
                         (c) => c.conversationId.toString() === conversationId
                     );
-                    if (found) setActiveConversation(found);
+
+                    if (found) {
+                        setActiveConversation(found);
+                    } else {
+                        // 🔍 fetch directly from conversation detail endpoint
+                        try {
+                            const detailRes: Conversation = await getActiveConversationDetail(
+                                user.id,
+                                conversationId,
+                                selectedLocation.location.id,
+                                selectedLocation.organization.id
+                            );
+                            if (detailRes) {
+                                setActiveConversation(detailRes);
+                                // Optionally add to top of list
+                                setConversations((prev) => {
+                                    // Remove if it already exists
+                                    const filtered = prev.filter(
+                                        (c) => c.conversationId !== detailRes.conversationId
+                                    );
+                                    // Insert at top
+                                    return [detailRes, ...filtered];
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Error fetching conversation detail:", error);
+                        }
+                    }
                 }
+                hasFetchedDetailRef.current = true;
             }
+
         } catch (err) {
             console.error("Error fetching conversations:", err);
         } finally {
@@ -80,13 +116,15 @@ const Vox: React.FC = () => {
 
     // 🔎 Debounced search effect
     useEffect(() => {
+        if (!searchTerm || searchTerm.trim() === "") return;
         if (debounceTimeout.current) {
             clearTimeout(debounceTimeout.current);
         }
         debounceTimeout.current = setTimeout(() => {
             setPage(1);
+            console.log("Search conversations triggered")
             fetchConversations(1, false);
-        }, 500); // 500ms debounce
+        }, 500);
         return () => {
             if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
         };
