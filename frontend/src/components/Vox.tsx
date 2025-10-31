@@ -94,6 +94,10 @@ const Vox: React.FC = () => {
 
     };
 
+    const handleOnCreateGroup = () => {
+
+    }
+
     return (
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
@@ -129,6 +133,7 @@ const Vox: React.FC = () => {
                             open={modalOpen}
                             onClose={() => setModalOpen(false)}
                             onSelectUser={handleSelectUser}
+                            onCreateGroup={handleOnCreateGroup}
                         />
                     </div>
 

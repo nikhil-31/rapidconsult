@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useCallback} from "react";
-import {Modal, Input, List, Avatar, Spin, Empty} from "antd";
-import {UserOutlined, SearchOutlined} from "@ant-design/icons";
+import {Modal, Input, List, Avatar, Spin, Empty, Button} from "antd";
+import {UserOutlined, SearchOutlined, TeamOutlined} from "@ant-design/icons";
 import debounce from "lodash/debounce";
 import {searchUsers} from "../api/services";
 import {UserModel} from "../models/UserModel";
@@ -10,12 +10,14 @@ interface StartConversationModalProps {
     open: boolean;
     onClose: () => void;
     onSelectUser: (user: UserModel) => void;
+    onCreateGroup: () => void;
 }
 
 const StartConversationModal: React.FC<StartConversationModalProps> = ({
                                                                            open,
                                                                            onClose,
-                                                                           onSelectUser
+                                                                           onSelectUser,
+                                                                           onCreateGroup
                                                                        }) => {
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(false);
@@ -64,7 +66,7 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
     return (
         <Modal
             open={open}
-            title="Start Conversation"
+            title="Start New Chat"
             onCancel={onClose}
             footer={null}
             centered
@@ -78,6 +80,24 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
                 style={{marginBottom: 12}}
                 allowClear
             />
+
+
+            {/* 👇 New "Create Group Chat" button */}
+            <Button
+                type="dashed"
+                icon={<TeamOutlined/>}
+                block
+                onClick={() => {
+                    onCreateGroup();
+                }}
+                style={{
+                    marginBottom: 8,
+                    fontWeight: 500,
+                    borderColor: "#1890ff",
+                }}
+            >
+                Create Group Chat
+            </Button>
 
             {loading ? (
                 <div style={{textAlign: "center", padding: "40px 0"}}>
