@@ -3,7 +3,7 @@ import {AuthContext} from "../contexts/AuthContext";
 import {Layout, Typography, List, Skeleton, Input, Button} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {useLocation} from "react-router-dom";
-import {getActiveConversationDetail, getActiveConversations} from "../api/services";
+import {getActiveConversationDetail, getActiveConversations, startDirectConversation} from "../api/services";
 import {SearchOutlined, MessageOutlined} from "@ant-design/icons";
 import {Conversation} from "../models/ActiveConversation";
 import ConversationListItem from "./ConversationListItem";
@@ -140,9 +140,54 @@ const Vox: React.FC = () => {
         }
     };
 
-    const handleSelectUser = (user: UserModel) => {
-        console.log("Selected user:", user);
-        // Create or open conversation logic here
+    const handleSelectUser = async (selectedUser: UserModel) => {
+        try {
+            if (!user || !selectedLocation) return;
+
+            // 🧠 Step 1: Check if a direct conversation already exists with this user
+            const existing = conversations.find(
+                (c) =>
+                    c.conversationType === "direct" &&
+                    c.directMessage?.otherParticipantId === selectedUser.id.toString()
+            );
+
+            if (existing) {
+                setActiveConversation(existing);
+                return;
+            }
+
+            // Step 2: Create a new DM
+            const response = await startDirectConversation(
+                user?.id,
+                selectedUser.id,
+                selectedLocation?.organization.id.toString(),
+                selectedLocation?.location.id.toString()
+            );
+
+            const conversationId = response.conversation_id;
+
+            // Step 3: Otherwise, fetch or create a new direct conversation
+            const newConv = await getActiveConversationDetail(
+                user.id,
+                conversationId,
+                selectedLocation.location.id,
+                selectedLocation.organization.id
+            );
+
+            if (newConv) {
+                setActiveConversation(newConv);
+
+                // ✅ Add to top of list without duplicates
+                setConversations((prev) => {
+                    const filtered = prev.filter(
+                        (c) => c.conversationId !== newConv.conversationId
+                    );
+                    return [newConv, ...filtered];
+                });
+            }
+        } catch (error) {
+            console.error("Error selecting user:", error);
+        }
     };
 
     const handleOnCreateGroup = () => {
