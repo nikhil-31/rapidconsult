@@ -29,6 +29,7 @@ const Vox: React.FC = () => {
     const [modalOpen, setModalOpen] = useState(false);
 
     const listRef = useRef<HTMLDivElement | null>(null);
+    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
     const fetchConversations = async (pageNum: number, append = false) => {
         if (!user || !selectedLocation || loading) return;
@@ -71,11 +72,25 @@ const Vox: React.FC = () => {
         }
     };
 
-    // initial load or search
+    // initial load or when org/location changes
     useEffect(() => {
         setPage(1);
         fetchConversations(1, false);
-    }, [user, selectedLocation, searchTerm]);
+    }, [user, selectedLocation]);
+
+    // 🔎 Debounced search effect
+    useEffect(() => {
+        if (debounceTimeout.current) {
+            clearTimeout(debounceTimeout.current);
+        }
+        debounceTimeout.current = setTimeout(() => {
+            setPage(1);
+            fetchConversations(1, false);
+        }, 500); // 500ms debounce
+        return () => {
+            if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+        };
+    }, [searchTerm]); // trigger search on input change
 
     // load more when scrolling
     const handleScroll = (e: UIEvent<HTMLDivElement>) => {
@@ -94,7 +109,7 @@ const Vox: React.FC = () => {
 
     const handleOnCreateGroup = () => {
         fetchConversations(1, false);
-    }
+    };
 
     return (
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
@@ -122,9 +137,7 @@ const Vox: React.FC = () => {
                                 backgroundColor: '#ff4d4f',
                                 borderColor: '#ff4d4f',
                             }}
-                            onClick={() => {
-                                setModalOpen(true)
-                            }}
+                            onClick={() => setModalOpen(true)}
                         />
 
                         <StartConversationModal
@@ -135,22 +148,17 @@ const Vox: React.FC = () => {
                         />
                     </div>
 
-                    {/* Search Bar */}
-                    <Input.Search
+                    {/* 🔎 Auto Search Input */}
+                    <Input
                         placeholder="Search conversations"
                         allowClear
-                        enterButton={
-                            <Button
-                                type="default"
-                                icon={<SearchOutlined style={{color: "red"}}/>}
-                                style={{borderColor: "red"}}
-                            />
-                        }
-                        onSearch={(value) => setSearchTerm(value)}
+                        prefix={<SearchOutlined style={{color: "red"}}/>}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
                             marginBottom: 12,
+                            borderColor: "red",
                         }}
-                        className="custom-search"
                     />
 
                     <div
@@ -188,7 +196,6 @@ const Vox: React.FC = () => {
                             conversation={activeConversation}
                             onNewMessage={(convId, message) => {
                                 setConversations((prev) => {
-                                    // find the conversation and update it
                                     const updated = prev.map((conv) =>
                                         conv.conversationId === convId
                                             ? {
@@ -205,12 +212,8 @@ const Vox: React.FC = () => {
                                             }
                                             : conv
                                     );
-
-                                    // find the updated conversation
                                     const movedConv = updated.find((c) => c.conversationId === convId);
                                     if (!movedConv) return updated;
-
-                                    // move it to the top
                                     const filtered = updated.filter((c) => c.conversationId !== convId);
                                     return [movedConv, ...filtered];
                                 });
