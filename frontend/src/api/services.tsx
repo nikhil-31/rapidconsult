@@ -311,10 +311,9 @@ export const startDirectConversation = async (
 export const createGroupConversation = async (
     name: string,
     description: string,
-    organization_id: number,
-    location_id: number,
+    organization_id: string,
+    location_id: string,
     member_ids: number[],
-    unit_id?: number
 ): Promise<Conversation> => {
     const response = await api.post(endpoints.activeConversations, {
             type: "group",
@@ -323,7 +322,7 @@ export const createGroupConversation = async (
             organization_id: organization_id,
             location_id: location_id,
             member_ids: member_ids,
-            unit_id: unit_id,
+            unit_id: 0,
         },
     );
     return response.data;

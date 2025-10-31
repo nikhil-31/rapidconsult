@@ -90,12 +90,10 @@ const Vox: React.FC = () => {
     const handleSelectUser = (user: UserModel) => {
         console.log("Selected user:", user);
         // Create or open conversation logic here
-
-
     };
 
     const handleOnCreateGroup = () => {
-
+        fetchConversations(1, false);
     }
 
     return (

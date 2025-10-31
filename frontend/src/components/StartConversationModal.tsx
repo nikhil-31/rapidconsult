@@ -9,6 +9,7 @@ import debounce from "lodash/debounce";
 import {searchUsers, getUsersLocation, createGroupConversation} from "../api/services";
 import {UserModel} from "../models/UserModel";
 import {useOrgLocation} from "../contexts/LocationContext";
+import {Conversation} from "../models/ActiveConversation";
 
 interface StartConversationModalProps {
     open: boolean;
@@ -102,23 +103,22 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
             const values = await form.validateFields();
 
             if (selectedUsers.length === 0) {
-                message.warning("Please select at least one user");
                 console.log(`selected users ${selectedUsers}`)
                 return;
             }
 
-            const res = await createGroupConversation(
+            const res: Conversation = await createGroupConversation(
                 values.name,
                 values.description || "",
-                selectedLocation?.organization.id!,
-                selectedLocationId!,
+                selectedOrganizationId.toString(),
+                selectedLocationId!.toString(),
                 selectedUsers
             );
 
-            // message.success(`Group "${res.name}" created successfully!`);
             form.resetFields();
             setSelectedUsers([]);
             setGroupMode(false);
+            onCreateGroup();
             onClose();
         } catch (err) {
             console.error(err);
