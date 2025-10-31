@@ -4,10 +4,12 @@ import {Layout, Typography, List, Skeleton, Input, Button} from "antd";
 import {useOrgLocation} from "../contexts/LocationContext";
 import {useLocation} from "react-router-dom";
 import {getActiveConversations} from "../api/services";
-import {PlusOutlined, SearchOutlined} from "@ant-design/icons";
+import {SearchOutlined, MessageOutlined} from "@ant-design/icons";
 import {Conversation} from "../models/ActiveConversation";
 import ConversationListItem from "./ConversationListItem";
 import ChatView from "./ChatView";
+import {UserModel} from "../models/UserModel";
+import StartConversationModal from "./StartConversationModal";
 
 const {Sider, Content} = Layout;
 const {Title, Text} = Typography;
@@ -24,7 +26,7 @@ const Vox: React.FC = () => {
     const [page, setPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [searchTerm, setSearchTerm] = useState<string>("");
-    const [modalVisible, setModalVisible] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
 
     const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -85,6 +87,13 @@ const Vox: React.FC = () => {
         }
     };
 
+    const handleSelectUser = (user: UserModel) => {
+        console.log("Selected user:", user);
+        // Create or open conversation logic here
+
+
+    };
+
     return (
         <Layout style={{height: 'calc(100vh - 64px)', background: '#f9f9f9'}}>
             <Sider width={350} style={{backgroundColor: '#ffffff', borderRight: '1px solid #f0f0f0'}}>
@@ -95,7 +104,7 @@ const Vox: React.FC = () => {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            marginBottom: 10,
+                            marginBottom: 20,
                         }}
                     >
                         <Title level={5} style={{margin: 0}}>
@@ -105,15 +114,21 @@ const Vox: React.FC = () => {
                         {/* ➕ Add Conversation Button */}
                         <Button
                             type="primary"
-                            size="middle"
-                            icon={<PlusOutlined/>}
+                            size="large"
+                            icon={<MessageOutlined/>}
                             style={{
                                 backgroundColor: '#ff4d4f',
                                 borderColor: '#ff4d4f',
                             }}
                             onClick={() => {
-                                setModalVisible(true)
+                                setModalOpen(true)
                             }}
+                        />
+
+                        <StartConversationModal
+                            open={modalOpen}
+                            onClose={() => setModalOpen(false)}
+                            onSelectUser={handleSelectUser}
                         />
                     </div>
 
