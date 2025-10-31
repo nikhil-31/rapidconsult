@@ -307,6 +307,28 @@ export const startDirectConversation = async (
     return res.data;
 };
 
+// Create group conversation
+export const createGroupConversation = async (
+    name: string,
+    description: string,
+    organization_id: number,
+    location_id: number,
+    member_ids: number[],
+    unit_id?: number
+): Promise<Conversation> => {
+    const response = await api.post(endpoints.activeConversations, {
+            type: "group",
+            name: name,
+            description: description,
+            organization_id: organization_id,
+            location_id: location_id,
+            member_ids: member_ids,
+            unit_id: unit_id,
+        },
+    );
+    return response.data;
+};
+
 // Get departments by location
 export const getDepartmentsByLocation = async (
     locationId: number,
