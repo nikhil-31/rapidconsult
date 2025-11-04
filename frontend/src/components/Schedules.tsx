@@ -285,6 +285,7 @@ const CalendarView: React.FC = () => {
         dateParam?: Date
     ): Promise<void> => {
         setLoadingEvents(true);
+        console.log(`Handle my shifts click ${forceRefresh}`)
         try {
             const {start_date, end_date, startObj, endObj} = getMonthRange(dateParam || date);
 
@@ -368,7 +369,7 @@ const CalendarView: React.FC = () => {
 
                 <div
                     key="my-shifts"
-                    onClick={() => handleMyShiftsClick(false)}
+                    onClick={() => handleMyShiftsClick(true)}
                     style={{
                         padding: "8px 16px",
                         marginTop: "16px",
