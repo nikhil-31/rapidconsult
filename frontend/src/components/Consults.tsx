@@ -7,8 +7,6 @@ import CloseConsultModal from "./CloseConsultModal";
 import {
     UserOutlined,
     PlusOutlined,
-    CheckCircleOutlined,
-    ClockCircleOutlined,
     CloseCircleOutlined,
     EditOutlined,
     StopOutlined,
@@ -24,33 +22,37 @@ const Consults: React.FC = () => {
     const [closeModalVisible, setCloseModalVisible] = useState(false);
     const [detailsVisible, setDetailsVisible] = useState(false);
 
-    const [selectedMenuKey, setSelectedMenuKey] = useState<
-        "pending" | "in_progress" | "completed" | "closed" | "calendar"
-    >("pending");
+    const [selectedMenuKey, setSelectedMenuKey] = useState<"myconsults" | "closed">("myconsults");
     const [consultations, setConsultations] = useState<Consultation[]>([]);
-
     const [loading, setLoading] = useState(false);
     const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
 
     const handleRowClick = (record: Consultation) => {
         setSelectedConsultation(record);
         setDetailsVisible(true);
-        // setDetailModalVisible(true);
     };
 
-    // Fetch consultations when menu key changes
     useEffect(() => {
-        if (selectedMenuKey !== "calendar") {
-            loadConsultations(selectedMenuKey);
-        }
+        loadConsultations(selectedMenuKey);
     }, [selectedMenuKey]);
 
-    const loadConsultations = async (
-        status: "pending" | "in_progress" | "completed" | "closed"
-    ) => {
+    const loadConsultations = async (menuKey: "myconsults" | "closed") => {
         try {
             setLoading(true);
-            const data: Consultation[] = await getConsultationsByStatus(status);
+            let data: Consultation[] = [];
+
+            if (menuKey === "myconsults") {
+                // Fetch both pending and in_progress
+                const pending = await getConsultationsByStatus("pending");
+                const inProgress = await getConsultationsByStatus("in_progress");
+                data = [...pending, ...inProgress];
+            } else {
+                // Only closed
+                const completed = await getConsultationsByStatus("completed");
+                const closed = await getConsultationsByStatus("closed");
+                data = [...completed, ...closed];
+            }
+
             setConsultations(data);
         } catch (error) {
             console.error(error);
@@ -70,9 +72,7 @@ const Consults: React.FC = () => {
     };
 
     const handleConsultUpdated = () => {
-        if (selectedMenuKey !== "calendar") {
-            loadConsultations(selectedMenuKey);
-        }
+        loadConsultations(selectedMenuKey);
     };
 
     const columns = [
@@ -167,8 +167,8 @@ const Consults: React.FC = () => {
                             type="text"
                             icon={<EditOutlined/>}
                             onClick={(e) => {
-                                e.stopPropagation()
-                                handleEdit(record)
+                                e.stopPropagation();
+                                handleEdit(record);
                             }}
                         />
                     </Tooltip>
@@ -181,7 +181,7 @@ const Consults: React.FC = () => {
                                 icon={<StopOutlined/>}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleClose(record)
+                                    handleClose(record);
                                 }}
                             />
                         </Tooltip>
@@ -192,16 +192,14 @@ const Consults: React.FC = () => {
     ];
 
     const menuItems = [
-        {key: "pending", label: "Pending", icon: <ClockCircleOutlined/>},
-        {key: "in_progress", label: "In Progress", icon: <UserOutlined/>},
-        {key: "completed", label: "Completed", icon: <CheckCircleOutlined/>},
+        {key: "myconsults", label: "My Consults", icon: <UserOutlined/>},
         {key: "closed", label: "Closed", icon: <CloseCircleOutlined/>},
     ];
 
     return (
         <Layout style={{minHeight: "100vh", background: "#f9f9f9"}}>
             <Sider
-                width={280}
+                width={250}
                 style={{
                     backgroundColor: "#ffffff",
                     borderRight: "1px solid #f0f0f0",
@@ -244,11 +242,7 @@ const Consults: React.FC = () => {
                         }}
                     >
                         <Title level={3} style={{margin: 0}}>
-                            {selectedMenuKey === "calendar"
-                                ? "Calendar View"
-                                : `${
-                                    menuItems.find((i) => i.key === selectedMenuKey)?.label
-                                } Consultations`}
+                            {menuItems.find((i) => i.key === selectedMenuKey)?.label} Consultations
                         </Title>
 
                         <Button
@@ -264,9 +258,7 @@ const Consults: React.FC = () => {
                         </Button>
                     </div>
 
-                    {selectedMenuKey === "calendar" ? (
-                        <div>Show calendar component here</div>
-                    ) : loading ? (
+                    {loading ? (
                         <Spin tip="Loading consultations..."/>
                     ) : (
                         <Table
@@ -299,7 +291,6 @@ const Consults: React.FC = () => {
                 isEdit={!!selectedConsultation}
             />
 
-            {/* Close Consultation Modal */}
             <CloseConsultModal
                 visible={closeModalVisible}
                 consultationId={selectedConsultation?.id ?? null}
