@@ -149,7 +149,7 @@ const CalendarView: React.FC = () => {
 
     const handleShiftUpdate = () => {
         if (selectedKey === 'my-shifts') {
-            handleMyShiftsClick();
+            handleMyShiftsClick(true);
         } else if (selectedKey.startsWith('unit-')) {
             const unitId = parseInt(selectedKey.replace('unit-', ''), 10);
             handleUnitClick(unitId, true);
@@ -280,21 +280,71 @@ const CalendarView: React.FC = () => {
         );
     };
 
-    const handleMyShiftsClick = async () => {
+    const handleMyShiftsClick = async (
+        forceRefresh: boolean = false,
+        dateParam?: Date
+    ): Promise<void> => {
         setLoadingEvents(true);
         try {
-            const data = await getMyShifts(getOrgProfileId(user), selectedLocationId, shiftType)
+            const {start_date, end_date, startObj, endObj} = getMonthRange(dateParam || date);
+
+            const hasDifferentShiftType =
+                events.length === 0 || events.some((e) => e.shift_type !== shiftType);
+
+            // Reset if different shift type or forced refresh
+            if (hasDifferentShiftType || forceRefresh) {
+                setEvents([]);
+                setFetchedRanges([]);
+            }
+
+            // Skip fetch if already covered and not forcing
+            if (!forceRefresh && isRangeCovered(startObj, endObj) && !hasDifferentShiftType) {
+                setLoadingEvents(false);
+                return;
+            }
+
+            const data = await getMyShifts(
+                getOrgProfileId(user),
+                selectedLocationId,
+                shiftType,
+                start_date,
+                end_date
+            );
             const formatted = formatShiftsToEvents(data);
 
             setSelectedKey("my-shifts");
             setMenuSelectedKeys([]);
-            setEvents(formatted);
+
+            setEvents((prev) => {
+                if (forceRefresh) return formatted;
+                const existingIds = new Set(prev.map((e) => e.id));
+                const newEvents = formatted.filter((e) => !existingIds.has(e.id));
+                return [...prev, ...newEvents];
+            });
+
+            // Merge overlapping ranges
+            setFetchedRanges((prev) => {
+                const merged = [...prev, {start: startObj, end: endObj}];
+                merged.sort((a, b) => a.start.diff(b.start));
+
+                const result: { start: dayjs.Dayjs; end: dayjs.Dayjs }[] = [];
+                for (const range of merged) {
+                    const last = result[result.length - 1];
+                    if (!last || range.start.isAfter(last.end)) {
+                        result.push(range);
+                    } else if (range.end.isAfter(last.end)) {
+                        last.end = range.end;
+                    }
+                }
+                return result;
+            });
         } catch (err) {
             console.error("Failed to fetch my shifts:", err);
         } finally {
             setLoadingEvents(false);
         }
     };
+
 
     return (
         <Layout style={{minHeight: "100vh", background: "#f9f9f9"}}>
@@ -318,7 +368,7 @@ const CalendarView: React.FC = () => {
 
                 <div
                     key="my-shifts"
-                    onClick={handleMyShiftsClick}
+                    onClick={() => handleMyShiftsClick(false)}
                     style={{
                         padding: "8px 16px",
                         marginTop: "16px",
@@ -438,7 +488,9 @@ const CalendarView: React.FC = () => {
                                 // Always fetch the entire month for the navigated date
                                 if (selectedKey.startsWith("unit-")) {
                                     const unitId = parseInt(selectedKey.replace("unit-", ""), 10);
-                                    handleUnitClick(unitId, false ,newDate);
+                                    handleUnitClick(unitId, false, newDate);
+                                } else if (selectedKey == "my-shifts") {
+                                    handleMyShiftsClick(false, newDate)
                                 }
                             }}
                             onSelectEvent={handleEventClick}

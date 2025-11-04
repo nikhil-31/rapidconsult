@@ -406,11 +406,15 @@ export const getMyShifts = async (
     userOrgProfileId: string | null,
     selectedLocationId: number | null,
     shiftType: string | undefined,
+    start_date: string,
+    end_date: string
 ): Promise<Shift[]> => {
     const params = {
         user: userOrgProfileId,
         location: selectedLocationId,
-        shift_type: shiftType
+        shift_type: shiftType,
+        start_date: start_date,
+        end_date: end_date
     };
     return await fetchAllPages<Shift>(endpoints.shifts, params);
 };
