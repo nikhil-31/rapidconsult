@@ -1,4 +1,5 @@
 import {Contact} from "./Contact";
+import {Conversation} from "./ActiveConversation";
 
 export interface OnCall {
     id: number;
@@ -8,4 +9,5 @@ export interface OnCall {
     shift_start: string;
     shift_end: string;
     primary_contact: Contact;
+    conversation?: Conversation;
 }

@@ -22,7 +22,6 @@ const OnCall: React.FC = () => {
     const [loadingDepartments, setLoadingDepartments] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState<Record<number, boolean>>({});
 
-
     const fetchDepartments = async (locationId: number): Promise<void> => {
         setLoadingDepartments(true);
         try {
@@ -51,16 +50,16 @@ const OnCall: React.FC = () => {
 
     const handleUnitClick = (unit: Unit): void => {
         setSelectedUnitId(unit.id);
-
-        if (unit.conversation) {
-            setActiveConversation(unit.conversation);
+        const conversation = unit.oncall?.[0]?.conversation ?? null
+        if (conversation) {
+            setActiveConversation(conversation);
         } else {
             setActiveConversation(null)
         }
     };
 
     useEffect(() => {
-        if (selectedLocation){
+        if (selectedLocation) {
             fetchDepartments(selectedLocation.location.id)
         }
     }, [selectedLocation]);
@@ -208,7 +207,7 @@ const OnCall: React.FC = () => {
                             }}
                         />
                     ) : (
-                        <div style={{padding: 20}}>Select a unit to see its chat</div>
+                        <div style={{padding: 20}}>Select a unit to chat with its on-call member, if available</div>
                     )}
                 </Content>
             </Layout>

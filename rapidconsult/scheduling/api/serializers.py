@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from chats.api.mongo import create_direct_message
+from chats.mongo.models import UserConversation
 from config.roles import get_permissions_for_role
 from rapidconsult.scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, \
     UnitMembership, Role, OnCallShift, Consultation
@@ -202,6 +204,11 @@ class UnitSerializer(serializers.ModelSerializer):
 
     def get_oncall(self, obj):
         shifts = obj.get_current_oncall_shifts()
+
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return None
+
         results = []
         for shift in shifts:
             user_profile = shift.user
@@ -213,6 +220,32 @@ class UnitSerializer(serializers.ModelSerializer):
                 contact_qs = user.phone_numbers.all()
                 primary_contact = contact_qs.filter(primary=True).first() or contact_qs.first()
 
+            request_user_id = str(request.user.id)
+            on_call_user_id = str(user.id)
+            organization_id = str(user_profile.organization.id)
+            location_id = str(shift.unit.department.location.id)
+
+            print(f'Organization {organization_id} on shift {location_id}')
+
+            user_conversation = UserConversation.objects(
+                userId=request_user_id,
+                conversationType="direct",
+                directMessage__otherParticipantId=on_call_user_id,
+            ).first()
+
+            if not user_conversation:
+                conv = create_direct_message(request_user_id, on_call_user_id, organization_id=organization_id,
+                                             location_id=location_id)
+
+                if conv:
+                    user_conversation = UserConversation.objects(
+                        userId=request_user_id,
+                        conversationType="direct",
+                        directMessage__otherParticipantId=on_call_user_id,
+                    ).first()
+
+                print(f'conversation {user_conversation.userId}')
+
             results.append({
                 "id": shift.id,
                 "user_id": user_profile.id,
@@ -221,6 +254,7 @@ class UnitSerializer(serializers.ModelSerializer):
                 "shift_start": shift.start_time,
                 "shift_end": shift.end_time,
                 "primary_contact": ContactSerializer(primary_contact).data if primary_contact else None,
+                "conversation": UserConversationSerializer(user_conversation).data if user_conversation else None,
             })
         return results
 
