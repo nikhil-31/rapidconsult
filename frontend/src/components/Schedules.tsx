@@ -59,8 +59,7 @@ const CalendarView: React.FC = () => {
 
     const [selectedKey, setSelectedKey] = useState('my-shifts');
     const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([]);
-
-    const [fetchedRange, setFetchedRange] = useState<{ start: dayjs.Dayjs; end: dayjs.Dayjs } | null>(null);
+    const [fetchedRanges, setFetchedRanges] = useState<{ start: dayjs.Dayjs; end: dayjs.Dayjs }[]>([]);
 
     // Loading
     const [loadingDepartments, setLoadingDepartments] = useState(false);
@@ -128,7 +127,7 @@ const CalendarView: React.FC = () => {
             handleMyShiftsClick();
         } else if (selectedKey.startsWith("unit-")) {
             const unitId = parseInt(selectedKey.replace("unit-", ""), 10);
-            handleUnitClick(unitId);
+            handleUnitClick(unitId, false);
         }
     }, [selectedLocationId, user, shiftType]);
 
@@ -153,7 +152,7 @@ const CalendarView: React.FC = () => {
             handleMyShiftsClick();
         } else if (selectedKey.startsWith('unit-')) {
             const unitId = parseInt(selectedKey.replace('unit-', ''), 10);
-            handleUnitClick(unitId);
+            handleUnitClick(unitId, true);
         }
     };
 
@@ -187,34 +186,6 @@ const CalendarView: React.FC = () => {
         }));
     };
 
-    const getDateRange = (date: Date, view: "month" | "week" | "day") => {
-        let start: dayjs.Dayjs;
-        let end: dayjs.Dayjs;
-
-        switch (view) {
-            case "week":
-                start = dayjs(date).startOf("week").subtract(7, "day");
-                end = dayjs(date).endOf("week").add(7, "day");
-                break;
-            case "day":
-                start = dayjs(date).startOf("day").subtract(7, "day");
-                end = dayjs(date).endOf("day").add(7, "day");
-                break;
-            case "month":
-            default:
-                start = dayjs(date).startOf("month").subtract(7, "day");
-                end = dayjs(date).endOf("month").add(7, "day");
-                break;
-        }
-
-        return {
-            start_date: start.format("YYYY-MM-DD"),
-            end_date: end.format("YYYY-MM-DD"),
-            startObj: start,
-            endObj: end,
-        };
-    };
-
     const getMonthRange = (date: Date) => {
         const start = dayjs(date).startOf("month").subtract(7, "day");
         const end = dayjs(date).endOf("month").add(7, "day");
@@ -226,34 +197,9 @@ const CalendarView: React.FC = () => {
         };
     };
 
-    const [fetchedRanges, setFetchedRanges] = useState<{ start: dayjs.Dayjs; end: dayjs.Dayjs }[]>([]);
-
-    const isRangeCovered = (start: dayjs.Dayjs, end: dayjs.Dayjs) => {
-        if (fetchedRanges.length === 0) return false;
-
-        // Step 1: Merge overlapping or adjacent ranges
-        const sorted = [...fetchedRanges].sort((a, b) => a.start.diff(b.start));
-        const merged: { start: dayjs.Dayjs; end: dayjs.Dayjs }[] = [];
-
-        for (const range of sorted) {
-            const last = merged[merged.length - 1];
-            // merge if overlapping OR touching (1 day apart)
-            if (!last || range.start.isAfter(last.end.add(1, "day"))) {
-                merged.push({...range});
-            } else if (range.end.isAfter(last.end)) {
-                last.end = range.end;
-            }
-        }
-
-        // Step 2: Check if entire requested range is covered by any merged range
-        return merged.some((r) =>
-            start.isSameOrAfter(r.start, "day") && end.isSameOrBefore(r.end, "day")
-        );
-    };
-
-
     const handleUnitClick = async (
         unitId: number,
+        forceRefresh: boolean,
         dateParam?: Date,
     ): Promise<void> => {
         setLoadingEvents(true);
@@ -264,13 +210,13 @@ const CalendarView: React.FC = () => {
             const hasDifferentUnit = events.length === 0 || events.some((e) => e.unit_id !== unitId);
             const hasDifferentShiftType = events.length === 0 || events.some((e) => e.shift_type !== shiftType);
 
-            if (hasDifferentUnit || hasDifferentShiftType) {
+            if (hasDifferentUnit || hasDifferentShiftType || forceRefresh) {
                 setEvents([]);
                 setFetchedRanges([]);
             }
 
             // Only skip fetch if current range is fully covered AND same unit & shift type
-            if (isRangeCovered(startObj, endObj) && !hasDifferentUnit && !hasDifferentShiftType) {
+            if (!forceRefresh && isRangeCovered(startObj, endObj) && !hasDifferentUnit && !hasDifferentShiftType) {
                 setLoadingEvents(false);
                 return;
             }
@@ -282,6 +228,7 @@ const CalendarView: React.FC = () => {
             setMenuSelectedKeys([`unit-${unitId}`]);
 
             setEvents((prev) => {
+                if (forceRefresh) return formatted;
                 const existingIds = new Set(prev.map((e) => e.id));
                 const newEvents = formatted.filter((e) => !existingIds.has(e.id));
                 return [...prev, ...newEvents];
@@ -308,6 +255,29 @@ const CalendarView: React.FC = () => {
         } finally {
             setLoadingEvents(false);
         }
+    };
+
+    const isRangeCovered = (start: dayjs.Dayjs, end: dayjs.Dayjs) => {
+        if (fetchedRanges.length === 0) return false;
+
+        // Step 1: Merge overlapping or adjacent ranges
+        const sorted = [...fetchedRanges].sort((a, b) => a.start.diff(b.start));
+        const merged: { start: dayjs.Dayjs; end: dayjs.Dayjs }[] = [];
+
+        for (const range of sorted) {
+            const last = merged[merged.length - 1];
+            // merge if overlapping OR touching (1 day apart)
+            if (!last || range.start.isAfter(last.end.add(1, "day"))) {
+                merged.push({...range});
+            } else if (range.end.isAfter(last.end)) {
+                last.end = range.end;
+            }
+        }
+
+        // Step 2: Check if entire requested range is covered by any merged range
+        return merged.some((r) =>
+            start.isSameOrAfter(r.start, "day") && end.isSameOrBefore(r.end, "day")
+        );
     };
 
     const handleMyShiftsClick = async () => {
@@ -397,7 +367,7 @@ const CalendarView: React.FC = () => {
                                         units[department.id].map((unit) => (
                                             <Menu.Item
                                                 key={`unit-${unit.id}`}
-                                                onClick={() => handleUnitClick(unit.id)}
+                                                onClick={() => handleUnitClick(unit.id, false)}
                                             >
                                                 {unit.name}
                                             </Menu.Item>
@@ -468,7 +438,7 @@ const CalendarView: React.FC = () => {
                                 // Always fetch the entire month for the navigated date
                                 if (selectedKey.startsWith("unit-")) {
                                     const unitId = parseInt(selectedKey.replace("unit-", ""), 10);
-                                    handleUnitClick(unitId, newDate);
+                                    handleUnitClick(unitId, false ,newDate);
                                 }
                             }}
                             onSelectEvent={handleEventClick}

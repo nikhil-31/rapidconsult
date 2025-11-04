@@ -9,6 +9,7 @@ import {
     getUnitsByDepartment,
     getUnitById
 } from "../api/services";
+import {Shift} from "../models/Shift";
 
 const {Option} = Select;
 const {RangePicker} = DatePicker;
