@@ -12,4 +12,5 @@ export type EventData = {
     unit_id: number;
     unit_name: string;
     dept_name: string;
+    shift_type: string;
 };

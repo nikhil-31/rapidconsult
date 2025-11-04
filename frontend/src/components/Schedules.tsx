@@ -183,6 +183,7 @@ const CalendarView: React.FC = () => {
             unit_id: shift.unit_details.id,
             unit_name: shift.unit_details.name,
             dept_name: shift.unit_details.department.name,
+            shift_type: shift.shift_type
         }));
     };
 
@@ -260,17 +261,16 @@ const CalendarView: React.FC = () => {
             const {start_date, end_date, startObj, endObj} = getMonthRange(dateParam || date);
 
             // Check if previously fetched events all belong to the same unit
-            const hasDifferentUnit = events.some((e) => e.unit_id !== unitId);
+            const hasDifferentUnit = events.length === 0 || events.some((e) => e.unit_id !== unitId);
+            const hasDifferentShiftType = events.length === 0 || events.some((e) => e.shift_type !== shiftType);
 
-            if (hasDifferentUnit) {
-                // Clear previous unit's cache and events
+            if (hasDifferentUnit || hasDifferentShiftType) {
                 setEvents([]);
                 setFetchedRanges([]);
             }
 
-            // If not month view, and we already have data covering this range, skip fetch
-            // Skip fetch if month already loaded
-            if (isRangeCovered(startObj, endObj) && !hasDifferentUnit) {
+            // Only skip fetch if current range is fully covered AND same unit & shift type
+            if (isRangeCovered(startObj, endObj) && !hasDifferentUnit && !hasDifferentShiftType) {
                 setLoadingEvents(false);
                 return;
             }
