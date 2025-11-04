@@ -180,7 +180,7 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
-        fields = ['id', 'name', 'department', 'display_picture', 'members', 'oncall', 'conversation']
+        fields = ['id', 'name', 'department', 'display_picture', 'members', 'oncall']
 
     def create(self, validated_data):
         members_data = validated_data.pop('unitmembership_set', [])
@@ -257,30 +257,6 @@ class UnitSerializer(serializers.ModelSerializer):
                 "conversation": UserConversationSerializer(user_conversation).data if user_conversation else None,
             })
         return results
-
-    def get_conversation(self, obj):
-        """
-        Return the current user's UserConversation for this unit, if any.
-        """
-        from rapidconsult.chats.mongo.models import UserConversation  # adjust to your actual path
-
-        request = self.context.get("request")
-        if not request or not request.user.is_authenticated:
-            return None
-
-        # Use Django user.id
-        user_id = str(request.user.id)
-
-        user_conversation = UserConversation.objects(
-            userId=user_id,
-            unitId=str(obj.id),
-            conversationType="group"
-        ).first()
-
-        if not user_conversation:
-            return None
-
-        return UserConversationSerializer(user_conversation).data
 
 
 class OnCallShiftSerializer(serializers.ModelSerializer):
