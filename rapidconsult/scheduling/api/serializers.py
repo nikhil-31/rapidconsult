@@ -176,7 +176,6 @@ class UnitSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
     members = UnitMembershipSerializer(source='unitmembership_set', many=True, required=False)
     oncall = serializers.SerializerMethodField()
-    conversation = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -227,24 +226,27 @@ class UnitSerializer(serializers.ModelSerializer):
 
             print(f'Organization {organization_id} on shift {location_id}')
 
-            user_conversation = UserConversation.objects(
-                userId=request_user_id,
-                conversationType="direct",
-                directMessage__otherParticipantId=on_call_user_id,
-            ).first()
+            is_same_id = request_user_id == on_call_user_id
+            user_conversation = None
+            if not is_same_id:
+                user_conversation = UserConversation.objects(
+                    userId=request_user_id,
+                    conversationType="direct",
+                    directMessage__otherParticipantId=on_call_user_id,
+                ).first()
 
-            if not user_conversation:
-                conv = create_direct_message(request_user_id, on_call_user_id, organization_id=organization_id,
-                                             location_id=location_id)
+                if not user_conversation:
+                    conv = create_direct_message(request_user_id, on_call_user_id, organization_id=organization_id,
+                                                 location_id=location_id)
 
-                if conv:
-                    user_conversation = UserConversation.objects(
-                        userId=request_user_id,
-                        conversationType="direct",
-                        directMessage__otherParticipantId=on_call_user_id,
-                    ).first()
+                    if conv:
+                        user_conversation = UserConversation.objects(
+                            userId=request_user_id,
+                            conversationType="direct",
+                            directMessage__otherParticipantId=on_call_user_id,
+                        ).first()
 
-                print(f'conversation {user_conversation.userId}')
+                    print(f'conversation {user_conversation.userId}')
 
             results.append({
                 "id": shift.id,
