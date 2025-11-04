@@ -2,12 +2,14 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.dateparse import parse_datetime
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from datetime import datetime, timedelta
 
 from rapidconsult.chats.api.permissions import HasOrgLocationAccess
 from rapidconsult.chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
@@ -344,6 +346,8 @@ class OnCallShiftViewSet(viewsets.ModelViewSet):
         location_id = self.request.query_params.get('location')
         user_id = self.request.query_params.get('user')
         shift_type = self.request.query_params.get('shift_type')
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
 
         if unit_id:
             queryset = queryset.filter(unit_id=unit_id)
@@ -362,6 +366,27 @@ class OnCallShiftViewSet(viewsets.ModelViewSet):
 
         if shift_type in ['oncall', 'outpatient']:
             queryset = queryset.filter(shift_type=shift_type)
+
+        # -------------------------
+        # DATE RANGE FILTER
+        # -------------------------
+        if start_date and end_date:
+            try:
+                start_dt = parse_datetime(start_date) or datetime.fromisoformat(start_date)
+                end_dt = parse_datetime(end_date) or datetime.fromisoformat(end_date)
+
+                # Ensure end_dt covers the full end date (e.g., 2025-11-10 → include entire day)
+                if end_dt.time() == datetime.min.time():
+                    from datetime import timedelta
+                    end_dt = end_dt + timedelta(days=1)
+
+                # Include shifts that start OR end within the range, or overlap it
+                queryset = queryset.filter(
+                    start_time__lt=end_dt,
+                    end_time__gte=start_dt
+                )
+            except Exception:
+                pass
 
         return queryset
 

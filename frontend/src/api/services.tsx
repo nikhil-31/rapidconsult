@@ -389,10 +389,14 @@ export const loginRequest = async (username: string, password: string): Promise<
 export const getShiftsByUnit = async (
     unitId: number,
     shiftType: string | undefined,
+    start_date: string,
+    end_date: string
 ): Promise<Shift[]> => {
     const params = {
         unit: unitId,
-        shift_type: shiftType
+        shift_type: shiftType,
+        start_date: start_date,
+        end_date: end_date
     };
     return await fetchAllPages<Shift>(endpoints.shifts, params);
 };

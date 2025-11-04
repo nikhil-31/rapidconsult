@@ -53,6 +53,8 @@ const CalendarView: React.FC = () => {
     const [selectedKey, setSelectedKey] = useState('my-shifts');
     const [menuSelectedKeys, setMenuSelectedKeys] = useState<string[]>([]);
 
+    const [fetchedRange, setFetchedRange] = useState<{ start: dayjs.Dayjs; end: dayjs.Dayjs } | null>(null);
+
     // Loading
     const [loadingDepartments, setLoadingDepartments] = useState(false);
     const [loadingUnits, setLoadingUnits] = useState<Record<number, boolean>>({});
@@ -177,22 +179,70 @@ const CalendarView: React.FC = () => {
         }));
     };
 
-    const handleUnitClick = async (unitId: number): Promise<void> => {
+    const getDateRange = (date: Date, view: "month" | "week" | "day") => {
+        let start: dayjs.Dayjs;
+        let end: dayjs.Dayjs;
+
+        switch (view) {
+            case "week":
+                start = dayjs(date).startOf("week").subtract(7, "day");
+                end = dayjs(date).endOf("week").add(7, "day");
+                break;
+            case "day":
+                start = dayjs(date).startOf("day").subtract(7, "day");
+                end = dayjs(date).endOf("day").add(7, "day");
+                break;
+            case "month":
+            default:
+                start = dayjs(date).startOf("month").subtract(7, "day");
+                end = dayjs(date).endOf("month").add(7, "day");
+                break;
+        }
+
+        return {
+            start_date: start.format("YYYY-MM-DD"),
+            end_date: end.format("YYYY-MM-DD"),
+            startObj: start,
+            endObj: end,
+        };
+    };
+
+    const handleUnitClick = async (
+        unitId: number,
+        dateParam?: Date,
+        view: "month" | "week" | "day" = "month",
+        forceFetch = false
+    ): Promise<void> => {
         setLoadingEvents(true);
         try {
-            const data = await getShiftsByUnit(unitId, shiftType)
+            const {start_date, end_date, startObj, endObj} = getDateRange(dateParam || date, view);
+
+            // If not month view, and we already have data covering this range, skip fetch
+            if (
+                !forceFetch &&
+                view !== "month" &&
+                fetchedRange &&
+                startObj.isAfter(fetchedRange.start) &&
+                endObj.isBefore(fetchedRange.end)
+            ) {
+                setLoadingEvents(false);
+                return; // existing data already covers this range
+            }
+
+            // Otherwise fetch fresh data
+            const data = await getShiftsByUnit(unitId, shiftType, start_date, end_date);
             const formatted = formatShiftsToEvents(data);
 
             setSelectedKey(`unit-${unitId}`);
             setMenuSelectedKeys([`unit-${unitId}`]);
             setEvents(formatted);
+            setFetchedRange({start: startObj, end: endObj});
         } catch (err) {
             console.error("Failed to fetch shifts for unit:", err);
         } finally {
             setLoadingEvents(false);
         }
     };
-
     const handleMyShiftsClick = async () => {
         setLoadingEvents(true);
         try {
@@ -345,7 +395,17 @@ const CalendarView: React.FC = () => {
                             view={view}
                             onView={setView}
                             date={date}
-                            onNavigate={setDate}
+                            onNavigate={(newDate, view) => {
+                                setDate(newDate);
+
+                                if (selectedKey.startsWith("unit-")) {
+                                    const unitId = parseInt(selectedKey.replace("unit-", ""), 10);
+
+                                    // For month navigation → always fetch
+                                    // For week/day → reuse data unless outside last fetched range
+                                    handleUnitClick(unitId, newDate, view as "month" | "week" | "day");
+                                }
+                            }}
                             onSelectEvent={handleEventClick}
                             selectable
                             style={{
