@@ -1,5 +1,8 @@
 import {Layout, Menu, Button, Typography, Space, Skeleton, Select} from 'antd';
 import dayjs from 'dayjs';
+import isBetween from "dayjs/plugin/isBetween";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {Calendar, dateFnsLocalizer, View, Views,} from 'react-big-calendar';
 import {Locale} from 'date-fns';
@@ -32,6 +35,10 @@ const {Title} = Typography;
 const {Option} = Select;
 
 const localizer = dateFnsLocalizer({format, parse, startOfWeek, getDay, locales,});
+
+dayjs.extend(isBetween);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 const CalendarView: React.FC = () => {
     const {user} = useContext(AuthContext);
@@ -207,42 +214,102 @@ const CalendarView: React.FC = () => {
         };
     };
 
+    const getMonthRange = (date: Date) => {
+        const start = dayjs(date).startOf("month").subtract(7, "day");
+        const end = dayjs(date).endOf("month").add(7, "day");
+        return {
+            start_date: start.format("YYYY-MM-DD"),
+            end_date: end.format("YYYY-MM-DD"),
+            startObj: start,
+            endObj: end,
+        };
+    };
+
+    const [fetchedRanges, setFetchedRanges] = useState<{ start: dayjs.Dayjs; end: dayjs.Dayjs }[]>([]);
+
+    const isRangeCovered = (start: dayjs.Dayjs, end: dayjs.Dayjs) => {
+        if (fetchedRanges.length === 0) return false;
+
+        // Step 1: Merge overlapping or adjacent ranges
+        const sorted = [...fetchedRanges].sort((a, b) => a.start.diff(b.start));
+        const merged: { start: dayjs.Dayjs; end: dayjs.Dayjs }[] = [];
+
+        for (const range of sorted) {
+            const last = merged[merged.length - 1];
+            // merge if overlapping OR touching (1 day apart)
+            if (!last || range.start.isAfter(last.end.add(1, "day"))) {
+                merged.push({...range});
+            } else if (range.end.isAfter(last.end)) {
+                last.end = range.end;
+            }
+        }
+
+        // Step 2: Check if entire requested range is covered by any merged range
+        return merged.some((r) =>
+            start.isSameOrAfter(r.start, "day") && end.isSameOrBefore(r.end, "day")
+        );
+    };
+
+
     const handleUnitClick = async (
         unitId: number,
         dateParam?: Date,
-        view: "month" | "week" | "day" = "month",
-        forceFetch = false
     ): Promise<void> => {
         setLoadingEvents(true);
         try {
-            const {start_date, end_date, startObj, endObj} = getDateRange(dateParam || date, view);
+            const {start_date, end_date, startObj, endObj} = getMonthRange(dateParam || date);
 
-            // If not month view, and we already have data covering this range, skip fetch
-            if (
-                !forceFetch &&
-                view !== "month" &&
-                fetchedRange &&
-                startObj.isAfter(fetchedRange.start) &&
-                endObj.isBefore(fetchedRange.end)
-            ) {
-                setLoadingEvents(false);
-                return; // existing data already covers this range
+            // Check if previously fetched events all belong to the same unit
+            const hasDifferentUnit = events.some((e) => e.unit_id !== unitId);
+
+            if (hasDifferentUnit) {
+                // Clear previous unit's cache and events
+                setEvents([]);
+                setFetchedRanges([]);
             }
 
-            // Otherwise fetch fresh data
+            // If not month view, and we already have data covering this range, skip fetch
+            // Skip fetch if month already loaded
+            if (isRangeCovered(startObj, endObj) && !hasDifferentUnit) {
+                setLoadingEvents(false);
+                return;
+            }
+
             const data = await getShiftsByUnit(unitId, shiftType, start_date, end_date);
             const formatted = formatShiftsToEvents(data);
 
             setSelectedKey(`unit-${unitId}`);
             setMenuSelectedKeys([`unit-${unitId}`]);
-            setEvents(formatted);
-            setFetchedRange({start: startObj, end: endObj});
+
+            setEvents((prev) => {
+                const existingIds = new Set(prev.map((e) => e.id));
+                const newEvents = formatted.filter((e) => !existingIds.has(e.id));
+                return [...prev, ...newEvents];
+            });
+
+            // Merge overlapping ranges
+            setFetchedRanges((prev) => {
+                const merged = [...prev, {start: startObj, end: endObj}];
+                merged.sort((a, b) => a.start.diff(b.start));
+
+                const result: { start: dayjs.Dayjs; end: dayjs.Dayjs }[] = [];
+                for (const range of merged) {
+                    const last = result[result.length - 1];
+                    if (!last || range.start.isAfter(last.end)) {
+                        result.push(range);
+                    } else if (range.end.isAfter(last.end)) {
+                        last.end = range.end;
+                    }
+                }
+                return result;
+            });
         } catch (err) {
             console.error("Failed to fetch shifts for unit:", err);
         } finally {
             setLoadingEvents(false);
         }
     };
+
     const handleMyShiftsClick = async () => {
         setLoadingEvents(true);
         try {
@@ -398,12 +465,10 @@ const CalendarView: React.FC = () => {
                             onNavigate={(newDate, view) => {
                                 setDate(newDate);
 
+                                // Always fetch the entire month for the navigated date
                                 if (selectedKey.startsWith("unit-")) {
                                     const unitId = parseInt(selectedKey.replace("unit-", ""), 10);
-
-                                    // For month navigation → always fetch
-                                    // For week/day → reuse data unless outside last fetched range
-                                    handleUnitClick(unitId, newDate, view as "month" | "week" | "day");
+                                    handleUnitClick(unitId, newDate);
                                 }
                             }}
                             onSelectEvent={handleEventClick}
