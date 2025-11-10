@@ -268,8 +268,11 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
         [ReadyState.UNINSTANTIATED]: "Uninstantiated",
     }[readyState];
 
-    const handleEmojiClick = (emojiObject: any) => {
-        setInput((prev) => prev + emojiObject.emoji);
+    const handleEmojiClick = (emojiData: any) => {
+        setInput((prev) => prev + emojiData.emoji);
+        setShowEmoji(false);
+        const textarea = document.querySelector("textarea");
+        if (textarea) textarea.focus();
     };
 
     const title =
@@ -620,12 +623,17 @@ const ChatView: React.FC<ChatViewProps> = ({conversation, onNewMessage}) => {
 
             {/* Emoji Picker */}
             {showEmoji && (
-                <div className="absolute bottom-16 left-4 z-10 bg-white border rounded shadow">
+                <div className="absolute bottom-16 left-4 z-50 bg-white border rounded-xl shadow-lg">
                     <Picker
-                        onEmojiClick={(_, emojiObject) => handleEmojiClick(emojiObject)}
+                        onEmojiClick={handleEmojiClick}
+                        width={300}
+                        height={400}
+                        previewConfig={{showPreview: false}}
+                        searchPlaceHolder="Search emojis..."
                     />
                 </div>
             )}
+
         </div>
     );
 };
