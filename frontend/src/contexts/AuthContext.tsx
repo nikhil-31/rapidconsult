@@ -31,7 +31,7 @@ export const AuthContextProvider: React.FC<{ children: ReactNode }> = ({children
     function logout() {
         AuthService.logout();
         setUser(null);
-        navigate("/login");
+        window.location.replace("/login");
     }
 
     return (
