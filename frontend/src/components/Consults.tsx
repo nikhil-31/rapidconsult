@@ -42,12 +42,10 @@ const Consults: React.FC = () => {
             let data: Consultation[] = [];
 
             if (menuKey === "myconsults") {
-                // Fetch both pending and in_progress
                 const pending = await getConsultationsByStatus("pending");
                 const inProgress = await getConsultationsByStatus("in_progress");
                 data = [...pending, ...inProgress];
             } else {
-                // Only closed
                 const completed = await getConsultationsByStatus("completed");
                 const closed = await getConsultationsByStatus("closed");
                 data = [...completed, ...closed];
@@ -75,7 +73,8 @@ const Consults: React.FC = () => {
         loadConsultations(selectedMenuKey);
     };
 
-    const columns = [
+    // Base columns (always visible)
+    const baseColumns = [
         {
             title: "Patient",
             dataIndex: "patient_name",
@@ -156,40 +155,48 @@ const Consults: React.FC = () => {
                     })
                     : "—",
         },
-        {
-            title: "Actions",
-            key: "actions",
-            align: "right" as const,
-            render: (_: any, record: Consultation) => (
-                <Space>
-                    <Tooltip title="Edit">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined/>}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(record);
-                            }}
-                        />
-                    </Tooltip>
-
-                    {record.status !== "closed" && (
-                        <Tooltip title="Close Consultation">
-                            <Button
-                                type="text"
-                                danger
-                                icon={<StopOutlined/>}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleClose(record);
-                                }}
-                            />
-                        </Tooltip>
-                    )}
-                </Space>
-            ),
-        },
     ];
+
+    // Add Actions column only for My Consults
+    const columns =
+        selectedMenuKey === "closed"
+            ? baseColumns
+            : [
+                ...baseColumns,
+                {
+                    title: "Actions",
+                    key: "actions",
+                    align: "right" as const,
+                    render: (_: any, record: Consultation) => (
+                        <Space>
+                            <Tooltip title="Edit">
+                                <Button
+                                    type="text"
+                                    icon={<EditOutlined/>}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEdit(record);
+                                    }}
+                                />
+                            </Tooltip>
+
+                            {record.status !== "closed" && (
+                                <Tooltip title="Close Consultation">
+                                    <Button
+                                        type="text"
+                                        danger
+                                        icon={<StopOutlined/>}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleClose(record);
+                                        }}
+                                    />
+                                </Tooltip>
+                            )}
+                        </Space>
+                    ),
+                },
+            ];
 
     const menuItems = [
         {key: "myconsults", label: "My Consults", icon: <UserOutlined/>},
@@ -245,17 +252,19 @@ const Consults: React.FC = () => {
                             {menuItems.find((i) => i.key === selectedMenuKey)?.label}
                         </Title>
 
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined/>}
-                            style={{
-                                backgroundColor: "#ff4d4f",
-                                borderColor: "#ff4d4f",
-                            }}
-                            onClick={() => setModalVisible(true)}
-                        >
-                            New Consultation
-                        </Button>
+                        {selectedMenuKey === "myconsults" && (
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined/>}
+                                style={{
+                                    backgroundColor: "#ff4d4f",
+                                    borderColor: "#ff4d4f",
+                                }}
+                                onClick={() => setModalVisible(true)}
+                            >
+                                New Consultation
+                            </Button>
+                        )}
                     </div>
 
                     {loading ? (
