@@ -414,16 +414,23 @@ class ConsultationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        org_profiles = getattr(user, "organizations", None)
-        organization_ids = [p.organization_id for p in org_profiles.all()] if org_profiles else []
         queryset = super().get_queryset()
 
-        if organization_ids:
-            queryset = queryset.filter(organization_id__in=organization_ids)
+        # Get all UserOrgProfiles linked to this user
+        user_org_profiles = user.org_profiles.all()
+        # Filter consultations referred by this user's org profile(s)
+        queryset = queryset.filter(referred_by_doctor__in=user_org_profiles)
 
+        # --- Optional filters from query params ---
+        organization_id = self.request.query_params.get("organization_id")
+        location_id = self.request.query_params.get("location_id")
         status_param = self.request.query_params.get("status")
         urgency_param = self.request.query_params.get("urgency")
 
+        if organization_id:
+            queryset = queryset.filter(organization_id=organization_id)
+        if location_id:
+            queryset = queryset.filter(location_id=location_id)
         if status_param:
             queryset = queryset.filter(status=status_param)
         if urgency_param:

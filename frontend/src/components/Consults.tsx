@@ -14,6 +14,7 @@ import {
 import {getConsultationsByStatus} from "../api/services";
 import {Consultation} from "../models/Consultation";
 import ConsultationDetailModal from "./ConsultationDetailModal";
+import {useOrgLocation} from "../contexts/LocationContext";
 
 const {Content} = Layout;
 
@@ -26,6 +27,7 @@ const Consults: React.FC = () => {
     const [consultations, setConsultations] = useState<Consultation[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+    const {selectedLocation} = useOrgLocation();
 
     const handleRowClick = (record: Consultation) => {
         setSelectedConsultation(record);
@@ -40,14 +42,21 @@ const Consults: React.FC = () => {
         try {
             setLoading(true);
             let data: Consultation[] = [];
+            const locationId = selectedLocation?.location?.id
+                ? String(selectedLocation.location.id)
+                : "";
+
+            const organizationId = selectedLocation?.organization?.id
+                ? String(selectedLocation.organization.id)
+                : "";
 
             if (menuKey === "myconsults") {
-                const pending = await getConsultationsByStatus("pending");
-                const inProgress = await getConsultationsByStatus("in_progress");
+                const pending = await getConsultationsByStatus("pending", organizationId, locationId);
+                const inProgress = await getConsultationsByStatus("in_progress", organizationId, locationId);
                 data = [...pending, ...inProgress];
             } else {
-                const completed = await getConsultationsByStatus("completed");
-                const closed = await getConsultationsByStatus("closed");
+                const completed = await getConsultationsByStatus("completed", organizationId, locationId);
+                const closed = await getConsultationsByStatus("closed", organizationId, locationId);
                 data = [...completed, ...closed];
             }
 
