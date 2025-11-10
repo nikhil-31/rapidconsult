@@ -3,7 +3,6 @@ import {List, Button, Tooltip} from "antd";
 import {RollbackOutlined} from "@ant-design/icons";
 import {Message} from "../models/Message";
 
-
 interface ChatBubbleProps {
     msg: Message;
     userId: string | undefined;
@@ -12,6 +11,24 @@ interface ChatBubbleProps {
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({msg, userId, setReplyTo}) => {
     const mine = Number(msg.senderId) === Number(userId);
+
+    // Helper to format consult message content
+    const renderConsultContent = (content: string) => {
+        const lines = content.split("\n").filter(line => line.trim() !== "");
+        return (
+            <div className="space-y-1">
+                {lines.map((line, index) => {
+                    const [label, value] = line.split(":").map(s => s.trim());
+                    return (
+                        <div key={index}>
+                            <span className="text-white/80">{label}:</span>{" "}
+                            <span className="font-semibold text-white">{value}</span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
 
     return (
         <List.Item
@@ -45,18 +62,25 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({msg, userId, setReplyTo})
                         </div>
                     )}
 
-                    {/* The bubble */}
+                    {/* Message bubble */}
                     <div
                         className={`p-2 rounded-2xl shadow max-w-xs break-words ${
-                            mine
-                                ? "bg-white text-gray-900 rounded-br-sm text-right"
-                                : "bg-white text-gray-900 rounded-bl-sm text-left"
+                            msg.type === "consult"
+                                ? "bg-red-500 text-white"
+                                : mine
+                                    ? "bg-white text-gray-900 rounded-br-sm text-right"
+                                    : "bg-white text-gray-900 rounded-bl-sm text-left"
                         }`}
                     >
-                        <div className="font-semibold text-[11px] opacity-80 mb-1">
+                        <div
+                            className={`font-semibold text-[11px] mb-1 ${
+                                msg.type === "consult" ? "opacity-90" : "opacity-80"
+                            }`}
+                        >
                             {msg.senderName}
                         </div>
 
+                        {/* Media / attachments */}
                         {msg.media?.url ? (
                             msg.media.mimeType?.startsWith("image/") ? (
                                 <a href={msg.media.url} target="_blank" rel="noopener noreferrer">
@@ -71,7 +95,11 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({msg, userId, setReplyTo})
                                     href={msg.media.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-500 underline mt-2 block"
+                                    className={`mt-2 block underline ${
+                                        msg.type === "consult"
+                                            ? "text-blue-200"
+                                            : "text-blue-500"
+                                    }`}
                                 >
                                     {msg.media.filename || "Download file"}
                                 </a>
@@ -86,12 +114,22 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({msg, userId, setReplyTo})
                             </a>
                         ) : null}
 
+                        {/* Message content */}
                         {msg.content && (
-                            <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                            <div className="whitespace-pre-wrap break-words">
+                                {msg.type === "consult"
+                                    ? renderConsultContent(msg.content)
+                                    : msg.content}
+                            </div>
                         )}
 
+                        {/* Timestamp */}
                         {msg.timestamp && (
-                            <div className="text-[10px] text-gray-400 mt-1 text-right">
+                            <div
+                                className={`text-[10px] mt-1 text-right ${
+                                    msg.type === "consult" ? "text-white/70" : "text-gray-400"
+                                }`}
+                            >
                                 {new Date(msg.timestamp).toLocaleString([], {
                                     month: "short",
                                     day: "numeric",
@@ -102,6 +140,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({msg, userId, setReplyTo})
                         )}
                     </div>
 
+                    {/* Reply button */}
                     <div className={`mt-1 ${mine ? "self-end" : "self-start"}`}>
                         <Tooltip title="Reply">
                             <Button
