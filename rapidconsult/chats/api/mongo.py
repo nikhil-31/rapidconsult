@@ -11,10 +11,11 @@ from rapidconsult.chats.mongo.models import (
     Conversation, Participant, GroupSettings, DirectMessageInfo, GroupChatInfo, User
 )
 from rapidconsult.chats.mongo.models import UserConversation, Message as MongoMessage
+from rapidconsult.scheduling.models import UserOrgProfile
+from rapidconsult.scheduling.models import Consultation
 
 
 def create_direct_message_conv(user1_id, user2_id, organization_id, location_id, system_message=True):
-
     existing_users = User.objects(sql_user_id__in=[str(user1_id), str(user2_id)]).only("sql_user_id")
     if existing_users.count() != 2:
         raise ValidationError({"detail": "One or more users do not exist."})
@@ -122,7 +123,7 @@ def create_group_chat(created_by_id, name, description, member_ids, location_id,
     return conv
 
 
-def add_user_to_group_chat(unit_id: str, user_id: str, is_admin: bool=False):
+def add_user_to_group_chat(unit_id: str, user_id: str, is_admin: bool = False):
     """Add a participant to the unit's group chat conversation."""
     conversation = Conversation.objects(unitId=str(unit_id), type="group").first()
     if not conversation:
@@ -197,9 +198,65 @@ def remove_user_from_group_chat(unit_id: str, user_id: str):
     return conversation
 
 
+def handle_consult_update_system_message(consult: Consultation):
+    user_1_name = consult.referred_by_doctor.user.name
+
+    user_1_id = consult.referred_by_doctor.user.id
+    user_2_id = consult.referred_to_doctor.user.id
+
+    organization_id = consult.organization.id
+    location_id = consult.location.id
+
+    patient_name = consult.patient_name
+    patient_age = consult.patient_age
+    patient_sex = consult.patient_sex
+    ward = consult.ward
+    urgency = consult.urgency
+    diagnosis = consult.diagnosis
+    reason_for_referral = consult.reason_for_referral
+    status = consult.status
+
+    consultant_remarks = consult.consultant_remarks
+    consultant_review = consult.consultant_review
+
+    if status in ["pending", "in_progress"]:
+
+        message = (
+            f"Patient Name: {patient_name}\n"
+            f"Age: {patient_age}\n"
+            f"Sex: {patient_sex}\n"
+            f"Ward: {ward}\n"
+            f"Urgency: {urgency}\n"
+            f"Diagnosis: {diagnosis}\n"
+            f"Reason for Referral: {reason_for_referral}\n"
+            f"Status: {status}\n"
+        )
+    elif status in ["completed", "closed"]:
+        message = (
+            f"Patient Name: {patient_name}\n"
+            f"Age: {patient_age}\n"
+            f"Sex: {patient_sex}\n"
+            f"Ward: {ward}\n"
+            f"Urgency: {urgency}\n"
+            f"Diagnosis: {diagnosis}\n"
+            f"Reason for Referral: {reason_for_referral}\n"
+            f"Status: {status}\n"
+            f"Consultant Remarks: {consultant_remarks}\n"
+            f"Consultant Review: {consultant_review}\n"
+        )
+
+    msg = create_system_message(
+        str(user_1_id),
+        str(user_2_id),
+        str(organization_id),
+        str(location_id),
+        str(user_1_name),
+        message,
+    )
+
+
 def create_system_message(user1_id: str, user2_id: str, organization_id: str, location_id: str,
                           user1_name: str, content: str):
-
     ## Step 1 - Create DM conversations
     conv = create_direct_message_conv(user1_id, user2_id, organization_id=organization_id, location_id=location_id)
     conversation_id = conv.id
