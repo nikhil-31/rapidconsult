@@ -42,6 +42,7 @@ class AuthService {
         localStorage.removeItem("user");
         localStorage.removeItem("org_select");
         localStorage.removeItem("selected_location")
+        sessionStorage.clear();
     }
 
     getCurrentUser() {
