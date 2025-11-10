@@ -1,14 +1,10 @@
 import React, {useState, useEffect, useCallback} from "react";
-import {
-    Modal, Input, List, Avatar, Spin, Empty, Button, Checkbox, Form, message, Space
-} from "antd";
-import {
-    UserOutlined, SearchOutlined, TeamOutlined, ArrowLeftOutlined
-} from "@ant-design/icons";
 import debounce from "lodash/debounce";
+import {Modal, Input, List, Avatar, Spin, Empty, Button, Checkbox, Form, Space} from "antd";
+import {UserOutlined, SearchOutlined, TeamOutlined, ArrowLeftOutlined} from "@ant-design/icons";
 import {searchUsers, getUsersLocation, createGroupConversation} from "../api/services";
-import {UserModel} from "../models/UserModel";
 import {useOrgLocation} from "../contexts/LocationContext";
+import {UserModel} from "../models/UserModel";
 import {Conversation} from "../models/ActiveConversation";
 
 interface StartConversationModalProps {
@@ -38,8 +34,8 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
     const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
     const [form] = Form.useForm();
 
-    const [selectedLocationId, setSelectedLocationId] = useState<number>(0);
     const [selectedOrganizationId, setSelectedOrganizationId] = useState<number>(0);
+    const [selectedLocationId, setSelectedLocationId] = useState<number>(0);
 
     useEffect(() => {
         if (selectedLocation !== null) {
@@ -122,7 +118,6 @@ const StartConversationModal: React.FC<StartConversationModalProps> = ({
             onClose();
         } catch (err) {
             console.error(err);
-            message.error("Failed to create group chat");
         }
     };
 

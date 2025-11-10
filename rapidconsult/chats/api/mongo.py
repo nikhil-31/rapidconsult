@@ -1,15 +1,21 @@
 import datetime
 
+from asgiref.sync import async_to_sync
 from bson import ObjectId
+from channels.layers import get_channel_layer
 from rest_framework.exceptions import ValidationError
+
+from chats.api.serializers import MongoMessageSerializer
+from chats.utils import update_user_conversation
 from rapidconsult.chats.mongo.models import (
-    Conversation, Participant, GroupSettings, UserConversation,
-    DirectMessageInfo, GroupChatInfo, User
+    Conversation, Participant, GroupSettings, DirectMessageInfo, GroupChatInfo, User
 )
+from rapidconsult.chats.mongo.models import UserConversation, Message as MongoMessage
 
 
-def create_direct_message(user1_id, user2_id, organization_id, location_id):
-    existing_users = User.objects(sql_user_id__in=[user1_id, user2_id]).only("sql_user_id")
+def create_direct_message_conv(user1_id, user2_id, organization_id, location_id, system_message=True):
+
+    existing_users = User.objects(sql_user_id__in=[str(user1_id), str(user2_id)]).only("sql_user_id")
     if existing_users.count() != 2:
         raise ValidationError({"detail": "One or more users do not exist."})
 
@@ -40,7 +46,7 @@ def create_direct_message(user1_id, user2_id, organization_id, location_id):
         if not other_user:
             raise ValidationError({"detail": "One or more users do not exist."})
 
-        UserConversation(
+        user_conv = UserConversation(
             _id=str(ObjectId()),
             userId=uid,
             conversationId=str(conv.id),
@@ -55,6 +61,8 @@ def create_direct_message(user1_id, user2_id, organization_id, location_id):
             locationId=location_id,
             organizationId=organization_id,
         ).save()
+
+        print(user_conv)
 
     return conv
 
@@ -187,3 +195,39 @@ def remove_user_from_group_chat(unit_id: str, user_id: str):
     UserConversation.objects(userId=user_id, conversationId=str(conversation.id)).delete()
 
     return conversation
+
+
+def create_system_message(user1_id: str, user2_id: str, organization_id: str, location_id: str,
+                          user1_name: str, content: str):
+
+    ## Step 1 - Create DM conversations
+    conv = create_direct_message_conv(user1_id, user2_id, organization_id=organization_id, location_id=location_id)
+    conversation_id = conv.id
+
+    ## Step 2 - Send a system message
+    msg = MongoMessage.objects.create(
+        conversationId=str(conversation_id),
+        senderId=str(user1_id),
+        senderName=str(user1_name),
+        content=content,
+        type="consult",
+        timestamp=datetime.datetime.utcnow(),
+        locationId=str(location_id),
+        organizationId=str(organization_id),
+    )
+
+    # Update user conversation
+    update_user_conversation(msg)
+
+    # Broadcast over WebSocket
+    channel_layer = get_channel_layer()
+    # Broadcast to group
+    async_to_sync(channel_layer.group_send)(
+        str(conversation_id),
+        {
+            "type": "chat_message_echo",
+            "message": MongoMessageSerializer(msg).data,
+        }
+    )
+
+    return msg

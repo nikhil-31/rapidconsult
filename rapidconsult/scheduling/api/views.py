@@ -1,18 +1,21 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.dateparse import parse_datetime
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from datetime import datetime, timedelta
 
-from rapidconsult.chats.api.permissions import HasOrgLocationAccess
+from chats.api.mongo import create_system_message
+from chats.api.serializers import MongoMessageSerializer
 from rapidconsult.chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
+from rapidconsult.chats.api.permissions import HasOrgLocationAccess
 from rapidconsult.scheduling.api.permissions import check_org_admin_or_raise
 from rapidconsult.scheduling.models import Location, Department, Organization, Role, UnitMembership, Unit, OnCallShift, \
     UserOrgProfile, Consultation
@@ -445,6 +448,50 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        # Send direct system message to the referred_to_user indicating that a consult request has been made
+        user_1_name = request.user.name
+        referred_by_doctor_id = request.data.get("referred_by_doctor_id")
+        referred_to_doctor_id = request.data.get("referred_to_doctor_id")
+
+        referred_by_doctor = UserOrgProfile.objects.get(pk=referred_by_doctor_id)
+        referred_to_doctor = UserOrgProfile.objects.get(pk=referred_to_doctor_id)
+
+        user_1_id = referred_by_doctor.user.id
+        user_2_id = referred_to_doctor.user.id
+
+        organization_id = request.data.get("organization_id")
+        location_id = request.data.get("location_id")
+
+        patient_name = request.data.get("patient_name")
+        patient_age = request.data.get("patient_age")
+        patient_sex = request.data.get("patient_sex")
+        ward = request.data.get("ward")
+        urgency = request.data.get("urgency")
+        diagnosis = request.data.get("diagnosis")
+        reason_for_referral = request.data.get("reason_for_referral")
+        consult_status = request.data.get("status")
+
+        message = (
+            f"Patient Name: {patient_name}\n"
+            f"Age: {patient_age}\n"
+            f"Sex: {patient_sex}\n"
+            f"Ward: {ward}\n"
+            f"Urgency: {urgency}\n"
+            f"Diagnosis: {diagnosis}\n"
+            f"Reason for Referral: {reason_for_referral}\n"
+            f"Status: {consult_status}\n"
+        )
+
+        msg = create_system_message(
+            str(user_1_id),
+            str(user_2_id),
+            str(organization_id),
+            str(location_id),
+            str(user_1_name),
+            message,
+        )
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from chats.api.mongo import create_direct_message
+from chats.api.mongo import create_direct_message_conv
 from chats.mongo.models import UserConversation
 from config.roles import get_permissions_for_role
 from rapidconsult.scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, \
@@ -224,8 +224,6 @@ class UnitSerializer(serializers.ModelSerializer):
             organization_id = str(user_profile.organization.id)
             location_id = str(shift.unit.department.location.id)
 
-            print(f'Organization {organization_id} on shift {location_id}')
-
             is_same_id = request_user_id == on_call_user_id
             user_conversation = None
             if not is_same_id:
@@ -236,8 +234,8 @@ class UnitSerializer(serializers.ModelSerializer):
                 ).first()
 
                 if not user_conversation:
-                    conv = create_direct_message(request_user_id, on_call_user_id, organization_id=organization_id,
-                                                 location_id=location_id)
+                    conv = create_direct_message_conv(request_user_id, on_call_user_id, organization_id=organization_id,
+                                                      location_id=location_id)
 
                     if conv:
                         user_conversation = UserConversation.objects(

@@ -242,7 +242,7 @@ const Consults: React.FC = () => {
                         }}
                     >
                         <Title level={3} style={{margin: 0}}>
-                            {menuItems.find((i) => i.key === selectedMenuKey)?.label} Consultations
+                            {menuItems.find((i) => i.key === selectedMenuKey)?.label}
                         </Title>
 
                         <Button
