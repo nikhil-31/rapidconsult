@@ -448,8 +448,6 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         consult = self.perform_create(serializer)
 
-        print(f"Consultation created: {consult}")
-
         # Send system message to referred_to_user
         handle_consult_update_system_message(consult)
 
@@ -461,8 +459,6 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         consult = self.perform_update(serializer)
-
-        print(f"Consultation updated: {consult}")
 
         # Send system message to referred_by_user
         handle_consult_update_system_message(consult)
