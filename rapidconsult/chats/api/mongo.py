@@ -5,8 +5,8 @@ from bson import ObjectId
 from channels.layers import get_channel_layer
 from rest_framework.exceptions import ValidationError
 
-from chats.api.serializers import MongoMessageSerializer
-from chats.utils import update_user_conversation
+from rapidconsult.chats.api.serializers import MongoMessageSerializer
+from rapidconsult.chats.utils import update_user_conversation
 from rapidconsult.chats.mongo.models import (
     Conversation, Participant, GroupSettings, DirectMessageInfo, GroupChatInfo, User
 )
