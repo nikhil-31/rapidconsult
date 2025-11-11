@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from chats.api.mongo import create_direct_message_conv
-from chats.mongo.models import UserConversation
+from rapidconsult.chats.api.mongo import create_direct_message_conv
+from rapidconsult.chats.mongo.models import UserConversation
 from config.roles import get_permissions_for_role
 from rapidconsult.scheduling.models import Address, Organization, Location, Department, Unit, UserOrgProfile, \
     UnitMembership, Role, OnCallShift, Consultation
