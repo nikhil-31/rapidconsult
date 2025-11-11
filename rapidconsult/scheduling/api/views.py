@@ -12,7 +12,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from chats.api.mongo import handle_consult_update_system_message
+from rapidconsult.chats.api.mongo import handle_consult_update_system_message
 from rapidconsult.chats.api.mongo import create_group_chat, add_user_to_group_chat, remove_user_from_group_chat
 from rapidconsult.chats.api.permissions import HasOrgLocationAccess
 from rapidconsult.scheduling.api.permissions import check_org_admin_or_raise
