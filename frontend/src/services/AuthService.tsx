@@ -50,6 +50,10 @@ class AuthService {
         const user = localStorage.getItem("user")!;
         return JSON.parse(user);
     }
+
+    getToken(): string | null {
+        return this.getCurrentUser()?.token || null;
+    }
 }
 
 const authService = new AuthService();

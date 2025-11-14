@@ -1,4 +1,5 @@
 import axios from "axios";
+import AuthService from "../services/AuthService";
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const api = axios.create({
@@ -8,11 +9,10 @@ const api = axios.create({
 // Request interceptor (e.g., adds auth token)
 api.interceptors.request.use(
     (config) => {
-        const storedUser = localStorage.getItem("user");
-        const user = storedUser ? JSON.parse(storedUser) : null;
+        const token = AuthService.getToken();
 
-        if (user?.token) {
-            config.headers.Authorization = `Token ${user.token}`;
+        if (token) {
+            config.headers.Authorization = `Token ${token}`;
         } else {
             delete config.headers.Authorization;
         }
@@ -30,7 +30,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Handle unauthorized, maybe redirect to log in
             console.error("Unauthorized, logging out...");
-            localStorage.removeItem("token");
+            AuthService.logout();
             window.location.href = "/login";
         }
         return Promise.reject(error);
