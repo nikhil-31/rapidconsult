@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
+from django.db.models.query_utils import Q
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_datetime
 from django_filters.rest_framework import DjangoFilterBackend
@@ -419,7 +420,10 @@ class ConsultationViewSet(viewsets.ModelViewSet):
         # Get all UserOrgProfiles linked to this user
         user_org_profiles = user.org_profiles.all()
         # Filter consultations referred by this user's org profile(s)
-        queryset = queryset.filter(referred_by_doctor__in=user_org_profiles)
+        queryset = queryset.filter(
+            Q(referred_by_doctor__in=user_org_profiles) |
+            Q(referred_to_doctor__in=user_org_profiles)
+        )
 
         # --- Optional filters from query params ---
         organization_id = self.request.query_params.get("organization_id")
