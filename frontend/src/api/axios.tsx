@@ -10,7 +10,6 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = AuthService.getToken();
-
         if (token) {
             config.headers.Authorization = `Token ${token}`;
         } else {

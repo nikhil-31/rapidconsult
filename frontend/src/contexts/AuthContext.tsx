@@ -1,5 +1,4 @@
 import React, {createContext, ReactNode, useState} from "react";
-import {useNavigate} from "react-router-dom";
 
 import {UserModel} from "../models/UserModel"
 import AuthService from "../services/AuthService";
@@ -19,7 +18,6 @@ export interface AuthProps {
 export const AuthContext = createContext<AuthProps>(DefaultProps);
 
 export const AuthContextProvider: React.FC<{ children: ReactNode }> = ({children}) => {
-    const navigate = useNavigate();
     const [user, setUser] = useState(() => AuthService.getCurrentUser());
 
     async function login(username: string, password: string) {
