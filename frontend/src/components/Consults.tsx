@@ -35,8 +35,10 @@ const Consults: React.FC = () => {
     };
 
     useEffect(() => {
-        loadConsultations(selectedMenuKey);
-    }, [selectedMenuKey]);
+        if (selectedLocation !== null) {
+            loadConsultations(selectedMenuKey);
+        }
+    }, [selectedMenuKey, selectedLocation]);
 
     const loadConsultations = async (menuKey: "myconsults" | "closed") => {
         try {
