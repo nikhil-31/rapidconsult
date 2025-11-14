@@ -36,6 +36,9 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
         location_id = request.query_params.get("location_id")
         queryset = self.queryset
 
+        # Exclude the user making the request
+        queryset = queryset.exclude(id=request.user.id)
+
         if org_id:
             queryset = queryset.filter(
                 org_profiles__organization_id=org_id
@@ -69,6 +72,10 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
         queryset = self.queryset.filter(Q(name__icontains=query)).distinct()
         org_id = request.query_params.get("organization_id")
         location_id = request.query_params.get("location_id")
+
+        # Exclude the user making the request
+        queryset = queryset.exclude(id=request.user.id)
+
         if org_id:
             queryset = queryset.filter(
                 org_profiles__organization_id=org_id
