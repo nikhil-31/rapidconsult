@@ -3,5 +3,5 @@ import {Organization} from "./Organization";
 
 export interface OrgLocation {
     location: Location;
-    organization:  Organization
+    organization:  Organization;
 }
