@@ -14,6 +14,7 @@ class UserDevice(models.Model):
     registration_id = models.CharField(_("Registration ID"), max_length=255, unique=True, blank=True, null=True)
     type = models.CharField(_("Type"), max_length=10, choices=DEVICE_TYPE_CHOICES, default='fcm', blank=True, null=True)
     active = models.BooleanField(_("Active"), default=True, blank=True, null=True)
+    device_type = models.CharField(_("Device Type"), max_length=20, default=None, blank=True, null=True)
     date_created = models.DateTimeField(_("Date Created"), auto_now_add=True, blank=True, null=True)
     last_updated = models.DateTimeField(_("Last Updated"), auto_now=True, blank=True, null=True)
 
