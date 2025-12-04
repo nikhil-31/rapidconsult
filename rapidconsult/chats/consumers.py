@@ -379,6 +379,22 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             }
         )
 
+        # Send push notification
+        from rapidconsult.notifications.services import send_notification
+        participants = self.conversation.participants
+        for participant in participants:
+            if str(participant.userId) != str(self.user.id):
+                try:
+                    receiver = User.objects.get(id=participant.userId)
+                    send_notification(
+                        user=receiver,
+                        title=f"New message from {self.user.name}",
+                        body=msg.content[:100] if msg.content else "Sent a file",
+                        data={"conversation_id": self.conversation_id}
+                    )
+                except User.DoesNotExist:
+                    pass
+
         # Updating lastReadAt for the user, user read the messages before he sent the message
         self.update_last_read_at()
 

@@ -311,4 +311,20 @@ class ImageMessageViewSet(viewsets.ViewSet):
             }
         )
 
+        # Send push notification
+        from rapidconsult.notifications.services import send_notification
+        participants = conversation.participants
+        for participant in participants:
+            if str(participant.userId) != str(request.user.id):
+                try:
+                    receiver = User.objects.get(id=participant.userId)
+                    send_notification(
+                        user=receiver,
+                        title=f"New message from {request.user.name}",
+                        body=msg.content[:100] if msg.content else "Sent a file",
+                        data={"conversation_id": conversation_id}
+                    )
+                except User.DoesNotExist:
+                    pass
+
         return Response(MongoMessageSerializer(msg).data)

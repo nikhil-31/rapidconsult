@@ -337,3 +337,6 @@ rapidconsult/media/
 .envs/*
 !.envs/.local/
 .envs/.production/
+
+# Remove rapidconsult
+config/creds/service_account.json

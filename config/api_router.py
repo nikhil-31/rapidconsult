@@ -8,6 +8,7 @@ from rapidconsult.users.api.views import UserViewSet, ContactViewSet
 from rapidconsult.scheduling.api.views import (LocationViewSet, DepartmentViewSet, UnitViewSet, OrganizationViewSet,
                                                UserProfileViewSet, RoleViewSet, UnitMembershipViewSet,
                                                OnCallShiftViewSet, UserOrgProfileViewSet, ConsultationViewSet)
+from rapidconsult.notifications.api.views import DeviceViewSet
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
 
@@ -28,6 +29,7 @@ router.register(r'allowed-location', UserOrgProfileViewSet, basename='allowed-lo
 router.register(r'active-conversations', UserConversationViewSet, basename='active-conversations')
 router.register(r'save-message', ImageMessageViewSet, basename='save-message')
 router.register(r"consultations", ConsultationViewSet, basename="consultation")
+router.register(r"devices", DeviceViewSet, basename="devices")
 
 app_name = "api"
 urlpatterns = router.urls

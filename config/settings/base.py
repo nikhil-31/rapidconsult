@@ -95,6 +95,7 @@ LOCAL_APPS = [
     # Your stuff: custom apps go here
     "rapidconsult.chats",
     "rapidconsult.scheduling",
+    "rapidconsult.notifications",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -414,3 +415,6 @@ connect(
     port=int(env("MONGO_DB_PORT", default=27017)),
     authentication_source=env("MONGO_DB_AUTH_SOURCE"),
 )
+
+# FCM configuration
+FIREBASE_SERVICE_ACCOUNT_PATH = BASE_DIR / "config/creds/service_account.json"
