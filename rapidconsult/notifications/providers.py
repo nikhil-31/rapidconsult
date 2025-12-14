@@ -13,18 +13,46 @@ class BaseNotificationProvider(ABC):
 
 class FCMNotificationProvider(BaseNotificationProvider):
     def __init__(self):
-        if not firebase_admin._apps:
-            cred_path = getattr(settings, 'FCM_CREDENTIALS', None)
-            if cred_path:
+        self._initialize_firebase()
+
+    def _initialize_firebase(self):
+        """Initialize Firebase Admin SDK if not already initialized."""
+        if firebase_admin._apps:
+            return  # Already initialized
+        
+
+        cred_path = getattr(settings, 'FIREBASE_SERVICE_ACCOUNT_PATH', None)
+        
+        if cred_path:
+            try:
+                # Handle Path objects
+                if hasattr(cred_path, '__fspath__'):
+                    cred_path = str(cred_path)
+                elif hasattr(cred_path, '__str__'):
+                    cred_path = str(cred_path)
+                
+                # Check if file exists
+                import os
+                if not os.path.exists(cred_path):
+                    logger.warning(f"Firebase credentials file not found at {cred_path}. FCM will not work.")
+                    return
+                
                 cred = credentials.Certificate(cred_path)
                 firebase_admin.initialize_app(cred)
-            else:
-                logger.warning("FCM_CREDENTIALS not found in settings. FCM will not work.")
+                logger.info(f"Firebase Admin SDK initialized successfully with credentials from {cred_path}")
+            except Exception as e:
+                logger.error(f"Failed to initialize Firebase Admin SDK: {e}", exc_info=True)
+        else:
+            logger.warning("Neither FCM_CREDENTIALS nor FIREBASE_SERVICE_ACCOUNT_PATH found in settings. FCM will not work.")
 
     def send(self, tokens, title, body, data=None):
         if not tokens:
             return
 
+        # Try to initialize if not already initialized (lazy initialization for multi-process environments)
+        if not firebase_admin._apps:
+            self._initialize_firebase()
+        
         if not firebase_admin._apps:
             logger.error("Firebase app not initialized. Cannot send notification.")
             return

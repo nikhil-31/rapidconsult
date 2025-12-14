@@ -8,6 +8,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
+from django.core.exceptions import DisallowedHost
+
 from .base import *  # noqa: F403
 from .base import DATABASES
 from .base import INSTALLED_APPS
@@ -170,8 +172,8 @@ SENTRY_DSN = env("SENTRY_DSN")
 SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
 
 sentry_logging = LoggingIntegration(
-    level=SENTRY_LOG_LEVEL,  # Capture info and above as breadcrumbs
-    event_level=logging.ERROR,  # Send errors as events
+    level=SENTRY_LOG_LEVEL,
+    event_level=logging.ERROR,
 )
 integrations = [
     sentry_logging,
@@ -179,11 +181,21 @@ integrations = [
     CeleryIntegration(),
     RedisIntegration(),
 ]
+
+def before_send(event, hint):
+    """Filter out DisallowedHost errors from Sentry"""
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
+        if isinstance(exc_value, DisallowedHost):
+            return None
+    return event
+
 sentry_sdk.init(
     dsn=SENTRY_DSN,
     integrations=integrations,
     environment=env("SENTRY_ENVIRONMENT", default="production"),
     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+    before_send=before_send,
 )
 
 # Your stuff...
