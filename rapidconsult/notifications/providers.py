@@ -55,16 +55,22 @@ class FCMNotificationProvider(BaseNotificationProvider):
 
     def send(self, tokens, title, body, data=None):
         if not tokens:
+            logger.warning("FCM send called with empty tokens list")
             return []
+
+        logger.info(f"FCM send called with {len(tokens)} token(s), title: '{title}', body: '{body}'")
 
         # Lazy init (important for gunicorn / daphne / multiprocess)
         if not firebase_admin._apps:
+            logger.info("Firebase app not initialized, attempting initialization...")
             self._initialize_firebase()
 
         if not firebase_admin._apps:
             logger.error("Firebase app not initialized. Cannot send notification.")
+            logger.error("Check FIREBASE_SERVICE_ACCOUNT_PATH setting and credentials file.")
             return tokens  # treat all as failed
 
+        logger.debug(f"Creating FCM message with {len(tokens)} token(s)")
         message = messaging.MulticastMessage(
             notification=messaging.Notification(
                 title=title,
@@ -78,6 +84,7 @@ class FCMNotificationProvider(BaseNotificationProvider):
 
         try:
             # ✅ FIX: use HTTP v1 safe API (no /batch endpoint)
+            logger.debug("Sending FCM multicast message...")
             response = messaging.send_each_for_multicast(message)
 
             logger.info(
