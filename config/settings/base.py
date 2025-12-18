@@ -418,3 +418,11 @@ connect(
 
 # FCM configuration
 FIREBASE_SERVICE_ACCOUNT_PATH = BASE_DIR / "config/creds/service_account.json"
+
+# APNS (iOS) configuration
+# These are optional; if not provided APNS will be disabled gracefully.
+APNS_AUTH_KEY_PATH = env("APNS_AUTH_KEY_PATH", default=None)
+APNS_AUTH_KEY_ID = env("APNS_AUTH_KEY_ID", default=None)
+APNS_TEAM_ID = env("APNS_TEAM_ID", default=None)
+APNS_BUNDLE_ID = env("APNS_BUNDLE_ID", default=None)
+APNS_USE_SANDBOX = env.bool("APNS_USE_SANDBOX", default=True)
