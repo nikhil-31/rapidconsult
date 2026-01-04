@@ -439,6 +439,18 @@ class VoxChatConsumer(JsonWebsocketConsumer):
             },
         )
 
+        # Broadcast user details who read the message
+        async_to_sync(self.channel_layer.group_send)(
+            self.conversation_id,
+            {
+                "type": "message_read_by_user",
+                "userId": str(self.user.id),
+                "userName": str(self.user.name),
+                "conversationId": self.conversation_id,
+                "readAt": now.isoformat(),
+            },
+        )
+
         # Ack to the same client (so UI updates divider)
         self.send_json({
             "type": "read_messages_ack",
@@ -519,6 +531,9 @@ class VoxChatConsumer(JsonWebsocketConsumer):
         self.send_json(event)
 
     def last_read_update(self, event):
+        self.send_json(event)
+
+    def message_read_by_user(self, event):
         self.send_json(event)
 
     @classmethod
